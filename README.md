@@ -4,7 +4,7 @@
 ## Project Proposal
 
 >### What does it do?
-> The objective of this project is to produce an > **3D n-body simulator**, which given the initial
+> The objective of this project is to produce a **3D n-body simulator**, which given the initial
 >  - starting positions, 
 >  - velocities, 
 > - and radii 
