@@ -24,5 +24,4 @@
 > - I want to be able to advance the simulation by an arbitrary number of seconds, including fractional numbers of seconds
 > - I want to be able to view the current positions, velocities, and radii of all planets at the current point in time of the simulation
 > - I want to be able to view the current position, velocity and radius of a specific planet at the current point in time of the simulation
-> - I want to be able to change the current position, velocity and radius of a specific planet at the current point in time of the simulation
-> - I want to be able to see which planets in the simulation have collided with a specific planet
+> - I want to be able to check if a specific planet has collided with any other planets
