@@ -10,16 +10,22 @@ import model.Vector3;
 public class Simulation {
     private static final float GRAVITATIONAL_CONSTANT = 0.02f;
 
+    private String title;
     private float timeElapsed;
     private List<Planet> planets;
     private List<Collision> collisions;
 
     // EFFECTS: creates a simulation with no time elapsed and no planets or
     // collisions
-    public Simulation() {
+    public Simulation(String title) {
+        this.title = title;
         timeElapsed = 0.0f;
         planets = new ArrayList<Planet>();
         collisions = new ArrayList<Collision>();
+    }
+
+    public String getTitle() {
+        return title;
     }
 
     public float getTimeElapsed() {

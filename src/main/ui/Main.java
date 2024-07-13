@@ -1,7 +1,8 @@
 package ui;
 
 public class Main {
-    public static void main(String[] args) {
-        System.out.println("Welcome to my project!");
+    public static void main(String[] args) throws Exception {
+        SimulationManager manager = new SimulationManager();
+        manager.mainLoop();
     }
 }
