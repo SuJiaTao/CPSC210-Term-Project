@@ -22,7 +22,7 @@ public class SimulationManager {
     private static final int EDITOR_LEFT = 0;
     private static final int EDITOR_RIGHT = 40;
     private static final int PLANETLIST_ENTIRES = 20;
-    private static final int PLANETINFO_TOP = EDITOR_TOP + PLANETLIST_ENTIRES;
+    private static final int PLANETINFO_TOP = EDITOR_TOP + PLANETLIST_ENTIRES + 3;
 
     private static final int EDIT_PROP_NAME = 0;
     private static final int EDIT_PROP_POSITION = 1;
@@ -42,6 +42,7 @@ public class SimulationManager {
     private int newPlanetSuffix;
 
     private Planet selectedPlanet;
+    private int listViewOffset;
     private boolean editingSelectedPlanet;
     private boolean editingSelectedProperty;
     private int selectedProperty;
@@ -70,6 +71,7 @@ public class SimulationManager {
         editingSelectedPlanet = false;
         editingSelectedProperty = false;
         userInputString = "";
+        listViewOffset = 0;
     }
 
     // EFFECTS: prints an error to stderr if failed to construct screen of desired
@@ -134,9 +136,11 @@ public class SimulationManager {
 
         List<Planet> planetList = simulation.getPlanets();
 
-        int listStartIndex = Math.max(0, planetList.indexOf(selectedPlanet) - PLANETLIST_ENTIRES);
+        listViewOffset = Math.max(listViewOffset, planetList.indexOf(selectedPlanet) - PLANETLIST_ENTIRES + 1);
+        listViewOffset = Math.min(listViewOffset, planetList.indexOf(selectedPlanet));
+
         for (int i = 0; i < PLANETLIST_ENTIRES; i++) {
-            int indexActual = listStartIndex + i;
+            int indexActual = listViewOffset + i;
             if (indexActual >= planetList.size()) {
                 break;
             }
@@ -148,7 +152,8 @@ public class SimulationManager {
             } else {
                 setTextGraphicsToViewMode(gfx);
             }
-            gfx.putString(EDITOR_LEFT + 1, EDITOR_TOP + 3 + i, planetList.get(indexActual).getName());
+            String entryString = "" + (indexActual + 1) + ". " + planetList.get(indexActual).getName();
+            gfx.putString(EDITOR_LEFT + 1, EDITOR_TOP + 3 + i, entryString);
         }
     }
 
@@ -269,6 +274,7 @@ public class SimulationManager {
                 handleCyclePlanetProperty();
             }
         } else {
+            handlePlanetAddAndRemove();
             handleCycleSelectedPlanet();
         }
     }
@@ -288,8 +294,7 @@ public class SimulationManager {
             return;
         }
         if (lastUserKey.getKeyType() == KeyType.Enter) {
-            boolean wasValid = handleUserInputSubmissionAttempt();
-            if (wasValid) {
+            if (handleUserInputSubmissionAttempt()) {
                 editingSelectedProperty = false;
             }
             return;
@@ -308,11 +313,7 @@ public class SimulationManager {
     public boolean handleUserInputSubmissionAttempt() {
         switch (selectedProperty) {
             case EDIT_PROP_NAME:
-                if (userInputString.length() > 0) {
-                    selectedPlanet.setName(userInputString);
-                    return true;
-                }
-                return false;
+                return tryApplyNewName();
 
             case EDIT_PROP_POSITION:
                 Vector3 newPos = tryParseVectorFromInputString();
@@ -331,19 +332,33 @@ public class SimulationManager {
                 return true;
 
             case EDIT_PROP_RADIUS:
-                float newRadius;
-                try {
-                    newRadius = Float.parseFloat(userInputString);
-                } catch (Exception exception) {
-                    return false;
-                }
-                selectedPlanet.setRadius(newRadius);
-                return true;
+                return tryApplyNewRadius();
 
             default:
                 System.err.print("attempted to apply input to unknown property: " + selectedProperty);
                 return false;
         }
+    }
+
+    // EFFECTS: attempts to update the planet name
+    public boolean tryApplyNewName() {
+        if (userInputString.length() > 0) {
+            selectedPlanet.setName(userInputString);
+            return true;
+        }
+        return false;
+    }
+
+    // EFFECTS: attempts to update the planet radius
+    public boolean tryApplyNewRadius() {
+        float newRadius;
+        try {
+            newRadius = Float.parseFloat(userInputString);
+        } catch (Exception exception) {
+            return false;
+        }
+        selectedPlanet.setRadius(newRadius);
+        return true;
     }
 
     // EFFECTS: attempts to parse a Vector3 out of the user input string, returns
@@ -364,6 +379,39 @@ public class SimulationManager {
         } catch (Exception exception) {
             return null;
         }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: manages creating and destroying selected planet
+    public void handlePlanetAddAndRemove() {
+        if (lastUserKey.getKeyType() != KeyType.Character) {
+            return;
+        }
+
+        Character lastChar = lastUserKey.getCharacter();
+        if (lastChar == '+' || lastChar == '=') {
+            addAndSelectNewPlanet();
+        }
+        if (lastChar == '-' || lastChar == '_') {
+            if (simulation.getPlanets().size() == 1) {
+                return;
+            }
+            handleRemoveSelectedPlanet();
+        }
+    }
+
+    // REQUIRES: there are more than one planets remaining
+    // MODFIES: this
+    // EFFECTS: handles the updating of selectedPlanet when the current selected
+    // planet is removed
+    public void handleRemoveSelectedPlanet() {
+        int selectedIndex = simulation.getPlanets().indexOf(selectedPlanet);
+        simulation.getPlanets().remove(selectedPlanet);
+        if (selectedIndex >= simulation.getPlanets().size()) {
+            selectedIndex = simulation.getPlanets().size() - 1;
+        }
+
+        selectedPlanet = simulation.getPlanets().get(selectedIndex);
     }
 
     // MODIFIES: this
@@ -408,12 +456,7 @@ public class SimulationManager {
             return;
         }
 
-        // NOTE: ensure a positive modulous as the % operator can produce negative
-        // integers
-        selectedIndex %= simulation.getPlanets().size();
-        if (selectedIndex < 0) {
-            selectedIndex += simulation.getPlanets().size();
-        }
+        selectedIndex = Math.max(0, Math.min(selectedIndex, simulation.getPlanets().size() - 1));
         selectedPlanet = simulation.getPlanets().get(selectedIndex);
     }
 
