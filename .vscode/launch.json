@@ -5,13 +5,8 @@
             "name": "Main",
             "request": "launch",
             "mainClass": "ui.Main",
-            "projectName": "TermProject_242a6cda"
-        },
-        {
-            "type": "java",
-            "name": "Current File",
-            "request": "launch",
-            "javaExec": "C:\\Program Files\\Eclipse Adoptium\\jdk-11.0.23.9-hotspot\\bin\\javaw.exe"
+            "projectName": "TermProject_242a6cda",
+	    "javaExec": "C:\\Program Files\\Eclipse Adoptium\\jdk-11.0.23.9-hotspot\\bin\\javaw.exe"
         }
     ]
 }
