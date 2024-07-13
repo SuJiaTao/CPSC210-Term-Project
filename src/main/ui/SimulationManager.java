@@ -75,6 +75,10 @@ public class SimulationManager {
     private String simulationState;
 
     // MENU SELECT VARIABLES
+    private static final String MENU_BROWSE_PLANETS = "BrowsePlanets";
+    private static final String MENU_EDIT_PLANET = "EditPlanet";
+    private static final String MENU_ADD_PLANET = "AddPlanet";
+    private String menuState;
 
     // SIMULATION VIEW VARIABLES
 
@@ -96,6 +100,7 @@ public class SimulationManager {
         screen.startScreen();
 
         simulationState = SIM_STATE_OPENING_SCREEN;
+        menuState = MENU_BROWSE_PLANETS;
     }
 
     // EFFECTS: prints an error to sterr if failed to construct screen of desired
@@ -135,9 +140,9 @@ public class SimulationManager {
     public void drawErrAndOut() {
         TextGraphics textWriter = screen.newTextGraphics();
         textWriter.setForegroundColor(TextColor.ANSI.WHITE);
-        textWriter.putString(0, screen.getTerminalSize().getRows() - 2, "out: " + outRedirect.getStringToDisplay());
+        textWriter.putString(0, TERMINAL_HEIGHT - 2, "out: " + outRedirect.getStringToDisplay());
         textWriter.setForegroundColor(TextColor.ANSI.RED);
-        textWriter.putString(0, screen.getTerminalSize().getRows() - 1, "err: " + errRedirect.getStringToDisplay());
+        textWriter.putString(0, TERMINAL_HEIGHT - 1, "err: " + errRedirect.getStringToDisplay());
     }
 
     // EFFECTS: waits for miliseconds via spin
@@ -197,23 +202,37 @@ public class SimulationManager {
     }
 
     // MODIFIES: this
-    // EFFECTS: prints opening screen graphic to terminal
+    // EFFECTS: draws opening screen graphic to terminal
     public void drawOpeningScreenGraphic() {
-        TextGraphics textWriter = screen.newTextGraphics();
-        textWriter.setForegroundColor(TextColor.ANSI.WHITE);
-        textWriter.drawRectangle(new TerminalPosition(2, 1), new TerminalSize(50, 10), '+');
-        textWriter.putString(5, 3, "UI Controls:");
-        textWriter.putString(7, 4, "- Press Space to change selection");
-        textWriter.putString(7, 5, "- Press Enter to confirm selection");
-        textWriter.putString(7, 6, "- Press Escape to go back");
-        textWriter.putString(7, 7, "- Press Q to quit");
-        textWriter.putString(5, 8, "Press Space to continue");
+        TextGraphics graphics = screen.newTextGraphics();
+        graphics.setForegroundColor(TextColor.ANSI.WHITE);
+        graphics.drawRectangle(new TerminalPosition(2, 1), new TerminalSize(50, 10), '+');
+        graphics.putString(5, 3, "UI Controls:");
+        graphics.putString(7, 4, "- Press Space to change selection");
+        graphics.putString(7, 5, "- Press Enter to confirm selection");
+        graphics.putString(7, 6, "- Press Escape to go back");
+        graphics.putString(7, 7, "- Press Q to quit");
+        graphics.putString(5, 8, "Press Space to continue");
     }
 
     // MODIFIES: this
     // EFFECTS: handles ui/input logic for menu
     public void handleMenuTick() {
+        drawMenuGraphic();
+    }
 
+    // MODIFIES: this
+    // EFFECTS: draws the menu graphic to terminal
+    public void drawMenuGraphic() {
+        TextGraphics graphics = screen.newTextGraphics();
+        graphics.setForegroundColor(TextColor.ANSI.WHITE);
+        drawPlanetViewer(graphics);
+    }
+
+    public void drawPlanetViewer(TextGraphics graphics) {
+        graphics.drawRectangle(new TerminalPosition(1, 1), new TerminalSize(32, TERMINAL_HEIGHT - 5), '+');
+        graphics.putString(new TerminalPosition(4, 2), "Planet List");
+        graphics.drawLine(1, 3, 32, 3, '+');
     }
 
     // MODIFIES: this
