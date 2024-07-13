@@ -71,7 +71,7 @@ public class Planet {
 
     // EFFECTS: returns whether this planet is colliding with the specified planet
     public boolean isCollidingWith(Planet other) {
-        Vector3 displaceMent = Vector3.add(position, Vector3.multiply(other.getPosition(), -1.0f));
+        Vector3 displaceMent = Vector3.sub(position, other.getPosition());
         return displaceMent.magnitude() <= (radius + other.getRadius() + EPSILON);
     }
 }

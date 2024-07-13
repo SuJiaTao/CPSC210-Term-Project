@@ -64,9 +64,30 @@ public class Vector3Test {
     }
 
     @Test
+    public void testAddition() {
+        assertEquals(v2, Vector3.add(v2, v1));
+        assertEquals(v3, Vector3.add(v1, v3));
+        assertEquals(Vector3.multiply(v2, 2.0f), Vector3.add(v2, v2));
+    }
+
+    @Test
     public void testAdditionSymmetry() {
         assertEquals(v1, Vector3.add(v2, v3));
         assertEquals(v1, Vector3.add(v3, v2));
+    }
+
+    @Test
+    public void testSubtraction() {
+        assertEquals(v1, Vector3.sub(v1, v1));
+        assertEquals(v1, Vector3.sub(v2, v2));
+        assertEquals(v1, Vector3.sub(v3, v3));
+        assertEquals(Vector3.multiply(v2, 2.0f), Vector3.sub(v2, v3));
+        assertEquals(Vector3.multiply(v3, 2.0f), Vector3.sub(v3, v2));
+    }
+
+    @Test
+    public void testSubtractionAntiSymmetry() {
+        assertNotEquals(Vector3.sub(v3, v2), Vector3.sub(v2, v3));
     }
 
     @Test

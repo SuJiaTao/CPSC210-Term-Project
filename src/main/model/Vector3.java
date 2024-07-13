@@ -45,6 +45,13 @@ public class Vector3 {
     }
 
     // EFFECTS:
+    // returns a vector where each component is the difference of leftVector and
+    // rightVector's corresponding componenets
+    public static Vector3 sub(Vector3 lefVector3, Vector3 rightVector) {
+        return add(lefVector3, multiply(rightVector, -1.0f));
+    }
+
+    // EFFECTS:
     // returns a vector where each component is the same as vector's corresponding
     // components multiplied by scalar
     public static Vector3 multiply(Vector3 vector, float scalar) {

@@ -115,4 +115,56 @@ public class SimulationTest {
         assertTrue(sim.getCollisions().get(0).wasPlanetInvolved(p1));
         assertTrue(sim.getCollisions().get(0).wasPlanetInvolved(p2));
     }
+
+    @Test
+    public void testEnsurePlanetsGetCloserToEachOther() {
+        sim.addPlanet(p1);
+        sim.addPlanet(p2);
+        float distInitial = Vector3.add(p1.getPosition(), Vector3.multiply(p3.getPosition(), -1.0f)).magnitude();
+        sim.progressBySeconds(1.0f);
+        float distFinal = Vector3.add(p1.getPosition(), Vector3.multiply(p3.getPosition(), -1.0f)).magnitude();
+        assertTrue(distFinal < distInitial);
+    }
+
+    @Test
+    public void testEnsurePlanetsGetCloserToEachOtherMultiple() {
+        sim.addPlanet(p1);
+        sim.addPlanet(p2);
+        float distInitial = Vector3.add(p1.getPosition(), Vector3.multiply(p3.getPosition(), -1.0f)).magnitude();
+        sim.progressBySeconds(1.0f);
+        sim.progressBySeconds(1.0f);
+        sim.progressBySeconds(1.0f);
+        float distFinal = Vector3.add(p1.getPosition(), Vector3.multiply(p3.getPosition(), -1.0f)).magnitude();
+        assertTrue(distFinal < distInitial);
+    }
+
+    @Test
+    public void testEnsureGravityMagCalculationIsCorrect() {
+        float m1 = 1.0f;
+        float m2 = 2.0f;
+        float rA = 2.0f;
+        float expected1 = (Simulation.GRAVITATIONAL_CONSTANT * m1 * m2) / (rA * rA);
+        assertEquals(expected1, sim.calculateGravityMagnitude(m1, m2, rA), EPSILON);
+        assertFalse(Float.isInfinite(sim.calculateGravityMagnitude(m1, m2, rA)));
+        assertFalse(Float.isNaN(sim.calculateGravityMagnitude(m1, m2, rA)));
+
+        float m3 = 3.0f;
+        float m4 = 4.0f;
+        float rB = 5.0f;
+        float expected2 = (Simulation.GRAVITATIONAL_CONSTANT * m3 * m4) / (rB * rB);
+        assertEquals(expected2, sim.calculateGravityMagnitude(m3, m4, rB), EPSILON);
+        assertFalse(Float.isInfinite(sim.calculateGravityMagnitude(m3, m4, rB)));
+        assertFalse(Float.isNaN(sim.calculateGravityMagnitude(m3, m4, rB)));
+    }
+
+    @Test
+    public void testEnsureGravityMagCalculationDoesntExplodeAtLowRadius() {
+        float m1 = 1.0f;
+        float m2 = 2.0f;
+        float rTiny = Simulation.EPSILON / 5.0f;
+        float expected1 = (Simulation.GRAVITATIONAL_CONSTANT * m1 * m2) / (Simulation.EPSILON);
+        assertEquals(expected1, sim.calculateGravityMagnitude(m1, m2, rTiny), EPSILON);
+        assertFalse(Float.isInfinite(sim.calculateGravityMagnitude(m1, m2, rTiny)));
+        assertFalse(Float.isNaN(sim.calculateGravityMagnitude(m1, m2, rTiny)));
+    }
 }

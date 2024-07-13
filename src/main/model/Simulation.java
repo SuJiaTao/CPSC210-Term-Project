@@ -4,8 +4,8 @@ import java.util.*;
 
 // Represents the current n-body simulation state
 public class Simulation {
-    private static final float GRAVITATIONAL_CONSTANT = 0.02f;
-    private static final float EPSILON = 0.001f;
+    public static final float GRAVITATIONAL_CONSTANT = 0.02f;
+    public static final float EPSILON = 0.001f;
 
     private float timeElapsed;
     private List<Planet> planets;
@@ -81,9 +81,7 @@ public class Simulation {
     // EFFECTS:
     // applies a gravitational force between a specific planet to another
     public void applyGravity(Planet targetPlanet, Planet otherPlanet, float deltaTime) {
-        Vector3 targetPos = targetPlanet.getPosition();
-        Vector3 otherPos = otherPlanet.getPosition();
-        Vector3 displacement = Vector3.add(otherPos, Vector3.multiply(targetPos, -1.0f));
+        Vector3 displacement = Vector3.sub(otherPlanet.getPosition(), targetPlanet.getPosition());
 
         float distance = displacement.magnitude();
 
@@ -92,6 +90,7 @@ public class Simulation {
         targetPlanet.addForce(gravityForce, deltaTime);
     }
 
+    // REQUIRES: mass1, mass2 > 0.0f
     // EFFECTS:
     // given two masses and a distance, calculates the gravitational force magnitude
     // between the two objects

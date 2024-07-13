@@ -41,6 +41,12 @@ public class ConsoleOutputRedirectStream extends PrintStream {
     }
 
     // EFFECTS: updates latest display string
+    @Override
+    public void println(Object toPrint) {
+        internalPrint(toPrint.toString());
+    }
+
+    // EFFECTS: updates latest display string
     private void internalPrint(String toPrint) {
         stringToDisplay = toPrint;
     }
