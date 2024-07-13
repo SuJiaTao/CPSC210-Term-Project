@@ -1,14 +1,11 @@
 package ui;
 
-import java.awt.Dimension;
 import java.util.*;
 import com.googlecode.lanterna.*;
 import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.screen.Screen;
-import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
-import com.googlecode.lanterna.terminal.swing.*;
 
 // Represents the current state of user-interface to managing simulations
 public class SimulationManager {
@@ -32,7 +29,8 @@ public class SimulationManager {
         DefaultTerminalFactory termFactory = new DefaultTerminalFactory();
         termFactory.setInitialTerminalSize(new TerminalSize(TERMINAL_WIDTH, TERMINAL_HEIGHT));
         screen = termFactory.createScreen();
-        ensureDesiredTerminalSize();
+        // ensureDesiredTerminalSize(); // TODO: fix this mess :(
+        screen.startScreen();
 
         simulationState = SIM_STATE_OPENING_SCREEN;
     }
@@ -50,16 +48,30 @@ public class SimulationManager {
     // MODIFIES: this
     // EFFECTS: execute main input/rendering loop
     public void mainLoop() throws Exception {
-        screen.startScreen();
         while (true) {
             screen.clear();
             lastUserKey = screen.pollInput();
-            screen.setCursorPosition(new TerminalPosition(0, 0));
 
+            screen.setCursorPosition(new TerminalPosition(0, 0));
             handleSimulationState();
 
             screen.refresh();
             screen.setCursorPosition(new TerminalPosition(screen.getTerminalSize().getColumns() - 1, 0));
+
+            spinlockWaitMiliseconds(10);
+        }
+    }
+
+    // EFFECTS: waits for miliseconds via spinlock
+    public void spinlockWaitMiliseconds(int waitMilliseconds) {
+        // NOTE: hi, you are probably wondering why I'm not using Thread.sleep()
+        // right now the issue with thread.sleep is that internally it is generally not
+        // precice enough at least on windows, Thread.sleep() has a granularity of about
+        // ~16msec which really isn't good enough for my purposes. The only way to do
+        // this the way I want is to go into a spinlock so here it is :3
+        long startTime = System.nanoTime();
+        while (((System.nanoTime() - startTime) / 1000) <= waitMilliseconds) {
+            // wait
         }
     }
 
@@ -68,8 +80,8 @@ public class SimulationManager {
     public void handleSimulationState() throws Exception {
         switch (simulationState) {
             case SIM_STATE_OPENING_SCREEN:
-                // handleOpeningScreenTick();
-                // break;
+                handleOpeningScreenTick();
+                break;
             case SIM_STATE_MENU:
                 // handleMenuTick();
                 // break;
@@ -80,7 +92,7 @@ public class SimulationManager {
                 // System.exit(0); // TODO: make less harsh
                 // break;
             default:
-                throw new Exception("Entered unknown simulationState: " + simulationState);
+                // throw new Exception("Entered unknown simulationState: " + simulationState);
         }
     }
 
@@ -90,7 +102,15 @@ public class SimulationManager {
         TextGraphics textWriter = screen.newTextGraphics();
         textWriter.setForegroundColor(TextColor.ANSI.WHITE);
         textWriter.putString(5, 3, "UI Controls:");
-        textWriter.putString(7, 4, "B:");
+        textWriter.putString(7, 4, "- Press Tab to change selection");
+        textWriter.putString(7, 5, "- Press Enter to confirm selection");
+        textWriter.putString(7, 6, "- Press Escape to go back");
+        textWriter.putString(5, 7, "Press Enter to continue");
+
+        if (lastUserKey == null) {
+            return;
+        }
+        Character input = lastUserKey.getCharacter();
     }
 
     // ODIFIES: his
