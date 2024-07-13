@@ -34,16 +34,32 @@ public class Planet {
         return name;
     }
 
+    public void setName(String newName) {
+        name = newName;
+    }
+
     public Vector3 getPosition() {
         return position;
+    }
+
+    public void setPosition(Vector3 newPosition) {
+        position = newPosition;
     }
 
     public Vector3 getVelocity() {
         return velocity;
     }
 
+    public void setVelocity(Vector3 newVelocity) {
+        velocity = newVelocity;
+    }
+
     public float getRadius() {
         return radius;
+    }
+
+    public void setRadius(float newRadius) {
+        radius = newRadius;
     }
 
     // EFFECTS:

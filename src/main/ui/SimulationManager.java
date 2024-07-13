@@ -24,11 +24,13 @@ public class SimulationManager {
     private static final int PLANETLIST_ENTIRES = 20;
     private static final int PLANETINFO_TOP = EDITOR_TOP + PLANETLIST_ENTIRES;
 
-    private static final int PLANETEDIT_NAME = 0;
+    private static final int EDIT_PROP_NAME = 0;
     private static final int EDIT_PROP_POSITION = 1;
     private static final int EDIT_PROP_VELOCITY = 2;
     private static final int EDIT_PROP_RADIUS = 3;
     private static final int EDIT_PROP_CYCLE_MOD = EDIT_PROP_RADIUS + 1;
+
+    private static final int EDIT_PROP_MAX_INPUT_LEN = EDITOR_RIGHT - EDITOR_LEFT - 3;
 
     private ConsoleOutputRedirectStream errRedirect;
     private ConsoleOutputRedirectStream outRedirect;
@@ -43,6 +45,7 @@ public class SimulationManager {
     private boolean editingSelectedPlanet;
     private boolean editingSelectedProperty;
     private int selectedProperty;
+    private String userInputString;
 
     // EFFECTS: initialize simulation, init graphical/user input, redirect
     // sterr+stdout, and set simulation state to the opening screen
@@ -66,6 +69,7 @@ public class SimulationManager {
         addAndSelectNewPlanet();
         editingSelectedPlanet = false;
         editingSelectedProperty = false;
+        userInputString = "";
     }
 
     // EFFECTS: prints an error to stderr if failed to construct screen of desired
@@ -165,6 +169,20 @@ public class SimulationManager {
         gfx.putString(EDITOR_LEFT + 1, PLANETINFO_TOP + 1, actionPrefix + " PLANET: " + selectedPlanet.getName());
 
         drawPlanetProperties(gfx);
+        drawPropertyEditingInputBox(gfx);
+    }
+
+    // MODIFIES: this
+    // EFFECTS: draws GUI for value editing input handler
+    public void drawPropertyEditingInputBox(TextGraphics gfx) {
+        if (!editingSelectedProperty) {
+            return;
+        }
+        setTextGraphicsToViewMode(gfx);
+        gfx.drawLine(EDITOR_LEFT, EDITOR_BOT - 3, EDITOR_RIGHT, EDITOR_BOT - 3, '+');
+        gfx.putString(EDITOR_LEFT + 1, EDITOR_BOT - 2, "Input Value:");
+        setTextGraphicsToSelectMode(gfx);
+        gfx.putString(EDITOR_LEFT + 2, EDITOR_BOT - 1, userInputString);
     }
 
     // MODIFIES: this
@@ -179,6 +197,9 @@ public class SimulationManager {
         for (int i = 0; i < propertyStrings.length; i++) {
             if (editingSelectedPlanet && selectedProperty == i) {
                 setTextGraphicsToHoverMode(gfx);
+                if (editingSelectedProperty) {
+                    setTextGraphicsToSelectMode(gfx);
+                }
             } else {
                 setTextGraphicsToViewMode(gfx);
             }
@@ -242,15 +263,112 @@ public class SimulationManager {
             return;
         }
         if (editingSelectedPlanet) {
-            handleEditPlanet();
+            if (editingSelectedProperty) {
+                handleEditPlanetProperty();
+            } else {
+                handleCyclePlanetProperty();
+            }
         } else {
             handleCycleSelectedPlanet();
         }
     }
 
     // MODIFIES: this
-    // EFFECTS: manages planet editing behavior
-    public void handleEditPlanet() {
+    // EFFECTS: manages planet property editing input handling behavior
+    public void handleEditPlanetProperty() {
+        if (lastUserKey.getKeyType() == KeyType.Escape) {
+            editingSelectedProperty = false;
+            return;
+        }
+        if (lastUserKey.getKeyType() == KeyType.Backspace) {
+            if (userInputString.length() == 0) {
+                return;
+            }
+            userInputString = userInputString.substring(0, userInputString.length() - 1);
+            return;
+        }
+        if (lastUserKey.getKeyType() == KeyType.Enter) {
+            boolean wasValid = handleUserInputSubmissionAttempt();
+            if (wasValid) {
+                editingSelectedProperty = false;
+            }
+            return;
+        }
+        if (lastUserKey.getCharacter() != null) {
+            if (userInputString.length() >= EDIT_PROP_MAX_INPUT_LEN) {
+                return;
+            }
+            userInputString += lastUserKey.getCharacter().toString();
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: attempts to apply user input to replace the selected property, does
+    // nothing if invalid input
+    public boolean handleUserInputSubmissionAttempt() {
+        switch (selectedProperty) {
+            case EDIT_PROP_NAME:
+                if (userInputString.length() > 0) {
+                    selectedPlanet.setName(userInputString);
+                    return true;
+                }
+                return false;
+
+            case EDIT_PROP_POSITION:
+                Vector3 newPos = tryParseVectorFromInputString();
+                if (newPos == null) {
+                    return false;
+                }
+                selectedPlanet.setPosition(newPos);
+                return true;
+
+            case EDIT_PROP_VELOCITY:
+                Vector3 newVel = tryParseVectorFromInputString();
+                if (newVel == null) {
+                    return false;
+                }
+                selectedPlanet.setVelocity(newVel);
+                return true;
+
+            case EDIT_PROP_RADIUS:
+                float newRadius;
+                try {
+                    newRadius = Float.parseFloat(userInputString);
+                } catch (Exception exception) {
+                    return false;
+                }
+                selectedPlanet.setRadius(newRadius);
+                return true;
+
+            default:
+                System.err.print("attempted to apply input to unknown property: " + selectedProperty);
+                return false;
+        }
+    }
+
+    // EFFECTS: attempts to parse a Vector3 out of the user input string, returns
+    // null if it fails
+    public Vector3 tryParseVectorFromInputString() {
+        String[] components = userInputString.split(" ");
+        if (components.length != 3) {
+            return null;
+        }
+        float x;
+        float y;
+        float z;
+        try {
+            x = Float.parseFloat(components[0]);
+            y = Float.parseFloat(components[1]);
+            z = Float.parseFloat(components[2]);
+            return new Vector3(x, y, z);
+        } catch (Exception exception) {
+            return null;
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: manages planet editing cycle behavior
+    public void handleCyclePlanetProperty() {
         if (lastUserKey.getKeyType() == KeyType.Escape) {
             editingSelectedPlanet = false;
             return;
@@ -260,6 +378,11 @@ public class SimulationManager {
         }
         if (lastUserKey.getKeyType() == KeyType.ArrowDown) {
             selectedProperty++;
+        }
+        if (lastUserKey.getKeyType() == KeyType.Enter) {
+            userInputString = "";
+            editingSelectedProperty = true;
+            return;
         }
         // NOTE: ensure positive modulous
         selectedProperty %= EDIT_PROP_CYCLE_MOD;
@@ -281,7 +404,7 @@ public class SimulationManager {
         }
         if (lastUserKey.getKeyType() == KeyType.Enter) {
             editingSelectedPlanet = true;
-            selectedProperty = PLANETEDIT_NAME;
+            selectedProperty = EDIT_PROP_NAME;
             return;
         }
 
