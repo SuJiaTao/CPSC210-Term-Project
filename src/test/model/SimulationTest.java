@@ -61,6 +61,58 @@ public class SimulationTest {
     }
 
     @Test
+    public void testProgressTimeElapsedWithPlanets() {
+        sim.addPlanet(p1);
+        sim.addPlanet(p2);
+        Planet p1ShouldBe = new Planet("p1s", p1.getPosition(), p1.getVelocity(), p1.getRadius());
+        Planet p2ShouldBe = new Planet("p2s", p2.getPosition(), p2.getVelocity(), p2.getRadius());
+        sim.progressBySeconds(1.0f);
+
+        sim.applyGravity(p1ShouldBe, p2ShouldBe, 1.0f);
+        sim.applyGravity(p2ShouldBe, p1ShouldBe, 1.0f);
+        p1ShouldBe.updatePosition(1.0f);
+        p2ShouldBe.updatePosition(1.0f);
+
+        assertEquals(p1.getPosition(), p1ShouldBe.getPosition());
+        assertEquals(p2.getPosition(), p2ShouldBe.getPosition());
+
+        assertEquals(p1.getVelocity(), p1ShouldBe.getVelocity());
+        assertEquals(p2.getVelocity(), p2ShouldBe.getVelocity());
+
+        assertEquals(p1.getRadius(), p1ShouldBe.getRadius(), EPSILON);
+        assertEquals(p2.getRadius(), p2ShouldBe.getRadius(), EPSILON);
+    }
+
+    @Test
+    public void testProgressTimeElapsedWithPlanetsMultiple() {
+        sim.addPlanet(p1);
+        sim.addPlanet(p2);
+        Planet p1ShouldBe = new Planet("p1s", p1.getPosition(), p1.getVelocity(), p1.getRadius());
+        Planet p2ShouldBe = new Planet("p2s", p2.getPosition(), p2.getVelocity(), p2.getRadius());
+        sim.progressBySeconds(1.0f);
+        sim.progressBySeconds(1.5f);
+
+        sim.applyGravity(p1ShouldBe, p2ShouldBe, 1.0f);
+        sim.applyGravity(p2ShouldBe, p1ShouldBe, 1.0f);
+        p1ShouldBe.updatePosition(1.0f);
+        p2ShouldBe.updatePosition(1.0f);
+
+        sim.applyGravity(p1ShouldBe, p2ShouldBe, 1.5f);
+        sim.applyGravity(p2ShouldBe, p1ShouldBe, 1.5f);
+        p1ShouldBe.updatePosition(1.5f);
+        p2ShouldBe.updatePosition(1.5f);
+
+        assertEquals(p1.getPosition(), p1ShouldBe.getPosition());
+        assertEquals(p2.getPosition(), p2ShouldBe.getPosition());
+
+        assertEquals(p1.getVelocity(), p1ShouldBe.getVelocity());
+        assertEquals(p2.getVelocity(), p2ShouldBe.getVelocity());
+
+        assertEquals(p1.getRadius(), p1ShouldBe.getRadius(), EPSILON);
+        assertEquals(p2.getRadius(), p2ShouldBe.getRadius(), EPSILON);
+    }
+
+    @Test
     public void testProgressSinglePlanetNoCollisions() {
         sim.addPlanet(p1);
         sim.progressBySeconds(5.0f);
@@ -166,5 +218,42 @@ public class SimulationTest {
         assertEquals(expected1, sim.calculateGravityMagnitude(m1, m2, rTiny), EPSILON);
         assertFalse(Float.isInfinite(sim.calculateGravityMagnitude(m1, m2, rTiny)));
         assertFalse(Float.isNaN(sim.calculateGravityMagnitude(m1, m2, rTiny)));
+    }
+
+    @Test
+    public void testApplyGravity() {
+        Planet p1ShouldBe = new Planet("p1s", p1.getPosition(), p1.getVelocity(), p1.getRadius());
+
+        sim.applyGravity(p1, p2, 1.0f);
+
+        Vector3 disp = Vector3.sub(p2.getPosition(), p1.getPosition());
+        float distance = disp.magnitude();
+        float gravityForce = sim.calculateGravityMagnitude(p1.getMass(), p2.getMass(), distance);
+        Vector3 gravityVector = Vector3.multiply(Vector3.normalize(disp), gravityForce);
+        p1ShouldBe.addForce(gravityVector, 1.0f);
+
+        assertEquals(p1ShouldBe.getVelocity(), p1.getVelocity());
+    }
+
+    @Test
+    public void testApplyGravityMultiple() {
+        Planet p1ShouldBe = new Planet("p1s", p1.getPosition(), p1.getVelocity(), p1.getRadius());
+
+        sim.applyGravity(p1, p2, 1.0f);
+        sim.applyGravity(p1, p2, 2.0f);
+
+        Vector3 disp = Vector3.sub(p2.getPosition(), p1.getPosition());
+        float distance = disp.magnitude();
+        float gravityForce = sim.calculateGravityMagnitude(p1.getMass(), p2.getMass(), distance);
+        Vector3 gravityVector = Vector3.multiply(Vector3.normalize(disp), gravityForce);
+        p1ShouldBe.addForce(gravityVector, 1.0f);
+
+        Vector3 disp2 = Vector3.sub(p2.getPosition(), p1.getPosition());
+        float distance2 = disp2.magnitude();
+        float gravityForce2 = sim.calculateGravityMagnitude(p1.getMass(), p2.getMass(), distance2);
+        Vector3 gravityVector2 = Vector3.multiply(Vector3.normalize(disp), gravityForce2);
+        p1ShouldBe.addForce(gravityVector2, 2.0f);
+
+        assertEquals(p1ShouldBe.getVelocity(), p1.getVelocity());
     }
 }
