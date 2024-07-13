@@ -5,6 +5,7 @@ import java.util.*;
 // Represents the current n-body simulation state
 public class Simulation {
     private static final float GRAVITATIONAL_CONSTANT = 0.02f;
+    private static final float EPSILON = 0.001f;
 
     private float timeElapsed;
     private List<Planet> planets;
@@ -41,7 +42,8 @@ public class Simulation {
 
     // MODIFIES: this
     // EFFECTS:
-    // progresses the simulation forward by deltaTime
+    // progresses the simulation forward by deltaTime, including increasing
+    // timeElapsed
     public void progressBySeconds(float deltaTime) {
         for (Planet currentPlanet : planets) {
             for (Planet targetPlanet : planets) {
@@ -58,6 +60,7 @@ public class Simulation {
         for (Planet currentPlanet : planets) {
             currentPlanet.updatePosition(deltaTime);
         }
+        timeElapsed += deltaTime;
     }
 
     // MODIFIES: this
@@ -93,6 +96,6 @@ public class Simulation {
     // given two masses and a distance, calculates the gravitational force magnitude
     // between the two objects
     public float calculateGravityMagnitude(float mass1, float mass2, float dist) {
-        return (GRAVITATIONAL_CONSTANT * mass1 * mass2) / (dist * dist);
+        return (GRAVITATIONAL_CONSTANT * mass1 * mass2) / Math.max(EPSILON, (dist * dist));
     }
 }
