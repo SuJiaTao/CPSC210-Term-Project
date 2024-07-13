@@ -16,11 +16,18 @@ public class SimulationManager {
     private static final int TERMINAL_WIDTH = 90;
     private static final int TERMINAL_HEIGHT = 35;
     private static final int FRAME_TIME_DELAY_MSEC = 50;
+
     private static final int EDITOR_TOP = 0;
     private static final int EDITOR_BOT = 32;
     private static final int EDITOR_LEFT = 0;
     private static final int EDITOR_RIGHT = 40;
     private static final int PLANETLIST_ENTIRES = 20;
+
+    private static final int PLANETEDIT_NAME = 0;
+    private static final int PLANETEDIT_POSITION = 1;
+    private static final int PLANETEDIT_VELOCITY = 2;
+    private static final int PLANETEDIT_RADIUS = 3;
+    private static final int PLANETEDIT_CYCLE_MOD = PLANETEDIT_RADIUS;
 
     private ConsoleOutputRedirectStream errRedirect;
     private ConsoleOutputRedirectStream outRedirect;
@@ -29,8 +36,11 @@ public class SimulationManager {
     private KeyStroke lastUserKey;
 
     private Simulation simulation;
-    private Planet selectedPlanet;
     private int newPlanetSuffix;
+
+    private Planet selectedPlanet;
+    private boolean editingSelectedPlanet;
+    private int planetEditMode;
 
     // EFFECTS: initialize simulation, init graphical/user input, redirect
     // sterr+stdout, and set simulation state to the opening screen
@@ -50,10 +60,9 @@ public class SimulationManager {
         simulation = new Simulation();
         newPlanetSuffix = 0;
 
-        // simulation starts with THREE planets
+        // simulation starts with planet
         addAndSelectNewPlanet();
-        addAndSelectNewPlanet();
-        addAndSelectNewPlanet();
+        editingSelectedPlanet = false;
     }
 
     // EFFECTS: prints an error to stderr if failed to construct screen of desired
@@ -112,7 +121,7 @@ public class SimulationManager {
         gfx.drawLine(EDITOR_LEFT, EDITOR_BOT, EDITOR_RIGHT, EDITOR_BOT, '+'); // BOTTOM
 
         drawPlanetList(gfx);
-        drawPlanetEditMenu(gfx);
+        drawPlanetInfo(gfx);
     }
 
     // MODIFIES: this
@@ -131,7 +140,10 @@ public class SimulationManager {
                 break;
             }
             if (indexActual == planetList.indexOf(selectedPlanet)) {
-                setTextGraphicsToSelectMode(gfx);
+                setTextGraphicsToHoverMode(gfx);
+                if (editingSelectedPlanet) {
+                    setTextGraphicsToSelectMode(gfx);
+                }
             } else {
                 setTextGraphicsToViewMode(gfx);
             }
@@ -140,21 +152,32 @@ public class SimulationManager {
     }
 
     // MODIFIES: this
-    // EFFECTS: draws planet edit menu
-    public void drawPlanetEditMenu(TextGraphics gfx) {
+    // EFFECTS: draws planet info viewer
+    public void drawPlanetInfo(TextGraphics gfx) {
         setTextGraphicsToViewMode(gfx);
 
         // title and border
         int borderHeight = EDITOR_TOP + PLANETLIST_ENTIRES;
         gfx.drawLine(EDITOR_LEFT, borderHeight, EDITOR_RIGHT, borderHeight, '+');
-        gfx.putString(EDITOR_LEFT + 1, borderHeight + 1, "EDIT PLANET: " + selectedPlanet.getName());
 
+        if (editingSelectedPlanet) {
+            gfx.putString(EDITOR_LEFT + 1, borderHeight + 1, "EDIT PLANET: " + selectedPlanet.getName());
+        } else {
+            gfx.putString(EDITOR_LEFT + 1, borderHeight + 1, "VIEW PLANET: " + selectedPlanet.getName());
+        }
+
+    }
+
+    // EFFECTS: sets Textgraphics to "hover" appearance
+    public void setTextGraphicsToHoverMode(TextGraphics gfx) {
+        gfx.setBackgroundColor(TextColor.ANSI.WHITE);
+        gfx.setForegroundColor(TextColor.ANSI.BLACK);
     }
 
     // EFFECTS: sets Textgraphics to "selection" appearance
     public void setTextGraphicsToSelectMode(TextGraphics gfx) {
-        gfx.setBackgroundColor(TextColor.ANSI.WHITE);
-        gfx.setForegroundColor(TextColor.ANSI.BLACK);
+        gfx.setBackgroundColor(TextColor.ANSI.BLUE);
+        gfx.setForegroundColor(TextColor.ANSI.WHITE);
     }
 
     // EFFECTS: sets Textgraphics to "view" appearance
@@ -200,18 +223,48 @@ public class SimulationManager {
         if (lastUserKey == null) {
             return;
         }
-        cycleSelectedPlanet();
+        if (editingSelectedPlanet) {
+            handleEditPlanet();
+        } else {
+            handleCycleSelectedPlanet();
+        }
     }
 
     // MODIFIES: this
-    // EFFECTS: cycles the selected planet based on the arrow keys
-    public void cycleSelectedPlanet() {
+    // EFFECTS: manages planet editing behavior
+    public void handleEditPlanet() {
+        if (lastUserKey.getKeyType() == KeyType.Escape) {
+            editingSelectedPlanet = false;
+            return;
+        }
+        if (lastUserKey.getKeyType() == KeyType.ArrowUp) {
+            planetEditMode--;
+        }
+        if (lastUserKey.getKeyType() == KeyType.ArrowDown) {
+            planetEditMode++;
+        }
+        // NOTE: ensure positive modulous
+        planetEditMode %= PLANETEDIT_CYCLE_MOD;
+        if (planetEditMode < 0) {
+            planetEditMode += PLANETEDIT_CYCLE_MOD;
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: cycles the selected planet based on the arrow keys, or selects if
+    // detected enter key
+    public void handleCycleSelectedPlanet() {
         int selectedIndex = simulation.getPlanets().indexOf(selectedPlanet);
         if (lastUserKey.getKeyType() == KeyType.ArrowUp) {
             selectedIndex--;
         }
         if (lastUserKey.getKeyType() == KeyType.ArrowDown) {
             selectedIndex++;
+        }
+        if (lastUserKey.getKeyType() == KeyType.Enter) {
+            editingSelectedPlanet = true;
+            planetEditMode = PLANETEDIT_NAME;
+            return;
         }
 
         // NOTE: ensure a positive modulous as the % operator can produce negative
