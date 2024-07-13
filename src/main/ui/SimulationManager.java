@@ -1,12 +1,11 @@
 package ui;
 
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.util.*;
 
 import com.googlecode.lanterna.*;
 import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
+import com.googlecode.lanterna.input.KeyType;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 
@@ -16,7 +15,7 @@ import model.*;
 public class SimulationManager {
     private static final int TERMINAL_WIDTH = 90;
     private static final int TERMINAL_HEIGHT = 35;
-    private static final int FRAME_TIME_DELAY_MSEC = 15;
+    private static final int FRAME_TIME_DELAY_MSEC = 50;
     private static final int EDITOR_TOP = 0;
     private static final int EDITOR_BOT = 32;
     private static final int EDITOR_LEFT = 0;
@@ -28,10 +27,10 @@ public class SimulationManager {
 
     private TerminalScreen screen;
     private KeyStroke lastUserKey;
-    private String simulationState;
 
     private Simulation simulation;
     private Planet selectedPlanet;
+    private int newPlanetSuffix;
 
     // EFFECTS: initialize simulation, init graphical/user input, redirect
     // sterr+stdout, and set simulation state to the opening screen
@@ -49,7 +48,12 @@ public class SimulationManager {
         screen.startScreen();
 
         simulation = new Simulation();
-        addAndSelectNewPlanet(); // simulation starts with ONE new planet
+        newPlanetSuffix = 0;
+
+        // simulation starts with THREE planets
+        addAndSelectNewPlanet();
+        addAndSelectNewPlanet();
+        addAndSelectNewPlanet();
     }
 
     // EFFECTS: prints an error to stderr if failed to construct screen of desired
@@ -71,6 +75,7 @@ public class SimulationManager {
     public void mainLoop() throws Exception {
         while (true) {
             try {
+                handleUserInput();
                 handleSimulationState();
             } catch (Exception errMsg) {
                 System.err.print(errMsg.toString());
@@ -98,7 +103,7 @@ public class SimulationManager {
     // EFFECTS: draws left-side planet editor
     public void drawPlanetListEditor() {
         TextGraphics gfx = screen.newTextGraphics();
-        gfx.setForegroundColor(TextColor.ANSI.WHITE);
+        setTextGraphicsToViewMode(gfx);
 
         // DRAW EDITOR SURROUNDING BOX
         gfx.drawLine(EDITOR_LEFT, EDITOR_TOP, EDITOR_RIGHT, EDITOR_TOP, '+'); // TOP
@@ -116,19 +121,29 @@ public class SimulationManager {
         // title and border
         gfx.putString(new TerminalPosition(EDITOR_LEFT + 1, EDITOR_TOP + 1), "PLANET LIST");
         gfx.drawLine(EDITOR_LEFT, EDITOR_TOP + 2, EDITOR_RIGHT, EDITOR_TOP + 2, '+');
-        int listStartIndex = simulation.getPlanets().indexOf(selectedPlanet);
+
+        List<Planet> planetList = simulation.getPlanets();
+
+        int listStartIndex = Math.max(0, planetList.indexOf(selectedPlanet) - PLANETLIST_ENTIRES);
         for (int i = 0; i < PLANETLIST_ENTIRES; i++) {
             int indexActual = listStartIndex + i;
-            if (indexActual >= simulation.getPlanets().size()) {
+            if (indexActual >= planetList.size()) {
                 break;
             }
-            gfx.putString(EDITOR_LEFT + 3, EDITOR_TOP + 3 + i, simulation.getPlanets().get(indexActual).getName());
+            if (indexActual == planetList.indexOf(selectedPlanet)) {
+                setTextGraphicsToSelectMode(gfx);
+            } else {
+                setTextGraphicsToViewMode(gfx);
+            }
+            gfx.putString(EDITOR_LEFT + 1, EDITOR_TOP + 3 + i, planetList.get(indexActual).getName());
         }
     }
 
     // MODIFIES: this
     // EFFECTS: draws planet edit menu
     public void drawPlanetEditMenu(TextGraphics gfx) {
+        setTextGraphicsToViewMode(gfx);
+
         // title and border
         int borderHeight = EDITOR_TOP + PLANETLIST_ENTIRES;
         gfx.drawLine(EDITOR_LEFT, borderHeight, EDITOR_RIGHT, borderHeight, '+');
@@ -136,9 +151,23 @@ public class SimulationManager {
 
     }
 
+    // EFFECTS: sets Textgraphics to "selection" appearance
+    public void setTextGraphicsToSelectMode(TextGraphics gfx) {
+        gfx.setBackgroundColor(TextColor.ANSI.WHITE);
+        gfx.setForegroundColor(TextColor.ANSI.BLACK);
+    }
+
+    // EFFECTS: sets Textgraphics to "view" appearance
+    public void setTextGraphicsToViewMode(TextGraphics gfx) {
+        gfx.setBackgroundColor(TextColor.ANSI.BLACK);
+        gfx.setForegroundColor(TextColor.ANSI.WHITE);
+    }
+
     // EFFECTS: draws stdout and stederr to the bottom of the screen
     public void drawErrAndMessageText() {
         TextGraphics textWriter = screen.newTextGraphics();
+        textWriter.setBackgroundColor(TextColor.ANSI.BLACK);
+
         textWriter.setForegroundColor(TextColor.ANSI.WHITE);
         textWriter.putString(0, TERMINAL_HEIGHT - 2, "Message:\t" + outRedirect.getStringToDisplay());
         textWriter.setForegroundColor(TextColor.ANSI.RED);
@@ -161,14 +190,45 @@ public class SimulationManager {
     // MODIFIES: this
     // EFFECTS: runs the appropriate handler function based on the simulation state
     public void handleSimulationState() throws Exception {
+
+    }
+
+    // MODIFIES: this
+    // EFFECTS: handles all user input
+    public void handleUserInput() throws Exception {
         lastUserKey = screen.pollInput();
+        if (lastUserKey == null) {
+            return;
+        }
+        cycleSelectedPlanet();
+    }
+
+    // MODIFIES: this
+    // EFFECTS: cycles the selected planet based on the arrow keys
+    public void cycleSelectedPlanet() {
+        int selectedIndex = simulation.getPlanets().indexOf(selectedPlanet);
+        if (lastUserKey.getKeyType() == KeyType.ArrowUp) {
+            selectedIndex--;
+        }
+        if (lastUserKey.getKeyType() == KeyType.ArrowDown) {
+            selectedIndex++;
+        }
+
+        // NOTE: ensure a positive modulous as the % operator can produce negative
+        // integers
+        selectedIndex %= simulation.getPlanets().size();
+        if (selectedIndex < 0) {
+            selectedIndex += simulation.getPlanets().size();
+        }
+        selectedPlanet = simulation.getPlanets().get(selectedIndex);
     }
 
     // MODIFIES: this
     // EFFECTS: adds new planet to the simulation and selects it
     public void addAndSelectNewPlanet() {
-        Planet newPlanet = new Planet("New Planet", 1.0f);
+        Planet newPlanet = new Planet("New Planet " + newPlanetSuffix, 1.0f);
         simulation.addPlanet(newPlanet);
         selectedPlanet = newPlanet;
+        newPlanetSuffix++;
     }
 }
