@@ -4,16 +4,11 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.*;
 
-import javax.swing.JFrame;
-
 import com.googlecode.lanterna.*;
 import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
-import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
-import com.googlecode.lanterna.terminal.swing.SwingTerminal;
-import com.googlecode.lanterna.terminal.swing.SwingTerminalFrame;
 
 // Represents the current state of user-interface to managing simulations
 public class SimulationManager {
@@ -25,32 +20,42 @@ public class SimulationManager {
     private class ConsoleRedirect extends PrintStream {
         private String stringToDisplay;
 
+        // EFFECTS: redirects a given outputstream to super, enable always flush
         public ConsoleRedirect(OutputStream outputStream) {
+            // NOTE:
+            // i can't lie, I am not familiar enough with the JDK's stream related classes
+            // and methods to completely understand what this constructor is doing, but
+            // making any modification to it will cause the program to crash, so I will opt
+            // to keep it like this >.<
             super(outputStream, true);
             stringToDisplay = "null";
         }
 
+        public String getStringToDisplay() {
+            return stringToDisplay;
+        }
+
+        // EFFECTS: updates latest display string
         @Override
         public void print(String toPrint) {
             internalPrint(toPrint);
         }
 
+        // EFFECTS: updates latest display string
         @Override
         public void println(String toPrint) {
             internalPrint(toPrint);
         }
 
+        // EFFECTS: updates latest display string
         @Override
         public void print(Object toPrint) {
             internalPrint(toPrint.toString());
         }
 
+        // EFFECTS: updates latest display string
         private void internalPrint(String toPrint) {
             stringToDisplay = toPrint;
-        }
-
-        public String getStringToDisplay() {
-            return stringToDisplay;
         }
     }
 
@@ -73,10 +78,11 @@ public class SimulationManager {
 
     // SIMULATION VIEW VARIABLES
 
-    // EFFECTS: initialize simulation, graphical/user input, and set simulation
-    // state to the opening screen
+    // EFFECTS: initialize simulation, init graphical/user input, redirect
+    // sterr+stdout, and set simulation state to the opening screen
     public SimulationManager() throws Exception {
         simulation = new Simulation();
+
         errRedirect = new ConsoleRedirect(System.err);
         System.setErr(errRedirect);
         outRedirect = new ConsoleRedirect(System.out);
@@ -86,19 +92,22 @@ public class SimulationManager {
         termFactory.setInitialTerminalSize(new TerminalSize(TERMINAL_WIDTH, TERMINAL_HEIGHT));
         screen = termFactory.createScreen();
 
-        // ensureDesiredTerminalSize(); // TODO: fix this mess :(
+        ensureDesiredTerminalSize();
         screen.startScreen();
 
         simulationState = SIM_STATE_OPENING_SCREEN;
     }
 
-    // EFFECTS: throws an exception if failed to construct screen of desired size
+    // EFFECTS: prints an error to sterr if failed to construct screen of desired
+    // size
     private void ensureDesiredTerminalSize() throws Exception {
         TerminalSize termSize = screen.getTerminalSize();
-        if (termSize.getRows() != TERMINAL_WIDTH || termSize.getColumns() != TERMINAL_HEIGHT) {
-            String formatStr = "Failed to create terminal of desired size: (%d, %d)";
-            String errMessage = String.format(formatStr, TERMINAL_WIDTH, TERMINAL_HEIGHT);
-            throw new Exception(errMessage);
+        int widthActual = termSize.getColumns();
+        int heightActual = termSize.getRows();
+        if (heightActual != TERMINAL_HEIGHT || widthActual != TERMINAL_WIDTH) {
+            String formatStr = "Failed to create terminal of desired size: (%d, %d), instead got (%d %d)";
+            String errMessage = String.format(formatStr, TERMINAL_WIDTH, TERMINAL_HEIGHT, widthActual, heightActual);
+            System.err.print(errMessage);
         }
     }
 
@@ -116,25 +125,28 @@ public class SimulationManager {
             screen.refresh();
             screen.setCursorPosition(new TerminalPosition(screen.getTerminalSize().getColumns() - 1, 0));
 
-            spinlockWaitMiliseconds(15);
+            long startWaitTime = System.nanoTime();
+            spinWaitMiliseconds(15);
+            long endWaitTime = System.nanoTime();
+            System.out.println("deltaTime: " + (endWaitTime - startWaitTime) / 1000);
         }
     }
 
     public void drawErrAndOut() {
         TextGraphics textWriter = screen.newTextGraphics();
         textWriter.setForegroundColor(TextColor.ANSI.WHITE);
-        textWriter.putString(0, screen.getTerminalSize().getRows() - 2, "sysout: " + outRedirect.getStringToDisplay());
+        textWriter.putString(0, screen.getTerminalSize().getRows() - 2, "out: " + outRedirect.getStringToDisplay());
         textWriter.setForegroundColor(TextColor.ANSI.RED);
-        textWriter.putString(0, screen.getTerminalSize().getRows() - 1, "syserr: " + errRedirect.getStringToDisplay());
+        textWriter.putString(0, screen.getTerminalSize().getRows() - 1, "err: " + errRedirect.getStringToDisplay());
     }
 
-    // EFFECTS: waits for miliseconds via spinlock
-    public void spinlockWaitMiliseconds(int waitMilliseconds) {
+    // EFFECTS: waits for miliseconds via spin
+    public void spinWaitMiliseconds(int waitMilliseconds) {
         // NOTE: hi, you are probably wondering why I'm not using Thread.sleep()
-        // right now the issue with thread.sleep is that internally it is generally not
-        // precice enough at least on windows, Thread.sleep() has a granularity of about
-        // ~16msec which really isn't good enough for my purposes. The only way to do
-        // this the way I want is to go into a spinlock so here it is :3
+        // right now. The issue with Thread.Sleep is that internally it is generally not
+        // precice enough. At least on windows, Thread.sleep() has a granularity of
+        // about ~16msec which really isn't good enough for my purposes. The only way to
+        // do this the way I want is to go into a spin so here it is :3
         long startTime = System.nanoTime();
         while (((System.nanoTime() - startTime) / 1000) <= waitMilliseconds) {
             // wait
@@ -155,18 +167,17 @@ public class SimulationManager {
                 handleSimViewTick();
                 break;
             case SIM_STATE_QUIT:
-                System.exit(0); // TODO: make less harsh
+                System.exit(0);
                 break;
             default:
-                // throw new Exception("Entered unknown simulationState: " + simulationState);
+                System.err.println("entered unknown simulation state");
         }
     }
 
     // MODIFIES: this
     // EFFECTS: handles ui/input logic for opening screen
     public void handleOpeningScreenTick() {
-        TextGraphics textWriter = screen.newTextGraphics();
-        drawOpeningScreenGraphic(textWriter);
+        drawOpeningScreenGraphic();
 
         if (lastUserKey == null) {
             return;
@@ -187,7 +198,8 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: prints opening screen graphic to terminal
-    public void drawOpeningScreenGraphic(TextGraphics textWriter) {
+    public void drawOpeningScreenGraphic() {
+        TextGraphics textWriter = screen.newTextGraphics();
         textWriter.setForegroundColor(TextColor.ANSI.WHITE);
         textWriter.drawRectangle(new TerminalPosition(2, 1), new TerminalSize(50, 10), '+');
         textWriter.putString(5, 3, "UI Controls:");
