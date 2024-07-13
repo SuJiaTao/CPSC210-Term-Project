@@ -10,25 +10,32 @@ import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 
-import model.Simulation;
+import model.*;
 
 // Represents the current state of user-interface to managing simulations
 public class SimulationManager {
     private static final int TERMINAL_WIDTH = 90;
     private static final int TERMINAL_HEIGHT = 35;
+    private static final int FRAME_TIME_DELAY_MSEC = 15;
+    private static final int EDITOR_TOP = 0;
+    private static final int EDITOR_BOT = 32;
+    private static final int EDITOR_LEFT = 0;
+    private static final int EDITOR_RIGHT = 40;
+    private static final int PLANETLIST_ENTIRES = 20;
 
     private ConsoleOutputRedirectStream errRedirect;
     private ConsoleOutputRedirectStream outRedirect;
-    private Simulation simulation;
+
     private TerminalScreen screen;
     private KeyStroke lastUserKey;
     private String simulationState;
 
+    private Simulation simulation;
+    private Planet selectedPlanet;
+
     // EFFECTS: initialize simulation, init graphical/user input, redirect
     // sterr+stdout, and set simulation state to the opening screen
     public SimulationManager() throws Exception {
-        simulation = new Simulation();
-
         errRedirect = new ConsoleOutputRedirectStream(System.err);
         System.setErr(errRedirect);
         outRedirect = new ConsoleOutputRedirectStream(System.out);
@@ -38,17 +45,20 @@ public class SimulationManager {
         termFactory.setInitialTerminalSize(new TerminalSize(TERMINAL_WIDTH, TERMINAL_HEIGHT));
         screen = termFactory.createScreen();
 
-        checkDesiredTerminalSize();
+        checkIfObtainedDesiredTerminalSize();
         screen.startScreen();
 
+        simulation = new Simulation();
+        addAndSelectNewPlanet(); // simulation starts with ONE new planet
     }
 
-    // EFFECTS: prints an error to sterr if failed to construct screen of desired
+    // EFFECTS: prints an error to stderr if failed to construct screen of desired
     // size
-    private void checkDesiredTerminalSize() {
+    private void checkIfObtainedDesiredTerminalSize() {
         TerminalSize termSize = screen.getTerminalSize();
         int widthActual = termSize.getColumns();
         int heightActual = termSize.getRows();
+
         if (heightActual != TERMINAL_HEIGHT || widthActual != TERMINAL_WIDTH) {
             String formatStr = "Failed to create terminal of desired size: (%d, %d), instead got (%d %d)";
             String errMessage = String.format(formatStr, TERMINAL_WIDTH, TERMINAL_HEIGHT, widthActual, heightActual);
@@ -60,31 +70,79 @@ public class SimulationManager {
     // EFFECTS: execute main input/rendering loop
     public void mainLoop() throws Exception {
         while (true) {
-            screen.clear();
-            lastUserKey = screen.pollInput();
-
-            screen.setCursorPosition(new TerminalPosition(0, 0));
             try {
                 handleSimulationState();
             } catch (Exception errMsg) {
                 System.err.print(errMsg.toString());
             }
 
-            drawErrAndOut();
+            handleInterfaceGraphics();
 
-            screen.refresh();
-            screen.setCursorPosition(new TerminalPosition(screen.getTerminalSize().getColumns() - 1, 0));
-
-            spinWaitMiliseconds(15);
+            spinWaitMiliseconds(FRAME_TIME_DELAY_MSEC);
         }
     }
 
-    public void drawErrAndOut() {
+    // MODIFIES: this
+    // EFFECTS: draws all required UI visuals
+    public void handleInterfaceGraphics() throws Exception {
+        screen.clear();
+        screen.setCursorPosition(new TerminalPosition(0, 0));
+        // TODO: add main draw logic here
+        drawPlanetListEditor();
+        drawErrAndMessageText();
+        screen.setCursorPosition(new TerminalPosition(screen.getTerminalSize().getColumns() - 1, 0));
+        screen.refresh();
+    }
+
+    // MODIFIES: this
+    // EFFECTS: draws left-side planet editor
+    public void drawPlanetListEditor() {
+        TextGraphics gfx = screen.newTextGraphics();
+        gfx.setForegroundColor(TextColor.ANSI.WHITE);
+
+        // DRAW EDITOR SURROUNDING BOX
+        gfx.drawLine(EDITOR_LEFT, EDITOR_TOP, EDITOR_RIGHT, EDITOR_TOP, '+'); // TOP
+        gfx.drawLine(EDITOR_LEFT, EDITOR_TOP, EDITOR_LEFT, EDITOR_BOT, '+'); // LEFT
+        gfx.drawLine(EDITOR_RIGHT, EDITOR_TOP, EDITOR_RIGHT, EDITOR_BOT, '+'); // RIGHT
+        gfx.drawLine(EDITOR_LEFT, EDITOR_BOT, EDITOR_RIGHT, EDITOR_BOT, '+'); // BOTTOM
+
+        drawPlanetList(gfx);
+        drawPlanetEditMenu(gfx);
+    }
+
+    // MODIFIES: this
+    // EFFECTS: draws planet editor planet list
+    public void drawPlanetList(TextGraphics gfx) {
+        // title and border
+        gfx.putString(new TerminalPosition(EDITOR_LEFT + 1, EDITOR_TOP + 1), "PLANET LIST");
+        gfx.drawLine(EDITOR_LEFT, EDITOR_TOP + 2, EDITOR_RIGHT, EDITOR_TOP + 2, '+');
+        int listStartIndex = simulation.getPlanets().indexOf(selectedPlanet);
+        for (int i = 0; i < PLANETLIST_ENTIRES; i++) {
+            int indexActual = listStartIndex + i;
+            if (indexActual >= simulation.getPlanets().size()) {
+                break;
+            }
+            gfx.putString(EDITOR_LEFT + 3, EDITOR_TOP + 3 + i, simulation.getPlanets().get(indexActual).getName());
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: draws planet edit menu
+    public void drawPlanetEditMenu(TextGraphics gfx) {
+        // title and border
+        int borderHeight = EDITOR_TOP + PLANETLIST_ENTIRES;
+        gfx.drawLine(EDITOR_LEFT, borderHeight, EDITOR_RIGHT, borderHeight, '+');
+        gfx.putString(EDITOR_LEFT + 1, borderHeight + 1, "EDIT PLANET: " + selectedPlanet.getName());
+
+    }
+
+    // EFFECTS: draws stdout and stederr to the bottom of the screen
+    public void drawErrAndMessageText() {
         TextGraphics textWriter = screen.newTextGraphics();
         textWriter.setForegroundColor(TextColor.ANSI.WHITE);
-        textWriter.putString(0, TERMINAL_HEIGHT - 2, "out: " + outRedirect.getStringToDisplay());
+        textWriter.putString(0, TERMINAL_HEIGHT - 2, "Message:\t" + outRedirect.getStringToDisplay());
         textWriter.setForegroundColor(TextColor.ANSI.RED);
-        textWriter.putString(0, TERMINAL_HEIGHT - 1, "err: " + errRedirect.getStringToDisplay());
+        textWriter.putString(0, TERMINAL_HEIGHT - 1, "Last Error:\t" + errRedirect.getStringToDisplay());
     }
 
     // EFFECTS: waits for miliseconds via spin
@@ -103,20 +161,14 @@ public class SimulationManager {
     // MODIFIES: this
     // EFFECTS: runs the appropriate handler function based on the simulation state
     public void handleSimulationState() throws Exception {
-
+        lastUserKey = screen.pollInput();
     }
 
     // MODIFIES: this
-    // EFFECTS: draws opening screen graphic to terminal
-    public void drawOpeningScreenGraphic() {
-        TextGraphics graphics = screen.newTextGraphics();
-        graphics.setForegroundColor(TextColor.ANSI.WHITE);
-        graphics.drawRectangle(new TerminalPosition(2, 1), new TerminalSize(50, 10), '+');
-        graphics.putString(5, 3, "UI Controls:");
-        graphics.putString(7, 4, "- Press Space to change selection");
-        graphics.putString(7, 5, "- Press Enter to confirm selection");
-        graphics.putString(7, 6, "- Press Escape to go back");
-        graphics.putString(7, 7, "- Press Q to quit");
-        graphics.putString(5, 8, "Press Space to continue");
+    // EFFECTS: adds new planet to the simulation and selects it
+    public void addAndSelectNewPlanet() {
+        Planet newPlanet = new Planet("New Planet", 1.0f);
+        simulation.addPlanet(newPlanet);
+        selectedPlanet = newPlanet;
     }
 }

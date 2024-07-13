@@ -15,7 +15,7 @@ public class ConsoleOutputRedirectStream extends PrintStream {
         // making any modification to it will cause the program to crash, so I will opt
         // to keep it like this >.<
         super(outputStream, true);
-        stringToDisplay = "";
+        stringToDisplay = "<none>";
     }
 
     public String getStringToDisplay() {
