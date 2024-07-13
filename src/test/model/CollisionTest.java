@@ -45,13 +45,13 @@ public class CollisionTest {
     }
 
     @Test
-    public void testEquals() {
+    public void testEqualsWithSymmetry() {
         assertEquals(col1, col2);
         assertEquals(col2, col1);
     }
 
     @Test
-    public void testNotEquals() {
+    public void testNotEqualsWithSymmetry() {
         assertNotEquals(col1, col3);
         assertNotEquals(col3, col1);
 

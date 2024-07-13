@@ -1,5 +1,6 @@
 package model;
 
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,11 +36,25 @@ public class Vector3Test {
     }
 
     @Test
-    public void testEqualsOverload() {
+    public void testEquals() {
         assertEquals(new Vector3(0.0f, 0.0f, 0.0f), v1);
         assertEquals(new Vector3(1.0f, 2.0f, -3.0f), v2);
         assertEquals(new Vector3(-1.0f, -2.0f, 3.0f), v3);
         assertEquals(new Vector3(3.0f, 4.0f, 0.0f), v4);
+    }
+
+    @Test
+    public void testNotEquals() {
+        assertNotEquals(v1, v2);
+        assertNotEquals(v2, v1);
+        assertNotEquals(v2, v3);
+        assertNotEquals(v3, v2);
+        assertNotEquals(v2, v4);
+        assertNotEquals(v4, v2);
+        assertNotEquals(v4, v3);
+        assertNotEquals(v3, v4);
+        assertNotEquals(v1, v4);
+        assertNotEquals(v4, v1);
     }
 
     @Test

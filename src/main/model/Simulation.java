@@ -1,10 +1,6 @@
-package ui;
+package model;
 
 import java.util.*;
-
-import model.Collision;
-import model.Planet;
-import model.Vector3;
 
 // Represents the current n-body simulation state
 public class Simulation {
