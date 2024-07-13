@@ -37,6 +37,7 @@ public class Collision {
 
     // REQUIRES: other must be of type Collision
     // EFFECTS: returns whether collisions are identical
+    @Override
     public boolean equals(Object otherObject) {
         Collision other = (Collision) otherObject;
         if (other.getCollisionTime() != collisionTime) {

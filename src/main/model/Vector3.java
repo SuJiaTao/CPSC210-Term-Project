@@ -87,7 +87,8 @@ public class Vector3 {
         float dx = Math.abs(this.getX() - otherVector.getX());
         float dy = Math.abs(this.getY() - otherVector.getY());
         float dz = Math.abs(this.getZ() - otherVector.getZ());
-        return (dx + dy + dz) < EPSILON;
+        float manhattanDistance = dx + dy + dz;
+        return manhattanDistance <= EPSILON;
     }
 
     // EFFECTS: produces a string of the form (x, y z)

@@ -38,6 +38,14 @@ public class Vector3Test {
     public void testEqualsOverload() {
         assertEquals(new Vector3(0.0f, 0.0f, 0.0f), v1);
         assertEquals(new Vector3(1.0f, 2.0f, -3.0f), v2);
+        assertEquals(new Vector3(-1.0f, -2.0f, 3.0f), v3);
+        assertEquals(new Vector3(3.0f, 4.0f, 0.0f), v4);
+    }
+
+    @Test
+    public void testToStringOverload() {
+        assertEquals(String.format("(%f %f %f)", 0.0f, 0.0f, 0.0f), v1.toString());
+        assertEquals(String.format("(%f %f %f)", 1.0f, 2.0f, -3.0f), v2.toString());
     }
 
     @Test
