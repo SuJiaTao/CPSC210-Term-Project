@@ -22,12 +22,13 @@ public class SimulationManager {
     private static final int EDITOR_LEFT = 0;
     private static final int EDITOR_RIGHT = 40;
     private static final int PLANETLIST_ENTIRES = 20;
+    private static final int PLANETINFO_TOP = EDITOR_TOP + PLANETLIST_ENTIRES;
 
     private static final int PLANETEDIT_NAME = 0;
-    private static final int PLANETEDIT_POSITION = 1;
-    private static final int PLANETEDIT_VELOCITY = 2;
-    private static final int PLANETEDIT_RADIUS = 3;
-    private static final int PLANETEDIT_CYCLE_MOD = PLANETEDIT_RADIUS;
+    private static final int EDIT_PROP_POSITION = 1;
+    private static final int EDIT_PROP_VELOCITY = 2;
+    private static final int EDIT_PROP_RADIUS = 3;
+    private static final int EDIT_PROP_CYCLE_MOD = EDIT_PROP_RADIUS + 1;
 
     private ConsoleOutputRedirectStream errRedirect;
     private ConsoleOutputRedirectStream outRedirect;
@@ -40,7 +41,8 @@ public class SimulationManager {
 
     private Planet selectedPlanet;
     private boolean editingSelectedPlanet;
-    private int planetEditMode;
+    private boolean editingSelectedProperty;
+    private int selectedProperty;
 
     // EFFECTS: initialize simulation, init graphical/user input, redirect
     // sterr+stdout, and set simulation state to the opening screen
@@ -63,6 +65,7 @@ public class SimulationManager {
         // simulation starts with planet
         addAndSelectNewPlanet();
         editingSelectedPlanet = false;
+        editingSelectedProperty = false;
     }
 
     // EFFECTS: prints an error to stderr if failed to construct screen of desired
@@ -83,29 +86,23 @@ public class SimulationManager {
     // EFFECTS: execute main input/rendering loop
     public void mainLoop() throws Exception {
         while (true) {
+            screen.clear();
+            screen.setCursorPosition(new TerminalPosition(0, 0));
+
             try {
                 handleUserInput();
                 handleSimulationState();
+                drawPlanetListEditor();
             } catch (Exception errMsg) {
                 System.err.print(errMsg.toString());
             }
 
-            handleInterfaceGraphics();
+            drawErrAndMessageText();
 
+            screen.setCursorPosition(new TerminalPosition(screen.getTerminalSize().getColumns() - 1, 0));
+            screen.refresh();
             spinWaitMiliseconds(FRAME_TIME_DELAY_MSEC);
         }
-    }
-
-    // MODIFIES: this
-    // EFFECTS: draws all required UI visuals
-    public void handleInterfaceGraphics() throws Exception {
-        screen.clear();
-        screen.setCursorPosition(new TerminalPosition(0, 0));
-        // TODO: add main draw logic here
-        drawPlanetListEditor();
-        drawErrAndMessageText();
-        screen.setCursorPosition(new TerminalPosition(screen.getTerminalSize().getColumns() - 1, 0));
-        screen.refresh();
     }
 
     // MODIFIES: this
@@ -157,15 +154,36 @@ public class SimulationManager {
         setTextGraphicsToViewMode(gfx);
 
         // title and border
-        int borderHeight = EDITOR_TOP + PLANETLIST_ENTIRES;
-        gfx.drawLine(EDITOR_LEFT, borderHeight, EDITOR_RIGHT, borderHeight, '+');
+        gfx.drawLine(EDITOR_LEFT, PLANETINFO_TOP, EDITOR_RIGHT, PLANETINFO_TOP, '+');
 
+        String actionPrefix = "";
         if (editingSelectedPlanet) {
-            gfx.putString(EDITOR_LEFT + 1, borderHeight + 1, "EDIT PLANET: " + selectedPlanet.getName());
+            actionPrefix = "EDIT";
         } else {
-            gfx.putString(EDITOR_LEFT + 1, borderHeight + 1, "VIEW PLANET: " + selectedPlanet.getName());
+            actionPrefix = "VIEW";
         }
+        gfx.putString(EDITOR_LEFT + 1, PLANETINFO_TOP + 1, actionPrefix + " PLANET: " + selectedPlanet.getName());
 
+        drawPlanetProperties(gfx);
+    }
+
+    // MODIFIES: this
+    // EFFECTS: draws planet property editor/viewer
+    public void drawPlanetProperties(TextGraphics gfx) {
+        setTextGraphicsToViewMode(gfx);
+        String[] propertyStrings = new String[EDIT_PROP_CYCLE_MOD];
+        propertyStrings[0] = "Name: " + selectedPlanet.getName();
+        propertyStrings[1] = "Pos: " + selectedPlanet.getPosition().toString();
+        propertyStrings[2] = "Vel: " + selectedPlanet.getVelocity().toString();
+        propertyStrings[3] = "Radius: " + selectedPlanet.getRadius();
+        for (int i = 0; i < propertyStrings.length; i++) {
+            if (editingSelectedPlanet && selectedProperty == i) {
+                setTextGraphicsToHoverMode(gfx);
+            } else {
+                setTextGraphicsToViewMode(gfx);
+            }
+            gfx.putString(2, PLANETINFO_TOP + 2 + i, propertyStrings[i]);
+        }
     }
 
     // EFFECTS: sets Textgraphics to "hover" appearance
@@ -238,15 +256,15 @@ public class SimulationManager {
             return;
         }
         if (lastUserKey.getKeyType() == KeyType.ArrowUp) {
-            planetEditMode--;
+            selectedProperty--;
         }
         if (lastUserKey.getKeyType() == KeyType.ArrowDown) {
-            planetEditMode++;
+            selectedProperty++;
         }
         // NOTE: ensure positive modulous
-        planetEditMode %= PLANETEDIT_CYCLE_MOD;
-        if (planetEditMode < 0) {
-            planetEditMode += PLANETEDIT_CYCLE_MOD;
+        selectedProperty %= EDIT_PROP_CYCLE_MOD;
+        if (selectedProperty < 0) {
+            selectedProperty += EDIT_PROP_CYCLE_MOD;
         }
     }
 
@@ -263,7 +281,7 @@ public class SimulationManager {
         }
         if (lastUserKey.getKeyType() == KeyType.Enter) {
             editingSelectedPlanet = true;
-            planetEditMode = PLANETEDIT_NAME;
+            selectedProperty = PLANETEDIT_NAME;
             return;
         }
 
