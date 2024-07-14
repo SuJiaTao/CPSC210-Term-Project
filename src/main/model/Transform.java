@@ -82,8 +82,8 @@ public class Transform {
         Transform rMatrix = new Transform();
 
         Transform rotX = rotationMatrixX(rot.getX());
-        Transform rotY = rotationMatrixX(rot.getY());
-        Transform rotZ = rotationMatrixX(rot.getZ());
+        Transform rotY = rotationMatrixY(rot.getY());
+        Transform rotZ = rotationMatrixZ(rot.getZ());
 
         rMatrix = multiply(rMatrix, rotX);
         rMatrix = multiply(rMatrix, rotY);
@@ -118,10 +118,10 @@ public class Transform {
         for (int i = 0; i < ROW_COUNT; i++) {
             for (int j = 0; j < COL_COUNT; j++) {
                 mMatrix.components[j][i] = 0.0f;
-                mMatrix.components[j][i] += leftMatrix.components[0][i] * rightMatrix.components[j][0];
-                mMatrix.components[j][i] += leftMatrix.components[1][i] * rightMatrix.components[j][1];
-                mMatrix.components[j][i] += leftMatrix.components[2][i] * rightMatrix.components[j][2];
-                mMatrix.components[j][i] += leftMatrix.components[3][i] * rightMatrix.components[j][3];
+                mMatrix.components[j][i] += rightMatrix.components[0][i] * leftMatrix.components[j][0];
+                mMatrix.components[j][i] += rightMatrix.components[1][i] * leftMatrix.components[j][1];
+                mMatrix.components[j][i] += rightMatrix.components[2][i] * leftMatrix.components[j][2];
+                mMatrix.components[j][i] += rightMatrix.components[3][i] * leftMatrix.components[j][3];
             }
         }
         return mMatrix;
