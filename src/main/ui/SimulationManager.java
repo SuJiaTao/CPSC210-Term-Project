@@ -3,9 +3,8 @@ package ui;
 import java.util.*;
 
 import com.googlecode.lanterna.*;
-import com.googlecode.lanterna.graphics.TextGraphics;
-import com.googlecode.lanterna.input.KeyStroke;
-import com.googlecode.lanterna.input.KeyType;
+import com.googlecode.lanterna.graphics.*;
+import com.googlecode.lanterna.input.*;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 
@@ -15,7 +14,7 @@ import model.*;
 public class SimulationManager {
     private static final int TERMINAL_WIDTH = 90;
     private static final int TERMINAL_HEIGHT = 35;
-    private static final int REFRESH_DELAY_MSEC = 5;
+    private static final int REFRESH_DELAY_MSEC = 10;
 
     private static final int EDITOR_TOP = 0;
     private static final int EDITOR_BOT = 32;
@@ -106,26 +105,32 @@ public class SimulationManager {
             screen.setCursorPosition(new TerminalPosition(0, 0));
             clearTerminal();
 
-            try {
-                handleUserInput();
-                handleSimulationState();
-                drawPlanetListEditor();
-                drawSimulationViewPort();
-            } catch (Exception errMsg) {
-                System.err.print(errMsg.toString());
-            }
-
-            drawErrAndMessageText();
+            handleEverythingAndiMeanEverything();
 
             screen.setCursorPosition(new TerminalPosition(screen.getTerminalSize().getColumns() - 1, 0));
             screen.refresh();
 
             long endNanoTime = System.nanoTime();
             lastDeltaTimeSeconds = (float) (endNanoTime - startNanoTime) / 1000000000.0f;
-            spinWaitMiliseconds(REFRESH_DELAY_MSEC);
+            spinWaitMiliseconds((int) Math.max(0, REFRESH_DELAY_MSEC - (endNanoTime - startNanoTime) / 1000));
         }
     }
 
+    // MODIFIES: this
+    // EFFECTS: handles all input and graphics
+    public void handleEverythingAndiMeanEverything() {
+        try {
+            handleUserInput();
+            handleSimulationState();
+            drawPlanetListEditor();
+            drawSimulationViewPort();
+        } catch (Exception errMsg) {
+            System.err.print(errMsg.toString());
+        }
+        drawErrAndMessageText();
+    }
+
+    // MODIFIES: this
     // EFFECTS: completely clears the terminal
     public void clearTerminal() {
         TextGraphics gfx = screen.newTextGraphics();
@@ -145,7 +150,7 @@ public class SimulationManager {
         gfx.drawLine(VIEWPORT_RIGHT, VIEWPORT_TOP, VIEWPORT_RIGHT, VIEWPORT_BOT, 'X');
 
         gfx.drawLine(VIEWPORT_LEFT, VIEWPORT_TOP + 2, VIEWPORT_RIGHT, VIEWPORT_TOP + 2, 'X');
-        String viewportTitle = "Simulation: ";
+        String viewportTitle = "Simulation ";
         if (simulationIsRunning) {
             viewportTitle += "Running";
         } else {
@@ -215,7 +220,7 @@ public class SimulationManager {
         } else {
             actionPrefix = "VIEW";
         }
-        gfx.putString(EDITOR_LEFT + 2, PLANETINFO_TOP + 1, actionPrefix + " PLANET: ");
+        gfx.putString(EDITOR_LEFT + 2, PLANETINFO_TOP + 1, actionPrefix + " PLANET ");
 
         drawPlanetProperties(gfx);
         drawPropertyEditingInputBox(gfx);
@@ -317,6 +322,7 @@ public class SimulationManager {
             return;
         }
 
+        handleShouldQuit();
         handleSimulationPauseAndUnpause();
 
         if (editingSelectedPlanet) {
@@ -328,6 +334,22 @@ public class SimulationManager {
         } else {
             handlePlanetAddAndRemove();
             handleCycleSelectedPlanet();
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: checks whether the program is in an acceptable state to quit given
+    // that the quit key is pressed and quit accordingly
+    public void handleShouldQuit() {
+        if (editingSelectedProperty) {
+            return;
+        }
+        if (lastUserKey.getCharacter() == null) {
+            return;
+        }
+        Character key = lastUserKey.getCharacter();
+        if (Character.toLowerCase(key) == 'q') {
+            System.exit(0);
         }
     }
 
