@@ -131,7 +131,7 @@ public class SimulationManager {
     // EFFECTS: draws planet editor planet list
     public void drawPlanetList(TextGraphics gfx) {
         // title and border
-        gfx.putString(new TerminalPosition(EDITOR_LEFT + 1, EDITOR_TOP + 1), "PLANET LIST");
+        gfx.putString(new TerminalPosition(EDITOR_LEFT + 2, EDITOR_TOP + 1), "PLANET LIST");
         gfx.drawLine(EDITOR_LEFT, EDITOR_TOP + 2, EDITOR_RIGHT, EDITOR_TOP + 2, '+');
 
         List<Planet> planetList = simulation.getPlanets();
@@ -257,7 +257,7 @@ public class SimulationManager {
     // MODIFIES: this
     // EFFECTS: runs the appropriate handler function based on the simulation state
     public void handleSimulationState() throws Exception {
-
+        // TODO: complete
     }
 
     // MODIFIES: this

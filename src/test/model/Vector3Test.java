@@ -44,17 +44,22 @@ public class Vector3Test {
     }
 
     @Test
-    public void testNotEquals() {
-        assertNotEquals(v1, v2);
-        assertNotEquals(v2, v1);
-        assertNotEquals(v2, v3);
-        assertNotEquals(v3, v2);
-        assertNotEquals(v2, v4);
-        assertNotEquals(v4, v2);
-        assertNotEquals(v4, v3);
-        assertNotEquals(v3, v4);
-        assertNotEquals(v1, v4);
-        assertNotEquals(v4, v1);
+    public void testNotEqualsAllCombinations() {
+        Vector3 aaa = new Vector3();
+        Vector3 aab = new Vector3(0.0f, 0.0f, 1.0f);
+        Vector3 aba = new Vector3(0.0f, 1.0f, 0.0f);
+        Vector3 abb = new Vector3(0.0f, 1.0f, 1.0f);
+        Vector3 baa = new Vector3(1.0f, 0.0f, 0.0f);
+        Vector3 bab = new Vector3(1.0f, 0.0f, 1.0f);
+        Vector3 bba = new Vector3(1.0f, 1.0f, 1.0f);
+        Vector3 bbb = new Vector3(1.0f, 1.0f, 1.0f);
+        assertNotEquals(aaa, aab);
+        assertNotEquals(aaa, aba);
+        assertNotEquals(aaa, abb);
+        assertNotEquals(aaa, baa);
+        assertNotEquals(aaa, bab);
+        assertNotEquals(aaa, bba);
+        assertNotEquals(aaa, bbb);
     }
 
     @Test

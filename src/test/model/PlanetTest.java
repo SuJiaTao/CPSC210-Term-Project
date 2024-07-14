@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.Test;
 
 public class PlanetTest {
+    private static final float EPSILON = 0.001f;
     private Planet plnt;
 
     @Test
@@ -22,6 +23,23 @@ public class PlanetTest {
         assertEquals(new Vector3(1.0f, 0.0f, 0.0f), plnt.getPosition());
         assertEquals(new Vector3(0.0f, 0.0f, 0.0f), plnt.getVelocity());
         assertEquals(5.0f, plnt.getRadius());
+    }
+
+    @Test
+    public void testSetters() {
+        plnt = new Planet("test", 5.0f);
+
+        plnt.setName("newname");
+        assertEquals("newname", plnt.getName());
+
+        plnt.setPosition(new Vector3(1.0f, -2.0f, 3.0f));
+        assertEquals(new Vector3(1.0f, -2.0f, 3.0f), plnt.getPosition());
+
+        plnt.setVelocity(new Vector3(1.0f, -2.0f, 3.0f));
+        assertEquals(new Vector3(1.0f, -2.0f, 3.0f), plnt.getVelocity());
+
+        plnt.setRadius(5.0f);
+        assertEquals(5.0f, plnt.getRadius(), EPSILON);
     }
 
     @Test
