@@ -30,6 +30,11 @@ public class SimulationManager {
     private static final int EDIT_PROP_RADIUS = 3;
     private static final int EDIT_PROP_CYCLE_MOD = EDIT_PROP_RADIUS + 1;
 
+    private static final int VIEWPORT_TOP = 0;
+    private static final int VIEWPORT_BOT = 32;
+    private static final int VIEWPORT_LEFT = EDITOR_RIGHT + 1;
+    private static final int VIEWPORT_RIGHT = TERMINAL_WIDTH - 1;
+
     private static final int EDIT_PROP_MAX_INPUT_LEN = EDITOR_RIGHT - EDITOR_LEFT - 3;
 
     private ConsoleOutputRedirectStream errRedirect;
@@ -39,8 +44,10 @@ public class SimulationManager {
     private KeyStroke lastUserKey;
 
     private Simulation simulation;
-    private int newPlanetSuffix;
+    private float lastDeltaTimeSeconds;
+    private boolean simulationIsRunning;
 
+    private int newPlanetSuffix;
     private Planet selectedPlanet;
     private int listViewOffset;
     private boolean editingSelectedPlanet;
@@ -65,6 +72,8 @@ public class SimulationManager {
 
         simulation = new Simulation();
         newPlanetSuffix = 0;
+        simulationIsRunning = false;
+        lastDeltaTimeSeconds = 0.0f;
 
         // simulation starts with planet
         addAndSelectNewPlanet();
@@ -92,6 +101,8 @@ public class SimulationManager {
     // EFFECTS: execute main input/rendering loop
     public void mainLoop() throws Exception {
         while (true) {
+            long startNanoTime = System.nanoTime();
+
             screen.clear();
             screen.setCursorPosition(new TerminalPosition(0, 0));
 
@@ -99,6 +110,7 @@ public class SimulationManager {
                 handleUserInput();
                 handleSimulationState();
                 drawPlanetListEditor();
+                drawSimulationViewPort();
             } catch (Exception errMsg) {
                 System.err.print(errMsg.toString());
             }
@@ -107,8 +119,33 @@ public class SimulationManager {
 
             screen.setCursorPosition(new TerminalPosition(screen.getTerminalSize().getColumns() - 1, 0));
             screen.refresh();
+
+            long endNanoTime = System.nanoTime();
+            lastDeltaTimeSeconds = (float) (endNanoTime - startNanoTime) / 1000000000.0f;
             spinWaitMiliseconds(FRAME_TIME_DELAY_MSEC);
         }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: draws right-side 3D viewport
+    public void drawSimulationViewPort() {
+        TextGraphics gfx = screen.newTextGraphics();
+        setTextGraphicsToViewMode(gfx);
+
+        // DRAW VIEWPORT SURROUNDING BOX
+        gfx.drawLine(VIEWPORT_LEFT, VIEWPORT_TOP, VIEWPORT_RIGHT, VIEWPORT_TOP, 'X');
+        gfx.drawLine(VIEWPORT_LEFT, VIEWPORT_BOT, VIEWPORT_RIGHT, VIEWPORT_BOT, 'X');
+        gfx.drawLine(VIEWPORT_LEFT, VIEWPORT_TOP, VIEWPORT_LEFT, VIEWPORT_BOT, 'X');
+        gfx.drawLine(VIEWPORT_RIGHT, VIEWPORT_TOP, VIEWPORT_RIGHT, VIEWPORT_BOT, 'X');
+
+        gfx.drawLine(VIEWPORT_LEFT, VIEWPORT_TOP + 2, VIEWPORT_RIGHT, VIEWPORT_TOP + 2, 'X');
+        String viewportTitle = "Simulation: ";
+        if (simulationIsRunning) {
+            viewportTitle += "Running";
+        } else {
+            viewportTitle += "Stopped";
+        }
+        gfx.putString(VIEWPORT_LEFT + 2, VIEWPORT_TOP + 1, viewportTitle);
     }
 
     // MODIFIES: this
@@ -257,7 +294,12 @@ public class SimulationManager {
     // MODIFIES: this
     // EFFECTS: runs the appropriate handler function based on the simulation state
     public void handleSimulationState() throws Exception {
-        // TODO: complete
+        if (editingSelectedPlanet) {
+            simulationIsRunning = false;
+        }
+        if (simulationIsRunning) {
+            simulation.progressBySeconds(lastDeltaTimeSeconds);
+        }
     }
 
     // MODIFIES: this
@@ -267,6 +309,9 @@ public class SimulationManager {
         if (lastUserKey == null) {
             return;
         }
+
+        handleSimulationPauseAndUnpause();
+
         if (editingSelectedPlanet) {
             if (editingSelectedProperty) {
                 handleEditPlanetProperty();
@@ -276,6 +321,20 @@ public class SimulationManager {
         } else {
             handlePlanetAddAndRemove();
             handleCycleSelectedPlanet();
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: handles pausing/unpausing of the simulation
+    public void handleSimulationPauseAndUnpause() {
+        Character key = lastUserKey.getCharacter();
+        if (key == null) {
+            return;
+        }
+
+        if (key == ' ') {
+            // toggle
+            simulationIsRunning = !simulationIsRunning;
         }
     }
 
