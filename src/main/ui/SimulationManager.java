@@ -15,7 +15,7 @@ import model.*;
 public class SimulationManager {
     private static final int TERMINAL_WIDTH = 90;
     private static final int TERMINAL_HEIGHT = 35;
-    private static final int FRAME_TIME_DELAY_MSEC = 50;
+    private static final int REFRESH_DELAY_MSEC = 5;
 
     private static final int EDITOR_TOP = 0;
     private static final int EDITOR_BOT = 32;
@@ -103,8 +103,8 @@ public class SimulationManager {
         while (true) {
             long startNanoTime = System.nanoTime();
 
-            screen.clear();
             screen.setCursorPosition(new TerminalPosition(0, 0));
+            clearTerminal();
 
             try {
                 handleUserInput();
@@ -122,8 +122,14 @@ public class SimulationManager {
 
             long endNanoTime = System.nanoTime();
             lastDeltaTimeSeconds = (float) (endNanoTime - startNanoTime) / 1000000000.0f;
-            spinWaitMiliseconds(FRAME_TIME_DELAY_MSEC);
+            spinWaitMiliseconds(REFRESH_DELAY_MSEC);
         }
+    }
+
+    // EFFECTS: completely clears the terminal
+    public void clearTerminal() {
+        TextGraphics gfx = screen.newTextGraphics();
+        gfx.fillRectangle(new TerminalPosition(0, 0), screen.getTerminalSize(), ' ');
     }
 
     // MODIFIES: this
@@ -209,7 +215,7 @@ public class SimulationManager {
         } else {
             actionPrefix = "VIEW";
         }
-        gfx.putString(EDITOR_LEFT + 2, PLANETINFO_TOP + 1, actionPrefix + " PLANET: " + selectedPlanet.getName());
+        gfx.putString(EDITOR_LEFT + 2, PLANETINFO_TOP + 1, actionPrefix + " PLANET: ");
 
         drawPlanetProperties(gfx);
         drawPropertyEditingInputBox(gfx);
