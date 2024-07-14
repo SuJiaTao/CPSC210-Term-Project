@@ -64,8 +64,8 @@ public class Vector3Test {
 
     @Test
     public void testToStringOverload() {
-        assertEquals(String.format("(%f %f %f)", 0.0f, 0.0f, 0.0f), v1.toString());
-        assertEquals(String.format("(%f %f %f)", 1.0f, 2.0f, -3.0f), v2.toString());
+        assertEquals(String.format("(%.2f %.2f %.2f)", 0.0f, 0.0f, 0.0f), v1.toString());
+        assertEquals(String.format("(%.2f %.2f %.2f)", 1.0f, 2.0f, -3.0f), v2.toString());
     }
 
     @Test

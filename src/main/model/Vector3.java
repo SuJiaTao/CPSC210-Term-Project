@@ -100,6 +100,6 @@ public class Vector3 {
     // EFFECTS: produces a string of the form (x, y z)
     @Override
     public String toString() {
-        return String.format("(%f %f %f)", compX, compY, compZ);
+        return String.format("(%.2f %.2f %.2f)", compX, compY, compZ);
     }
 }

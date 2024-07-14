@@ -145,6 +145,7 @@ public class SimulationManager {
         } else {
             viewportTitle += "Stopped";
         }
+        viewportTitle += String.format(" | Time Elapsed: %.2fs", simulation.getTimeElapsed());
         gfx.putString(VIEWPORT_LEFT + 2, VIEWPORT_TOP + 1, viewportTitle);
     }
 
@@ -208,7 +209,7 @@ public class SimulationManager {
         } else {
             actionPrefix = "VIEW";
         }
-        gfx.putString(EDITOR_LEFT + 1, PLANETINFO_TOP + 1, actionPrefix + " PLANET: " + selectedPlanet.getName());
+        gfx.putString(EDITOR_LEFT + 2, PLANETINFO_TOP + 1, actionPrefix + " PLANET: " + selectedPlanet.getName());
 
         drawPlanetProperties(gfx);
         drawPropertyEditingInputBox(gfx);
@@ -245,7 +246,7 @@ public class SimulationManager {
             } else {
                 setTextGraphicsToViewMode(gfx);
             }
-            gfx.putString(2, PLANETINFO_TOP + 2 + i, propertyStrings[i]);
+            gfx.putString(EDITOR_LEFT + 3, PLANETINFO_TOP + 2 + i, propertyStrings[i]);
         }
     }
 
