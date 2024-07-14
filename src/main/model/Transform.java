@@ -16,7 +16,10 @@ public class Transform {
         components[3][3] = 1.0f;
     }
 
-    // MODIFIES: this
+    public float[][] getComponents() {
+        return components;
+    }
+
     // EFFECTS: creates a translation matrix
     public static Transform translationMatrix(Vector3 trl) {
         Transform tMatrix = new Transform();
@@ -26,7 +29,6 @@ public class Transform {
         return tMatrix;
     }
 
-    // MODIFIES: this
     // EFFECTS: creates a scale matrix
     public static Transform scaleMatrix(Vector3 scl) {
         Transform sMatrix = new Transform();
@@ -36,12 +38,11 @@ public class Transform {
         return sMatrix;
     }
 
-    // MODIFIES: this
     // EFFECTS: creates a rotation matrix about the x axis
     public static Transform rotationMatrixX(float rotDegrees) {
         Transform rMatrix = new Transform();
 
-        float cosDeg = cosDegress(rotDegrees);
+        float cosDeg = cosDegrees(rotDegrees);
         float sinDeg = sinDegrees(rotDegrees);
         rMatrix.components[1][1] = cosDeg;
         rMatrix.components[2][1] = sinDeg;
@@ -50,32 +51,59 @@ public class Transform {
         return rMatrix;
     }
 
-    // MODIFIES: this
     // EFFECTS: creates a rotation matrix about the y axis
     public static Transform rotationMatrixY(float rotDegrees) {
         Transform rMatrix = new Transform();
 
-        float cosDeg = cosDegress(rotDegrees);
+        float cosDeg = cosDegrees(rotDegrees);
         float sinDeg = sinDegrees(rotDegrees);
         rMatrix.components[0][0] = cosDeg;
         rMatrix.components[0][2] = sinDeg;
-        rMatrix.components[0][2] = -sinDeg;
+        rMatrix.components[2][0] = -sinDeg;
         rMatrix.components[2][2] = cosDeg;
         return rMatrix;
     }
 
-    // MODIFIES: this
     // EFFECTS: creates a rotation matrix about the z axis
     public static Transform rotationMatrixZ(float rotDegrees) {
         Transform rMatrix = new Transform();
 
-        float cosDeg = cosDegress(rotDegrees);
+        float cosDeg = cosDegrees(rotDegrees);
         float sinDeg = sinDegrees(rotDegrees);
         rMatrix.components[0][0] = cosDeg;
         rMatrix.components[0][1] = sinDeg;
         rMatrix.components[1][0] = -sinDeg;
         rMatrix.components[1][1] = cosDeg;
         return rMatrix;
+    }
+
+    // EFFECTS: creates a 3D rotation matrix
+    public static Transform rotationMatrix(Vector3 rot) {
+        Transform rMatrix = new Transform();
+
+        Transform rotX = rotationMatrixX(rot.getX());
+        Transform rotY = rotationMatrixX(rot.getY());
+        Transform rotZ = rotationMatrixX(rot.getZ());
+
+        rMatrix = multiply(rMatrix, rotX);
+        rMatrix = multiply(rMatrix, rotY);
+        rMatrix = multiply(rMatrix, rotZ);
+
+        return rMatrix;
+    }
+
+    // EFFECTS: creates a TRS matrix
+    public static Transform transformMatrix(Vector3 trl, Vector3 rot, Vector3 scl) {
+        Transform tformMatrix = new Transform();
+        Transform sMatrix = scaleMatrix(scl);
+        Transform rMatrix = rotationMatrix(rot);
+        Transform tMatrix = translationMatrix(trl);
+
+        tformMatrix = multiply(tformMatrix, sMatrix);
+        tformMatrix = multiply(tformMatrix, rMatrix);
+        tformMatrix = multiply(tformMatrix, tMatrix);
+
+        return tformMatrix;
     }
 
     // EFFECTS: returns the multiplication of two matricies
@@ -89,11 +117,11 @@ public class Transform {
         // https://en.wikipedia.org/wiki/Matrix_multiplication
         for (int i = 0; i < ROW_COUNT; i++) {
             for (int j = 0; j < COL_COUNT; j++) {
-                mMatrix.components[i][j] = 0.0f;
-                mMatrix.components[i][j] += leftMatrix.components[i][0] * rightMatrix.components[0][j];
-                mMatrix.components[i][j] += leftMatrix.components[i][1] * rightMatrix.components[1][j];
-                mMatrix.components[i][j] += leftMatrix.components[i][2] * rightMatrix.components[2][j];
-                mMatrix.components[i][j] += leftMatrix.components[i][3] * rightMatrix.components[3][j];
+                mMatrix.components[j][i] = 0.0f;
+                mMatrix.components[j][i] += leftMatrix.components[0][i] * rightMatrix.components[j][0];
+                mMatrix.components[j][i] += leftMatrix.components[1][i] * rightMatrix.components[j][1];
+                mMatrix.components[j][i] += leftMatrix.components[2][i] * rightMatrix.components[j][2];
+                mMatrix.components[j][i] += leftMatrix.components[3][i] * rightMatrix.components[j][3];
             }
         }
         return mMatrix;
@@ -103,10 +131,10 @@ public class Transform {
     public static Vector3 multiply(Transform matrix, Vector3 vector) {
         float[] vector4 = new float[4];
         for (int i = 0; i < 4; i++) {
-            vector4[i] += matrix.components[i][0] * vector.getX();
-            vector4[i] += matrix.components[i][1] * vector.getY();
-            vector4[i] += matrix.components[i][2] * vector.getZ();
-            vector4[i] += matrix.components[i][3] * 1.0f;
+            vector4[i] += matrix.components[0][i] * vector.getX();
+            vector4[i] += matrix.components[1][i] * vector.getY();
+            vector4[i] += matrix.components[2][i] * vector.getZ();
+            vector4[i] += matrix.components[3][i] * 1.0f;
         }
         return new Vector3(vector4[0], vector4[1], vector4[2]);
     }
@@ -117,7 +145,7 @@ public class Transform {
     }
 
     // EFFECTS: returns cosx in degrees
-    private static float cosDegress(float x) {
+    private static float cosDegrees(float x) {
         return (float) Math.cos(x * DEGREE_TO_RAD);
     }
 }
