@@ -42,6 +42,10 @@ public class SimulationManager {
 
     private static final int EDIT_PROP_MAX_INPUT_LEN = EDITOR_RIGHT - EDITOR_LEFT - 3;
 
+    private static final float NEW_PLANET_POS_OFFSET_BOUND = 30.0f;
+    private static final float NEW_PLANET_MIN_RAD = 0.5f;
+    private static final float NEW_PLANET_MAX_RAD = 1.5f;
+
     private ConsoleOutputRedirectStream errRedirect;
     private ConsoleOutputRedirectStream outRedirect;
 
@@ -52,7 +56,6 @@ public class SimulationManager {
     private float lastDeltaTimeSeconds;
     private boolean simulationIsRunning;
 
-    private int newPlanetSuffix;
     private Planet selectedPlanet;
     private int listViewOffset;
     private boolean editingSelectedPlanet;
@@ -93,7 +96,6 @@ public class SimulationManager {
     // EFFECTS: sets up simulation related variables
     public void initSimulationVariables() {
         simulation = new Simulation();
-        newPlanetSuffix = 0;
         simulationIsRunning = false;
         lastDeltaTimeSeconds = 0.0f;
         addAndSelectNewPlanet();
@@ -299,7 +301,7 @@ public class SimulationManager {
         propertyStrings[0] = "Name: " + selectedPlanet.getName();
         propertyStrings[1] = "Pos: " + selectedPlanet.getPosition().toString();
         propertyStrings[2] = "Vel: " + selectedPlanet.getVelocity().toString();
-        propertyStrings[3] = "Radius: " + selectedPlanet.getRadius();
+        propertyStrings[3] = "Radius: " + String.format("%.2f", selectedPlanet.getRadius());
         for (int i = 0; i < propertyStrings.length; i++) {
             if (editingSelectedPlanet && selectedProperty == i) {
                 setTextGraphicsToHoverMode(gfx);
@@ -368,7 +370,6 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: handles debris creation behavior for when planets collide
-    
 
     // MODIFIES: this
     // EFFECTS: handles all user input
@@ -610,11 +611,18 @@ public class SimulationManager {
     }
 
     // MODIFIES: this
-    // EFFECTS: adds new planet to the simulation and selects it
+    // EFFECTS: adds new planet to the simulation with some mildly randomized values
+    // and selects it
     public void addAndSelectNewPlanet() {
-        Planet newPlanet = new Planet("New Planet " + newPlanetSuffix, 1.0f);
+
+        Random rand = new Random();
+        float posX = (rand.nextFloat() - 0.5f) * NEW_PLANET_POS_OFFSET_BOUND;
+        float posY = (rand.nextFloat() - 0.5f) * NEW_PLANET_POS_OFFSET_BOUND;
+        float posZ = (rand.nextFloat() - 0.5f) * NEW_PLANET_POS_OFFSET_BOUND;
+        float scale = NEW_PLANET_MIN_RAD + rand.nextFloat() * (NEW_PLANET_MAX_RAD - NEW_PLANET_MIN_RAD);
+
+        Planet newPlanet = new Planet("New Planet", new Vector3(posX, posY, posZ), new Vector3(), scale);
         simulation.addPlanet(newPlanet);
         selectedPlanet = newPlanet;
-        newPlanetSuffix++;
     }
 }

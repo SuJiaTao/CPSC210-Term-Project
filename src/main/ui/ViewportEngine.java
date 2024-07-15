@@ -10,7 +10,7 @@ public class ViewportEngine {
     // NOTE: "camera" looks down the negative Z axis
     private static final float CLIPPING_PLANE_DEPTH = -0.1f;
     private static final char CLEAR_VALUE = ' ';
-    private static final float CAMERA_PULLBACK_FACTOR = 1.25f;
+    private static final float CAMERA_PULLBACK_FACTOR = 1.05f;
     private static final float CAMERA_PULLBACL_MIN = 30.0f;
     private static final int PLANET_CIRCLE_VERTS = 10;
     private static final float PLANET_CIRCLE_VERT_STEP = (float) (Math.PI * 2.0f) / (float) PLANET_CIRCLE_VERTS;
