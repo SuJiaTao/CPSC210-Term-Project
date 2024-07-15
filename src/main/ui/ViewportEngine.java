@@ -2,6 +2,7 @@ package ui;
 
 import org.junit.jupiter.params.shadow.com.univocity.parsers.tsv.TsvRoutines;
 
+import exceptions.InvalidRenderStateException;
 import model.*;
 
 // Represents the internal graphics state and rendering logic that make up 
@@ -14,6 +15,7 @@ public class ViewportEngine {
     private static final float CAMERA_PULLBACK_FACTOR = 1.25f;
     private static final float CAMERA_PULLBACL_MIN = 50.0f;
     private static final int PLANET_CIRCLE_VERTS = 20;
+    private static final float PLANET_CIRCLE_VERT_STEP = (float) (Math.PI * 2.0f) / (float) PLANET_CIRCLE_VERTS;
 
     private float[] depthBuffer;
     private int[] frameBuffer;
@@ -149,23 +151,28 @@ public class ViewportEngine {
         // TODO: finish this so it actually looks nice
 
         Vector3 planetPosViewSpace = Transform.multiply(viewTransform, planet.getPosition());
-        System.out.println(planetPosViewSpace);
         if (planetPosViewSpace.getZ() >= CLIPPING_PLANE_DEPTH) {
             return;
         }
 
-        // NOTE:
-        // there are probably more optimized ways of doing this
-        Vector3 radiusVector = new Vector3(0.0f, 0.0f, planet.getRadius());
-        radiusVector = Transform.multiply(viewTransform, radiusVector);
+        Vector3 circleCenter = Transform.extractTranslation(viewTransform);
+        float circleRadius = Transform.extractScale(viewTransform).magnitude();
 
-        BufferPoint planetPoint = projectPointToScreenSpace(planetPosViewSpace);
-        if (planetPoint.isOutOfBounds(bufferWidth)) {
-            return;
+        for (int i = 0; i < PLANET_CIRCLE_VERTS; i++) {
+            Vector3 posI = getCircleVertPos(circleCenter, circleRadius, i);
+            Vector3 posF = getCircleVertPos(circleCenter, circleRadius, i + 1);
+            BufferPoint projI = projectPointToScreenSpace(posI);
+            BufferPoint projF = projectPointToScreenSpace(posF);
+            drawLine(projI, projF, planet.getName().charAt(0));
         }
+    }
 
-        depthBuffer[planetPoint.getBufferIndexOffset(bufferWidth)] = planetPoint.getDepth();
-        frameBuffer[planetPoint.getBufferIndexOffset(bufferWidth)] = (int) '+';
+    // EFFECTS: returns the worldspace vertex position of the planet circle vertex
+    // of index i
+    public Vector3 getCircleVertPos(Vector3 center, float radius, int index) {
+        float offsetX = (float) Math.cos(PLANET_CIRCLE_VERT_STEP * (float) index) * radius;
+        float offsetY = (float) Math.sin(PLANET_CIRCLE_VERT_STEP * (float) index) * radius;
+        return Vector3.add(center, new Vector3(offsetX, offsetY, 0.0f));
     }
 
     // MODIFIES: this
@@ -193,12 +200,19 @@ public class ViewportEngine {
             return;
         }
 
+        if (depthBuffer[point.getBufferIndexOffset(bufferWidth)] >= point.getDepth()) {
+            return;
+        }
+
         depthBuffer[point.getBufferIndexOffset(bufferWidth)] = point.getDepth();
         frameBuffer[point.getBufferIndexOffset(bufferWidth)] = (int) visChar;
     }
 
     // EFFECTS: projects a "worldspace" Vector3 into screenspace coordinates
     public BufferPoint projectPointToScreenSpace(Vector3 point) {
+        if (point.getZ() >= CLIPPING_PLANE_DEPTH) {
+            throw new InvalidRenderStateException();
+        }
         float posX = point.getX() / point.getZ();
         float posY = point.getY() / point.getZ();
         // NOTE: this transforms a point from [-1, 1] to [0, width]

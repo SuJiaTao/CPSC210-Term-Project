@@ -482,11 +482,16 @@ public class SimulationManager {
 
     // EFFECTS: attempts to update the planet name
     public boolean tryApplyNewName() {
-        if (userInputString.length() > 0) {
-            selectedPlanet.setName(userInputString);
-            return true;
+        if (userInputString.length() == 0) {
+            return false;
         }
-        return false;
+        if (userInputString.charAt(0) == ' ') {
+            return false;
+        }
+
+        selectedPlanet.setName(userInputString);
+        return true;
+
     }
 
     // EFFECTS: attempts to update the planet radius
