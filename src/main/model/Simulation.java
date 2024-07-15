@@ -2,6 +2,9 @@ package model;
 
 import java.util.*;
 
+import exceptions.ArgumentOutOfBoundsException;
+import exceptions.PlanetAlreadyExistsInSimulationException;
+
 // Represents the current n-body simulation state
 public class Simulation {
     public static final float GRAVITATIONAL_CONSTANT = 0.02f;
@@ -31,12 +34,14 @@ public class Simulation {
         return planets;
     }
 
-    // REQUIRES: planet object has not previously been added to the simulation
     // MODIFIES: this
     // EFFECTS:
     // adds a planet to the simulation which will be updated with
     // subsequent calls to update
     public void addPlanet(Planet planet) {
+        if (planets.contains(planet)) {
+            throw new PlanetAlreadyExistsInSimulationException();
+        }
         planets.add(planet);
     }
 
@@ -90,11 +95,16 @@ public class Simulation {
         targetPlanet.addForce(gravityForce, deltaTime);
     }
 
-    // REQUIRES: mass1, mass2 > 0.0f
     // EFFECTS:
     // given two masses and a distance, calculates the gravitational force magnitude
     // between the two objects
     public float calculateGravityMagnitude(float mass1, float mass2, float dist) {
+        if (mass1 <= 0.0f) {
+            throw new ArgumentOutOfBoundsException("mass1 must be > 0");
+        }
+        if (mass2 <= 0.0f) {
+            throw new ArgumentOutOfBoundsException("mass2 must be > 0");
+        }
         return (GRAVITATIONAL_CONSTANT * mass1 * mass2) / Math.max(EPSILON, (dist * dist));
     }
 }

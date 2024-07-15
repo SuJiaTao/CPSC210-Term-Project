@@ -35,10 +35,13 @@ public class Collision {
         return (toTest == planet1) || (toTest == planet2);
     }
 
-    // REQUIRES: other must be of type Collision
     // EFFECTS: returns whether collisions are identical
     @Override
     public boolean equals(Object otherObject) {
+        if (!(otherObject instanceof Collision)) {
+            throw new IllegalArgumentException("otherObject was not of type Collision");
+        }
+
         Collision other = (Collision) otherObject;
         if (other.getCollisionTime() != collisionTime) {
             return false;

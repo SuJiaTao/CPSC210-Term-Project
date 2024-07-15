@@ -1,5 +1,7 @@
 package model;
 
+import exceptions.ArgumentOutOfBoundsException;
+
 // Represents a Planet within the simulation in 3D-space
 // The planet has a name, position, velocity and radius
 public class Planet {
@@ -11,7 +13,6 @@ public class Planet {
     private Vector3 velocity;
     private float radius;
 
-    // REQUIRES: radius > 0
     // EFFECTS:
     // creates a planet with a name and radius, the position and velocity are both
     // zero
@@ -19,7 +20,6 @@ public class Planet {
         this(name, new Vector3(), new Vector3(), radius);
     }
 
-    // REQUIRES: radius > 0
     // EFFECTS:
     // creates a planet with the specified, name, starting position, starting
     // velocity and radius
@@ -27,6 +27,9 @@ public class Planet {
         this.name = name;
         this.position = position;
         this.velocity = velocity;
+        if (radius <= 0.0f) {
+            throw new ArgumentOutOfBoundsException("radius must be > 0");
+        }
         this.radius = radius;
     }
 
@@ -68,17 +71,21 @@ public class Planet {
         return SPHERE_VOLUME_COEFFICIENT * radius * radius * radius;
     }
 
-    // REQUIRES: deltaTime > 0
     // MODIFIES: this
     // EFFECTS: updates the planet's position based on it's velocity
     public void updatePosition(float deltaTime) {
+        if (deltaTime < 0.0f) {
+            throw new ArgumentOutOfBoundsException("deltaTime must be positive");
+        }
         position = Vector3.add(position, Vector3.multiply(velocity, deltaTime));
     }
 
-    // REQUIRES: deltaTime > 0
     // MODIFIES: this
     // EFFECTS: adds a force to the planet, changing it's velocity
     public void addForce(Vector3 forceVector, float deltaTime) {
+        if (deltaTime < 0.0f) {
+            throw new ArgumentOutOfBoundsException("deltaTime must be positive");
+        }
         float planetMass = getMass();
         Vector3 acceleration = Vector3.multiply(forceVector, 1.0f / planetMass);
         acceleration = Vector3.multiply(acceleration, deltaTime);

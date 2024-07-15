@@ -1,9 +1,6 @@
 package ui;
 
 import model.*;
-import com.googlecode.lanterna.*;
-import com.googlecode.lanterna.graphics.*;
-import com.googlecode.lanterna.input.*;
 
 // Represents the internal graphics state and rendering logic that make up 
 // the simulation viewport... it isn't a Bailey project without software
@@ -52,16 +49,19 @@ public class ViewportEngine {
     // EFFECTS: updates average planet position
     public void updateAveragePlanetPos() {
         averagePlanetPos = new Vector3();
+        float totalMass = 0.0f;
         for (Planet planet : simulation.getPlanets()) {
-            averagePlanetPos = Vector3.add(averagePlanetPos, planet.getPosition());
+            float planetMass = planet.getMass();
+            averagePlanetPos = Vector3.multiply(Vector3.add(averagePlanetPos, planet.getPosition()), planetMass);
+            totalMass += planetMass;
         }
-        averagePlanetPos = Vector3.multiply(averagePlanetPos, 1.0f / simulation.getPlanets().size());
+        averagePlanetPos = Vector3.multiply(averagePlanetPos, 1.0f / totalMass);
     }
 
     // MODIFIES: this
     // EFFECTS: sets up view matrix for viewing planets
     public void updateViewportMatrix() {
-
+        // TODO: figure out what I want
     }
 
     // MODIFIES: this

@@ -86,10 +86,12 @@ public class Vector3 {
         return productX + productY + productZ;
     }
 
-    // REQUIRES: other is also of type Vector
     // EFFECTS: returns whether all components of the vector are the same
     @Override
     public boolean equals(Object other) {
+        if (!(other instanceof Vector3)) {
+            throw new IllegalArgumentException("other must be of type Vector3");
+        }
         Vector3 otherVector = (Vector3) other;
         float dx = Math.abs(this.getX() - otherVector.getX());
         float dy = Math.abs(this.getY() - otherVector.getY());
