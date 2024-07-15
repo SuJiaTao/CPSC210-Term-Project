@@ -54,28 +54,45 @@ public class SimulationManager {
     private int selectedProperty;
     private String userInputString;
 
+    private ViewportEngine viewport;
+
     // EFFECTS: initialize simulation, init graphical/user input, redirect
     // sterr+stdout, and set simulation state to the opening screen
     public SimulationManager() throws Exception {
+        initOutputStreams();
+        initScreen();
+        initSimulationVariables();
+        initEditorVariables();
+    }
+
+    // EFFECTS: setup output streams
+    public void initOutputStreams() {
         errRedirect = new ConsoleOutputRedirectStream(System.err);
         System.setErr(errRedirect);
         outRedirect = new ConsoleOutputRedirectStream(System.out);
         System.setOut(outRedirect);
+    }
 
+    // EFFECTS: sets up screen
+    public void initScreen() throws Exception {
         DefaultTerminalFactory termFactory = new DefaultTerminalFactory();
         termFactory.setInitialTerminalSize(new TerminalSize(TERMINAL_WIDTH, TERMINAL_HEIGHT));
         screen = termFactory.createScreen();
-
         checkIfObtainedDesiredTerminalSize();
         screen.startScreen();
+    }
 
+    // EFFECTS: sets up simulation related variables
+    public void initSimulationVariables() {
         simulation = new Simulation();
         newPlanetSuffix = 0;
         simulationIsRunning = false;
         lastDeltaTimeSeconds = 0.0f;
-
-        // simulation starts with planet
         addAndSelectNewPlanet();
+    }
+
+    // EFFECTS: sets up editor related variables
+    public void initEditorVariables() {
         editingSelectedPlanet = false;
         editingSelectedProperty = false;
         userInputString = "";
