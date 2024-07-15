@@ -141,17 +141,17 @@ public class Transform {
 
     // EFFECTS: extracts a scale vector from the transform
     public static Vector3 extractScale(Transform matrix) {
-        return null;
+        float[][] comp = matrix.components;
+        float scaleX = new Vector3(comp[0][0], comp[0][1], comp[0][2]).magnitude();
+        float scaleY = new Vector3(comp[1][0], comp[1][1], comp[1][2]).magnitude();
+        float scaleZ = new Vector3(comp[2][0], comp[2][1], comp[2][2]).magnitude();
+        return new Vector3(scaleX, scaleY, scaleZ);
     }
 
     // EFFECTS: extracts a translation vector from the transform
     public static Vector3 extractTranslation(Transform matrix) {
-        return null;
-    }
-
-    // EFFECTS: extracts a rotation vector from the transform
-    public static Vector3 extractRotation(Transform matrix) {
-        return null;
+        float[][] comp = matrix.components;
+        return new Vector3(comp[3][0], comp[3][1], comp[3][2]);
     }
 
     // EFFECTS: returns sinx in degrees

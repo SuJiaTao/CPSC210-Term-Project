@@ -197,14 +197,15 @@ public class TransformTest {
         m0 = Transform.scaleMatrix(new Vector3(1.0f, 2.0f, 3.0f));
         assertEquals(new Vector3(1.0f, 2.0f, 3.0f), Transform.extractScale(m0));
 
-        m0 = Transform.scaleMatrix(new Vector3(-3.0f, 4.0f, 5.0f));
-        assertEquals(new Vector3(-3.0f, 4.0f, 5.0f), Transform.extractScale(m0));
-
         m0 = Transform.scaleMatrix(new Vector3());
         assertEquals(new Vector3(), Transform.extractScale(m0));
 
+        // NOTE: scale vector extracted will always have positive components
+        m0 = Transform.scaleMatrix(new Vector3(-3.0f, 4.0f, 5.0f));
+        assertEquals(new Vector3(3.0f, 4.0f, 5.0f), Transform.extractScale(m0));
+
         m0 = Transform.scaleMatrix(new Vector3(1.0f, -1.0f, 1.0f));
-        assertEquals(new Vector3(1.0f, -1.0f, 1.0f), Transform.extractScale(m0));
+        assertEquals(new Vector3(1.0f, 1.0f, 1.0f), Transform.extractScale(m0));
     }
 
     @Test
