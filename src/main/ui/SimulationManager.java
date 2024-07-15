@@ -151,6 +151,7 @@ public class SimulationManager {
     // EFFECTS: handles all input and graphics
     public void handleEverythingAndiMeanEverything() {
         try {
+            ensureSelectedPlanetIsReasonable();
             handleUserInput();
             handleSimulationState();
             drawPlanetListEditor();
@@ -168,9 +169,19 @@ public class SimulationManager {
             if (simulation.getPlanets().size() > 0) {
                 selectedPlanet = simulation.getPlanets().get(0);
             } else {
-                selectedPlanet = null;
+                setSimulationNoPlanets();
             }
         }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: ensure the simulation is in the correct state for there being no
+    // planets
+    public void setSimulationNoPlanets() {
+        selectedPlanet = null;
+        simulationIsRunning = false;
+        editingSelectedPlanet = false;
+        editingSelectedProperty = false;
     }
 
     // MODIFIES: this
@@ -418,7 +429,7 @@ public class SimulationManager {
         float kineticB = 0.5f * planetB.getMass() * deltaV * deltaV;
 
         float deltaK = Math.abs(kineticA - kineticB) / (kineticA + kineticB);
-        System.out.println("" + deltaK);
+        System.out.print(deltaK);
 
         simulation.removePlanet(planetA);
         simulation.removePlanet(planetB);
@@ -620,7 +631,7 @@ public class SimulationManager {
         int selectedIndex = simulation.getPlanets().indexOf(selectedPlanet);
         simulation.removePlanet(selectedPlanet);
         if (simulation.getPlanets().size() == 0) {
-            selectedPlanet = null;
+            setSimulationNoPlanets();
             return;
         }
         if (selectedIndex >= simulation.getPlanets().size()) {
