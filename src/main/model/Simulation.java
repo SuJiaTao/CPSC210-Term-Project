@@ -7,7 +7,7 @@ import exceptions.PlanetAlreadyExistsInSimulationException;
 
 // Represents the current n-body simulation state
 public class Simulation {
-    public static final float GRAVITATIONAL_CONSTANT = 0.15f;
+    public static final float GRAVITATIONAL_CONSTANT = 0.75f;
     public static final float EPSILON = 0.001f;
 
     private float timeElapsed;

@@ -1,9 +1,5 @@
 package ui;
 
-import java.util.Vector;
-
-import org.junit.jupiter.params.shadow.com.univocity.parsers.tsv.TsvRoutines;
-
 import exceptions.InvalidRenderStateException;
 import model.*;
 
@@ -15,8 +11,8 @@ public class ViewportEngine {
     private static final float CLIPPING_PLANE_DEPTH = -0.1f;
     private static final char CLEAR_VALUE = ' ';
     private static final float CAMERA_PULLBACK_FACTOR = 1.25f;
-    private static final float CAMERA_PULLBACL_MIN = 10.0f;
-    private static final int PLANET_CIRCLE_VERTS = 20;
+    private static final float CAMERA_PULLBACL_MIN = 30.0f;
+    private static final int PLANET_CIRCLE_VERTS = 10;
     private static final float PLANET_CIRCLE_VERT_STEP = (float) (Math.PI * 2.0f) / (float) PLANET_CIRCLE_VERTS;
 
     private float[] depthBuffer;
@@ -193,7 +189,7 @@ public class ViewportEngine {
         float drawY = from.getBufferY();
         for (float step = 0; step <= dist; step++) {
             float depth = from.getDepth() + (to.getDepth() - from.getDepth()) * (1.0f - step / dist);
-            drawPoint(new BufferPoint((int) drawX, (int) drawY, depth), visChar);
+            drawPoint(new BufferPoint((int) (drawX + 0.5f), (int) (drawY + 0.5f), depth), visChar);
             drawX += deltaX / dist;
             drawY += deltaY / dist;
         }

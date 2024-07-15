@@ -367,6 +367,10 @@ public class SimulationManager {
     }
 
     // MODIFIES: this
+    // EFFECTS: handles debris creation behavior for when planets collide
+    
+
+    // MODIFIES: this
     // EFFECTS: handles all user input
     public void handleUserInput() throws Exception {
         lastUserKey = screen.pollInput();
