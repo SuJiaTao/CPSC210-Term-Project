@@ -31,6 +31,16 @@ public class ViewportEngine {
             this.depth = depth;
         }
 
+        public boolean isOutOfBounds(int bufferWidth) {
+            if (bufferX < 0 || bufferX >= bufferWidth) {
+                return true;
+            }
+            if (bufferY < 0 || bufferY >= bufferWidth) {
+                return true;
+            }
+            return false;
+        }
+
         public int getBufferX() {
             return bufferX;
         }
@@ -60,6 +70,10 @@ public class ViewportEngine {
 
         viewTransform = new Transform();
         averagePlanetPos = new Vector3();
+    }
+
+    public int getFrameBufferValue(int x, int y) {
+        return frameBuffer[new BufferPoint(x, y, 0.0f).getBufferIndexOffset(bufferWidth)];
     }
 
     // MODIFIES: this
@@ -97,10 +111,15 @@ public class ViewportEngine {
     // EFFECTS: sets up view matrix for viewing planets
     public void updateViewportMatrix() {
         viewTransform = new Transform();
-        Vector3 centerTranslate = Vector3.multiply(averagePlanetPos, -1.0f);
-        viewTransform = Transform.multiply(viewTransform, Transform.translationMatrix(centerTranslate));
-        viewTransform = Transform.multiply(viewTransform, Transform.rotationMatrixX(35.0f));
-        viewTransform = Transform.multiply(viewTransform, Transform.translationMatrix(new Vector3(0.0f, 0.0f, 100.0f)));
+        /*
+         * Vector3 centerTranslate = Vector3.multiply(averagePlanetPos, -1.0f);
+         * viewTransform = Transform.multiply(viewTransform,
+         * Transform.translationMatrix(centerTranslate));
+         * viewTransform = Transform.multiply(viewTransform,
+         * Transform.rotationMatrixX(35.0f));
+         * viewTransform = Transform.multiply(viewTransform,
+         * Transform.translationMatrix(new Vector3(0.0f, 0.0f, -25.0f)));
+         */
     }
 
     // MODIFIES: this
@@ -113,16 +132,22 @@ public class ViewportEngine {
 
         Vector3 planetPosViewSpace = Transform.multiply(viewTransform, p.getPosition());
         BufferPoint planetPoint = projectPointToScreenSpace(planetPosViewSpace);
+        if (planetPoint.isOutOfBounds(bufferWidth)) {
+            return;
+        }
+
         depthBuffer[planetPoint.getBufferIndexOffset(bufferWidth)] = planetPoint.getDepth();
-        depthBuffer[planetPoint.getBufferIndexOffset(bufferWidth)] = (int) '+';
+        frameBuffer[planetPoint.getBufferIndexOffset(bufferWidth)] = (int) '+';
     }
 
     // EFFECTS: projects a "worldspace" Vector3 into screenspace coordinates
     public BufferPoint projectPointToScreenSpace(Vector3 point) {
-        Vector3 proj = new Vector3(point.getX() / point.getZ(), point.getY() / point.getZ(), point.getZ());
-        // NOTE: this transforms a point from [-1, 1] to [0, 1]
-        proj = Vector3.multiply(Vector3.add(proj, new Vector3(1.0f, 1.0f, 0.0f)), 0.5f);
-        return new BufferPoint((int) proj.getX() * bufferWidth, (int) proj.getY() * bufferWidth, proj.getZ());
+        float posX = point.getX() / point.getZ();
+        float posY = point.getY() / point.getZ();
+        // NOTE: this transforms a point from [-1, 1] to [0, width]
+        posX = ((posX + 1.0f) * 0.5f) * (float) bufferWidth;
+        posY = ((posY + 1.0f) * 0.5f) * (float) bufferWidth;
+        return new BufferPoint((int) posX, (int) posY, point.getZ());
     }
 
     // MODIFIES: this
@@ -130,7 +155,7 @@ public class ViewportEngine {
     public void clearBuffers() {
         for (int i = 0; i < pixelCount; i++) {
             depthBuffer[i] = Float.NEGATIVE_INFINITY;
-            frameBuffer[i] = 0;
+            frameBuffer[i] = (int) ' ';
         }
     }
 }

@@ -33,6 +33,8 @@ public class SimulationManager {
     private static final int VIEWPORT_BOT = 32;
     private static final int VIEWPORT_LEFT = EDITOR_RIGHT + 1;
     private static final int VIEWPORT_RIGHT = TERMINAL_WIDTH - 1;
+    private static final int VIEWPORT_WIDTH = VIEWPORT_RIGHT - VIEWPORT_LEFT;
+    private static final int VIEWPORT_HEIGHT = VIEWPORT_BOT - VIEWPORT_TOP;
 
     private static final int EDIT_PROP_MAX_INPUT_LEN = EDITOR_RIGHT - EDITOR_LEFT - 3;
 
@@ -63,6 +65,8 @@ public class SimulationManager {
         initScreen();
         initSimulationVariables();
         initEditorVariables();
+
+        viewport = new ViewportEngine(Math.max(VIEWPORT_WIDTH, VIEWPORT_HEIGHT), simulation);
     }
 
     // EFFECTS: setup output streams
@@ -158,6 +162,26 @@ public class SimulationManager {
     // EFFECTS: draws right-side 3D viewport
     public void drawSimulationViewPort() {
         TextGraphics gfx = screen.newTextGraphics();
+        drawViewportFrame(gfx);
+        drawViewportView(gfx);
+    }
+
+    // MODIFIES: this
+    // EFFECTS: draw the viewport buffers to the terminal
+    public void drawViewportView(TextGraphics gfx) {
+        setTextGraphicsToViewMode(gfx);
+        viewport.update();
+        for (int x = 0; x < VIEWPORT_WIDTH - 1; x++) {
+            for (int y = 0; y < VIEWPORT_HEIGHT - 1; y++) {
+                char fbChar = (char) viewport.getFrameBufferValue(x, y);
+                gfx.setCharacter(VIEWPORT_LEFT + 1 + x, VIEWPORT_TOP + 1 + y, fbChar);
+            }
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: draws the viewport frame
+    public void drawViewportFrame(TextGraphics gfx) {
         setTextGraphicsToViewMode(gfx);
 
         // DRAW VIEWPORT SURROUNDING BOX
