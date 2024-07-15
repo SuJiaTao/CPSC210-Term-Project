@@ -1,5 +1,7 @@
 package ui;
 
+import java.util.Vector;
+
 import org.junit.jupiter.params.shadow.com.univocity.parsers.tsv.TsvRoutines;
 
 import exceptions.InvalidRenderStateException;
@@ -13,7 +15,7 @@ public class ViewportEngine {
     private static final float CLIPPING_PLANE_DEPTH = -0.1f;
     private static final char CLEAR_VALUE = ' ';
     private static final float CAMERA_PULLBACK_FACTOR = 1.25f;
-    private static final float CAMERA_PULLBACL_MIN = 50.0f;
+    private static final float CAMERA_PULLBACL_MIN = 10.0f;
     private static final int PLANET_CIRCLE_VERTS = 20;
     private static final float PLANET_CIRCLE_VERT_STEP = (float) (Math.PI * 2.0f) / (float) PLANET_CIRCLE_VERTS;
 
@@ -126,7 +128,7 @@ public class ViewportEngine {
         furthestPlanetDistance = 0.0f;
         for (Planet planet : simulation.getPlanets()) {
             float dispFromCenter = Vector3.sub(averagePlanetPos, planet.getPosition()).magnitude();
-            furthestPlanetDistance = Math.max(dispFromCenter + planet.getRadius(), furthestPlanetDistance);
+            furthestPlanetDistance = Math.max(dispFromCenter + planet.getRadius() * 2.0f, furthestPlanetDistance);
         }
     }
 
@@ -138,10 +140,10 @@ public class ViewportEngine {
         Vector3 trl = Vector3.multiply(averagePlanetPos, -1.0f);
         Vector3 rot = new Vector3();
         Vector3 scl = new Vector3(1.0f, 1.0f, 1.0f);
-        viewTransform = Transform.multiply(viewTransform, Transform.transformMatrix(trl, rot, scl));
+        viewTransform = Transform.multiply(viewTransform, Transform.transform(trl, rot, scl));
         float pullBack = Math.max(CAMERA_PULLBACL_MIN, furthestPlanetDistance * CAMERA_PULLBACK_FACTOR);
         Vector3 pullBackVector = new Vector3(0.0f, 0.0f, -pullBack);
-        viewTransform = Transform.multiply(viewTransform, Transform.translationMatrix(pullBackVector));
+        viewTransform = Transform.multiply(viewTransform, Transform.translation(pullBackVector));
     }
 
     // MODIFIES: this
@@ -155,8 +157,12 @@ public class ViewportEngine {
             return;
         }
 
-        Vector3 circleCenter = Transform.extractTranslation(viewTransform);
-        float circleRadius = Transform.extractScale(viewTransform).magnitude();
+        Vector3 planetScale = new Vector3(planet.getRadius(), planet.getRadius(), planet.getRadius());
+        Transform planetTransform = Transform.transform(planet.getPosition(), new Vector3(), planetScale);
+        planetTransform = Transform.multiply(planetTransform, viewTransform);
+
+        Vector3 circleCenter = Transform.extractTranslation(planetTransform);
+        float circleRadius = Transform.extractScale(planetTransform).magnitude();
 
         for (int i = 0; i < PLANET_CIRCLE_VERTS; i++) {
             Vector3 posI = getCircleVertPos(circleCenter, circleRadius, i);

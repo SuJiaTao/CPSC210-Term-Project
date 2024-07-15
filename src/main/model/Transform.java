@@ -21,7 +21,7 @@ public class Transform {
     }
 
     // EFFECTS: creates a translation matrix
-    public static Transform translationMatrix(Vector3 trl) {
+    public static Transform translation(Vector3 trl) {
         Transform tMatrix = new Transform();
         tMatrix.components[3][0] = trl.getX();
         tMatrix.components[3][1] = trl.getY();
@@ -30,7 +30,7 @@ public class Transform {
     }
 
     // EFFECTS: creates a scale matrix
-    public static Transform scaleMatrix(Vector3 scl) {
+    public static Transform scale(Vector3 scl) {
         Transform sMatrix = new Transform();
         sMatrix.components[0][0] = scl.getX();
         sMatrix.components[1][1] = scl.getY();
@@ -39,7 +39,7 @@ public class Transform {
     }
 
     // EFFECTS: creates a rotation matrix about the x axis
-    public static Transform rotationMatrixX(float rotDegrees) {
+    public static Transform rotationX(float rotDegrees) {
         Transform rMatrix = new Transform();
 
         float cosDeg = cosDegrees(rotDegrees);
@@ -52,7 +52,7 @@ public class Transform {
     }
 
     // EFFECTS: creates a rotation matrix about the y axis
-    public static Transform rotationMatrixY(float rotDegrees) {
+    public static Transform rotationY(float rotDegrees) {
         Transform rMatrix = new Transform();
 
         float cosDeg = cosDegrees(rotDegrees);
@@ -65,7 +65,7 @@ public class Transform {
     }
 
     // EFFECTS: creates a rotation matrix about the z axis
-    public static Transform rotationMatrixZ(float rotDegrees) {
+    public static Transform rotationZ(float rotDegrees) {
         Transform rMatrix = new Transform();
 
         float cosDeg = cosDegrees(rotDegrees);
@@ -78,12 +78,12 @@ public class Transform {
     }
 
     // EFFECTS: creates a 3D rotation matrix
-    public static Transform rotationMatrix(Vector3 rot) {
+    public static Transform rotation(Vector3 rot) {
         Transform rMatrix = new Transform();
 
-        Transform rotX = rotationMatrixX(rot.getX());
-        Transform rotY = rotationMatrixY(rot.getY());
-        Transform rotZ = rotationMatrixZ(rot.getZ());
+        Transform rotX = rotationX(rot.getX());
+        Transform rotY = rotationY(rot.getY());
+        Transform rotZ = rotationZ(rot.getZ());
 
         rMatrix = multiply(rMatrix, rotX);
         rMatrix = multiply(rMatrix, rotY);
@@ -93,11 +93,11 @@ public class Transform {
     }
 
     // EFFECTS: creates a TRS matrix
-    public static Transform transformMatrix(Vector3 trl, Vector3 rot, Vector3 scl) {
+    public static Transform transform(Vector3 trl, Vector3 rot, Vector3 scl) {
         Transform tformMatrix = new Transform();
-        Transform sMatrix = scaleMatrix(scl);
-        Transform rMatrix = rotationMatrix(rot);
-        Transform tMatrix = translationMatrix(trl);
+        Transform sMatrix = scale(scl);
+        Transform rMatrix = rotation(rot);
+        Transform tMatrix = translation(trl);
 
         tformMatrix = multiply(tformMatrix, sMatrix);
         tformMatrix = multiply(tformMatrix, rMatrix);
