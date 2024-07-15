@@ -13,6 +13,7 @@ public class ViewportEngine {
     private static final char CLEAR_VALUE = ' ';
     private static final float CAMERA_PULLBACK_FACTOR = 1.25f;
     private static final float CAMERA_PULLBACL_MIN = 50.0f;
+    private static final int PLANET_CIRCLE_VERTS = 20;
 
     private float[] depthBuffer;
     private int[] frameBuffer;
@@ -168,7 +169,33 @@ public class ViewportEngine {
     }
 
     // MODIFIES: this
-    // EFFECTS:
+    // EFFECTS: draws a line of specified char from the specified buffer points
+    public void drawLine(BufferPoint from, BufferPoint to, char visChar) {
+        // NOTE:
+        // yes, this is a terribly naiive way of drawing a line
+        float deltaX = to.getBufferX() - from.getBufferX();
+        float deltaY = to.getBufferY() - from.getBufferY();
+        float dist = (float) Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        float drawX = from.getBufferX();
+        float drawY = from.getBufferY();
+        for (float step = 0; step <= dist; step++) {
+            float depth = from.getDepth() + (to.getDepth() - from.getDepth()) * (1.0f - step / dist);
+            drawPoint(new BufferPoint((int) drawX, (int) drawY, depth), visChar);
+            drawX += deltaX / dist;
+            drawY += deltaY / dist;
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: draws the specified char to the framebuffer
+    public void drawPoint(BufferPoint point, char visChar) {
+        if (point.isOutOfBounds(bufferWidth)) {
+            return;
+        }
+
+        depthBuffer[point.getBufferIndexOffset(bufferWidth)] = point.getDepth();
+        frameBuffer[point.getBufferIndexOffset(bufferWidth)] = (int) visChar;
+    }
 
     // EFFECTS: projects a "worldspace" Vector3 into screenspace coordinates
     public BufferPoint projectPointToScreenSpace(Vector3 point) {

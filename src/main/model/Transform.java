@@ -139,6 +139,11 @@ public class Transform {
         return new Vector3(vector4[0], vector4[1], vector4[2]);
     }
 
+    // EFFECTS: extracts a scale vector from the transform
+    public static Vector3 extractScale(Transform matrix) {
+        return null;
+    }
+
     // EFFECTS: returns sinx in degrees
     private static float sinDegrees(float x) {
         return (float) Math.sin(x * DEGREE_TO_RAD);

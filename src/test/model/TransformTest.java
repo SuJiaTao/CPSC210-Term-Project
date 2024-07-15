@@ -191,4 +191,9 @@ public class TransformTest {
         v1 = Transform.multiply(m0, new Vector3(3.0f, 4.0f, 5.0f));
         assertEquals(new Vector3(3f, 4f, 5f), v1);
     }
+
+    @Test
+    public void testExtractScale() {
+
+    }
 }
