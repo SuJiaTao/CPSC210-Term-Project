@@ -144,6 +144,16 @@ public class Transform {
         return null;
     }
 
+    // EFFECTS: extracts a translation vector from the transform
+    public static Vector3 extractTranslation(Transform matrix) {
+        return null;
+    }
+
+    // EFFECTS: extracts a rotation vector from the transform
+    public static Vector3 extractRotation(Transform matrix) {
+        return null;
+    }
+
     // EFFECTS: returns sinx in degrees
     private static float sinDegrees(float x) {
         return (float) Math.sin(x * DEGREE_TO_RAD);

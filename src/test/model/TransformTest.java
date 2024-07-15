@@ -194,6 +194,44 @@ public class TransformTest {
 
     @Test
     public void testExtractScale() {
+        m0 = Transform.scaleMatrix(new Vector3(1.0f, 2.0f, 3.0f));
+        assertEquals(new Vector3(1.0f, 2.0f, 3.0f), Transform.extractScale(m0));
 
+        m0 = Transform.scaleMatrix(new Vector3(-3.0f, 4.0f, 5.0f));
+        assertEquals(new Vector3(-3.0f, 4.0f, 5.0f), Transform.extractScale(m0));
+
+        m0 = Transform.scaleMatrix(new Vector3());
+        assertEquals(new Vector3(), Transform.extractScale(m0));
+
+        m0 = Transform.scaleMatrix(new Vector3(1.0f, -1.0f, 1.0f));
+        assertEquals(new Vector3(1.0f, -1.0f, 1.0f), Transform.extractScale(m0));
+    }
+
+    @Test
+    public void testExtractScaleComposed() {
+        m0 = Transform.scaleMatrix(new Vector3(1.0f, 2.0f, 3.0f));
+        m0 = Transform.multiply(m0, Transform.scaleMatrix(new Vector3(2.0f, 3.0f, 4.0f)));
+        m0 = Transform.multiply(m0, Transform.rotationMatrixX(45.0f));
+        m0 = Transform.multiply(m0, Transform.translationMatrix(new Vector3(8.0f, 9.0f, 7.0f)));
+        assertEquals(new Vector3(1.0f * 2.0f, 2.0f * 3.0f, 3.0f * 4.0f), Transform.extractScale(m0));
+    }
+
+    @Test
+    public void testExtractTranslation() {
+        m0 = Transform.translationMatrix(new Vector3());
+        assertEquals(new Vector3(), Transform.extractTranslation(m0));
+
+        m0 = Transform.translationMatrix(new Vector3(1.0f, 2.0f, 3.0f));
+        assertEquals(new Vector3(1.0f, 2.0f, 3.0f), Transform.extractTranslation(m0));
+
+        m0 = Transform.translationMatrix(new Vector3(6.0f, 5.0f, -4.0f));
+        assertEquals(new Vector3(6.0f, 5.0f, -4.0f), Transform.extractTranslation(m0));
+    }
+
+    @Test
+    public void testExtractTranslationComposed() {
+        m0 = Transform.translationMatrix(new Vector3(1.0f, 2.0f, 3.0f));
+        m0 = Transform.multiply(m0, Transform.translationMatrix(new Vector3(4.0f, 5.0f, 6.0f)));
+        assertEquals(new Vector3(1.0f + 4.0f, 2.0f + 5.0f, 3.0f + 6.0f), Transform.extractTranslation(m0));
     }
 }
