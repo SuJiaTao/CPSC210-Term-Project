@@ -29,12 +29,16 @@ public class SimulationManager {
     private static final int EDIT_PROP_RADIUS = 3;
     private static final int EDIT_PROP_CYCLE_MOD = EDIT_PROP_RADIUS + 1;
 
-    private static final int VIEWPORT_TOP = 0;
-    private static final int VIEWPORT_BOT = 32;
-    private static final int VIEWPORT_LEFT = EDITOR_RIGHT + 1;
-    private static final int VIEWPORT_RIGHT = TERMINAL_WIDTH - 1;
-    private static final int VIEWPORT_WIDTH = VIEWPORT_RIGHT - VIEWPORT_LEFT;
-    private static final int VIEWPORT_HEIGHT = VIEWPORT_BOT - VIEWPORT_TOP;
+    private static final int VP_FRAME_TOP = 0;
+    private static final int VP_FRAME_BOT = 32;
+    private static final int VP_FRAME_LEFT = EDITOR_RIGHT + 1;
+    private static final int VP_FRAME_RIGHT = TERMINAL_WIDTH - 1;
+    private static final int VIEWPORT_TOP = VP_FRAME_TOP + 3;
+    private static final int VIEWPORT_BOT = VP_FRAME_BOT;
+    private static final int VIEWPORT_LEFT = VP_FRAME_LEFT + 1;
+    private static final int VIEWPORT_RIGHT = VP_FRAME_RIGHT;
+    private static final int VIEWPORT_PIX_WIDTH = (VIEWPORT_RIGHT - VIEWPORT_LEFT) / 2;
+    private static final int VIEWPORT_PIX_HEIGHT = VIEWPORT_BOT - VIEWPORT_TOP;
 
     private static final int EDIT_PROP_MAX_INPUT_LEN = EDITOR_RIGHT - EDITOR_LEFT - 3;
 
@@ -66,7 +70,7 @@ public class SimulationManager {
         initSimulationVariables();
         initEditorVariables();
 
-        viewport = new ViewportEngine(Math.max(VIEWPORT_WIDTH, VIEWPORT_HEIGHT), simulation);
+        viewport = new ViewportEngine(Math.min(VIEWPORT_PIX_WIDTH, VIEWPORT_PIX_HEIGHT), simulation);
     }
 
     // EFFECTS: setup output streams
@@ -169,12 +173,19 @@ public class SimulationManager {
     // MODIFIES: this
     // EFFECTS: draw the viewport buffers to the terminal
     public void drawViewportView(TextGraphics gfx) {
+        // TODO: this is a hackjob that will be fixed once I can use a proper GUI
+        // library
         setTextGraphicsToViewMode(gfx);
         viewport.update();
-        for (int x = 0; x < VIEWPORT_WIDTH - 1; x++) {
-            for (int y = 0; y < VIEWPORT_HEIGHT - 1; y++) {
+        int vpOffsetX = (viewport.getSize() - VIEWPORT_PIX_WIDTH) / 2;
+        int vpOffsetY = (viewport.getSize() - VIEWPORT_PIX_HEIGHT) / 2;
+        int anchorLeft = VIEWPORT_LEFT + vpOffsetX;
+        int anchorTop = VIEWPORT_TOP - vpOffsetY;
+        for (int x = 0; x < viewport.getSize(); x++) {
+            for (int y = 0; y < viewport.getSize(); y++) {
                 char fbChar = (char) viewport.getFrameBufferValue(x, y);
-                gfx.setCharacter(VIEWPORT_LEFT + 1 + x, VIEWPORT_TOP + 1 + y, fbChar);
+                gfx.setCharacter(anchorLeft + (x * 2) + 0, anchorTop + y, fbChar);
+                gfx.setCharacter(anchorLeft + (x * 2) + 1, anchorTop + y, fbChar);
             }
         }
     }
@@ -185,12 +196,12 @@ public class SimulationManager {
         setTextGraphicsToViewMode(gfx);
 
         // DRAW VIEWPORT SURROUNDING BOX
-        gfx.drawLine(VIEWPORT_LEFT, VIEWPORT_TOP, VIEWPORT_RIGHT, VIEWPORT_TOP, 'X');
-        gfx.drawLine(VIEWPORT_LEFT, VIEWPORT_BOT, VIEWPORT_RIGHT, VIEWPORT_BOT, 'X');
-        gfx.drawLine(VIEWPORT_LEFT, VIEWPORT_TOP, VIEWPORT_LEFT, VIEWPORT_BOT, 'X');
-        gfx.drawLine(VIEWPORT_RIGHT, VIEWPORT_TOP, VIEWPORT_RIGHT, VIEWPORT_BOT, 'X');
+        gfx.drawLine(VP_FRAME_LEFT, VP_FRAME_TOP, VP_FRAME_RIGHT, VP_FRAME_TOP, 'X');
+        gfx.drawLine(VP_FRAME_LEFT, VP_FRAME_BOT, VP_FRAME_RIGHT, VP_FRAME_BOT, 'X');
+        gfx.drawLine(VP_FRAME_LEFT, VP_FRAME_TOP, VP_FRAME_LEFT, VP_FRAME_BOT, 'X');
+        gfx.drawLine(VP_FRAME_RIGHT, VP_FRAME_TOP, VP_FRAME_RIGHT, VP_FRAME_BOT, 'X');
 
-        gfx.drawLine(VIEWPORT_LEFT, VIEWPORT_TOP + 2, VIEWPORT_RIGHT, VIEWPORT_TOP + 2, 'X');
+        gfx.drawLine(VP_FRAME_LEFT, VP_FRAME_TOP + 2, VP_FRAME_RIGHT, VP_FRAME_TOP + 2, 'X');
         String viewportTitle = "Simulation ";
         if (simulationIsRunning) {
             viewportTitle += "Running";
@@ -198,7 +209,7 @@ public class SimulationManager {
             viewportTitle += "Stopped";
         }
         viewportTitle += String.format(" | Time Elapsed: %.2fs", simulation.getTimeElapsed());
-        gfx.putString(VIEWPORT_LEFT + 2, VIEWPORT_TOP + 1, viewportTitle);
+        gfx.putString(VP_FRAME_LEFT + 2, VP_FRAME_TOP + 1, viewportTitle);
     }
 
     // MODIFIES: this

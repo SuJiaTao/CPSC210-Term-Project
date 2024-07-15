@@ -1,5 +1,7 @@
 package ui;
 
+import org.junit.jupiter.params.shadow.com.univocity.parsers.tsv.TsvRoutines;
+
 import model.*;
 
 // Represents the internal graphics state and rendering logic that make up 
@@ -8,6 +10,9 @@ import model.*;
 public class ViewportEngine {
     // NOTE: "camera" looks down the negative Z axis
     private static final float CLIPPING_PLANE_DEPTH = -0.1f;
+    private static final char CLEAR_VALUE = ' ';
+    private static final float CAMERA_PULLBACK_FACTOR = 1.25f;
+    private static final float CAMERA_PULLBACL_MIN = 50.0f;
 
     private float[] depthBuffer;
     private int[] frameBuffer;
@@ -16,8 +21,9 @@ public class ViewportEngine {
 
     private Simulation simulation;
 
-    private Transform viewTransform;
     private Vector3 averagePlanetPos;
+    private float furthestPlanetDistance;
+    private Transform viewTransform;
 
     // Represents an element in the render buffers
     private class BufferPoint {
@@ -76,6 +82,10 @@ public class ViewportEngine {
         return frameBuffer[new BufferPoint(x, y, 0.0f).getBufferIndexOffset(bufferWidth)];
     }
 
+    public int getSize() {
+        return bufferWidth;
+    }
+
     // MODIFIES: this
     // EFFECTS: updates viewport based on simulation
     public void update() {
@@ -86,51 +96,68 @@ public class ViewportEngine {
         }
 
         updateAveragePlanetPos();
+        updateFurthestPlanetDistance();
         updateViewportMatrix();
         for (Planet planet : simulation.getPlanets()) {
             drawPlanet(planet);
         }
     }
 
-    // REQUIRES: there must be at least 1 planet present in the simulation
     // MODIFIES: this
     // EFFECTS: updates average planet position
     public void updateAveragePlanetPos() {
         averagePlanetPos = new Vector3();
-        float totalMass = 0.0f;
-        for (Planet planet : simulation.getPlanets()) {
-            float planetMass = planet.getMass();
-            averagePlanetPos = Vector3.multiply(Vector3.add(averagePlanetPos, planet.getPosition()), planetMass);
-            totalMass += planetMass;
+        if (simulation.getPlanets().size() == 0) {
+            return;
         }
-        averagePlanetPos = Vector3.multiply(averagePlanetPos, 1.0f / totalMass);
 
+        for (Planet planet : simulation.getPlanets()) {
+            Vector3 posWeighted = Vector3.multiply(planet.getPosition(), 1.0f / simulation.getPlanets().size());
+            averagePlanetPos = Vector3.add(averagePlanetPos, posWeighted);
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: updates the distance of the furthest planet away from the center
+    public void updateFurthestPlanetDistance() {
+        furthestPlanetDistance = 0.0f;
+        for (Planet planet : simulation.getPlanets()) {
+            float dispFromCenter = Vector3.sub(averagePlanetPos, planet.getPosition()).magnitude();
+            furthestPlanetDistance = Math.max(dispFromCenter + planet.getRadius(), furthestPlanetDistance);
+        }
     }
 
     // MODIFIES: this
     // EFFECTS: sets up view matrix for viewing planets
     public void updateViewportMatrix() {
         viewTransform = new Transform();
-        /*
-         * Vector3 centerTranslate = Vector3.multiply(averagePlanetPos, -1.0f);
-         * viewTransform = Transform.multiply(viewTransform,
-         * Transform.translationMatrix(centerTranslate));
-         * viewTransform = Transform.multiply(viewTransform,
-         * Transform.rotationMatrixX(35.0f));
-         * viewTransform = Transform.multiply(viewTransform,
-         * Transform.translationMatrix(new Vector3(0.0f, 0.0f, -25.0f)));
-         */
+
+        Vector3 trl = Vector3.multiply(averagePlanetPos, -1.0f);
+        Vector3 rot = new Vector3();
+        Vector3 scl = new Vector3(1.0f, 1.0f, 1.0f);
+        viewTransform = Transform.multiply(viewTransform, Transform.transformMatrix(trl, rot, scl));
+        float pullBack = Math.max(CAMERA_PULLBACL_MIN, furthestPlanetDistance * CAMERA_PULLBACK_FACTOR);
+        Vector3 pullBackVector = new Vector3(0.0f, 0.0f, -pullBack);
+        viewTransform = Transform.multiply(viewTransform, Transform.translationMatrix(pullBackVector));
     }
 
     // MODIFIES: this
     // EFFECTS: draws specific planet
-    public void drawPlanet(Planet p) {
+    public void drawPlanet(Planet planet) {
+
         // TODO: finish this so it actually looks nice
-        if (p.getPosition().getZ() >= CLIPPING_PLANE_DEPTH) {
+
+        Vector3 planetPosViewSpace = Transform.multiply(viewTransform, planet.getPosition());
+        System.out.println(planetPosViewSpace);
+        if (planetPosViewSpace.getZ() >= CLIPPING_PLANE_DEPTH) {
             return;
         }
 
-        Vector3 planetPosViewSpace = Transform.multiply(viewTransform, p.getPosition());
+        // NOTE:
+        // there are probably more optimized ways of doing this
+        Vector3 radiusVector = new Vector3(0.0f, 0.0f, planet.getRadius());
+        radiusVector = Transform.multiply(viewTransform, radiusVector);
+
         BufferPoint planetPoint = projectPointToScreenSpace(planetPosViewSpace);
         if (planetPoint.isOutOfBounds(bufferWidth)) {
             return;
@@ -139,6 +166,9 @@ public class ViewportEngine {
         depthBuffer[planetPoint.getBufferIndexOffset(bufferWidth)] = planetPoint.getDepth();
         frameBuffer[planetPoint.getBufferIndexOffset(bufferWidth)] = (int) '+';
     }
+
+    // MODIFIES: this
+    // EFFECTS:
 
     // EFFECTS: projects a "worldspace" Vector3 into screenspace coordinates
     public BufferPoint projectPointToScreenSpace(Vector3 point) {
@@ -155,7 +185,7 @@ public class ViewportEngine {
     public void clearBuffers() {
         for (int i = 0; i < pixelCount; i++) {
             depthBuffer[i] = Float.NEGATIVE_INFINITY;
-            frameBuffer[i] = (int) ' ';
+            frameBuffer[i] = (int) CLEAR_VALUE;
         }
     }
 }
