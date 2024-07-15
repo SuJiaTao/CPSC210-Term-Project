@@ -4,10 +4,11 @@ import java.util.*;
 
 import exceptions.ArgumentOutOfBoundsException;
 import exceptions.PlanetAlreadyExistsInSimulationException;
+import exceptions.PlanetDoesntExistInSimulationException;
 
 // Represents the current n-body simulation state
 public class Simulation {
-    public static final float GRAVITATIONAL_CONSTANT = 0.75f;
+    public static final float GRAVITATIONAL_CONSTANT = 2.5f;
     public static final float EPSILON = 0.001f;
 
     private float timeElapsed;
@@ -43,6 +44,15 @@ public class Simulation {
             throw new PlanetAlreadyExistsInSimulationException();
         }
         planets.add(planet);
+    }
+
+    // MODIFIES: this
+    // EFFECTS: removes a specific planet from the simulation, if it exists
+    public void removePlanet(Planet planet) {
+        if (!planets.contains(planet)) {
+            throw new PlanetDoesntExistInSimulationException();
+        }
+        planets.remove(planet);
     }
 
     // MODIFIES: this

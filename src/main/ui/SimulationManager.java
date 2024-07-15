@@ -8,6 +8,7 @@ import com.googlecode.lanterna.input.*;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 
+import exceptions.PlanetDoesntExistInSimulationException;
 import model.*;
 
 // Represents the current state of user-interface to managing simulations
@@ -42,6 +43,9 @@ public class SimulationManager {
 
     private static final int EDIT_PROP_MAX_INPUT_LEN = EDITOR_RIGHT - EDITOR_LEFT - 3;
 
+    private static final String[] NEW_PLANET_NAMES = { "Kepler", "Earth", "Solaris", "Tatoonie", "Furball", "X",
+            "Atlas", "Gemini", "Spongey", "Arrakis", "Trapist", "Proxima", "Mundley", "Bongcloud" };
+    private static final int NEW_PLANET_SUFFIX_MAX = 1000;
     private static final float NEW_PLANET_POS_OFFSET_BOUND = 30.0f;
     private static final float NEW_PLANET_MIN_RAD = 0.5f;
     private static final float NEW_PLANET_MAX_RAD = 1.5f;
@@ -93,6 +97,20 @@ public class SimulationManager {
         screen.startScreen();
     }
 
+    // EFFECTS: prints an error to stderr if failed to construct screen of desired
+    // size
+    private void checkIfObtainedDesiredTerminalSize() {
+        TerminalSize termSize = screen.getTerminalSize();
+        int widthActual = termSize.getColumns();
+        int heightActual = termSize.getRows();
+
+        if (heightActual != TERMINAL_HEIGHT || widthActual != TERMINAL_WIDTH) {
+            String formatStr = "Failed to create terminal of desired size: (%d, %d), instead got (%d %d)";
+            String errMessage = String.format(formatStr, TERMINAL_WIDTH, TERMINAL_HEIGHT, widthActual, heightActual);
+            System.err.print(errMessage);
+        }
+    }
+
     // EFFECTS: sets up simulation related variables
     public void initSimulationVariables() {
         simulation = new Simulation();
@@ -107,20 +125,6 @@ public class SimulationManager {
         editingSelectedProperty = false;
         userInputString = "";
         listViewOffset = 0;
-    }
-
-    // EFFECTS: prints an error to stderr if failed to construct screen of desired
-    // size
-    private void checkIfObtainedDesiredTerminalSize() {
-        TerminalSize termSize = screen.getTerminalSize();
-        int widthActual = termSize.getColumns();
-        int heightActual = termSize.getRows();
-
-        if (heightActual != TERMINAL_HEIGHT || widthActual != TERMINAL_WIDTH) {
-            String formatStr = "Failed to create terminal of desired size: (%d, %d), instead got (%d %d)";
-            String errMessage = String.format(formatStr, TERMINAL_WIDTH, TERMINAL_HEIGHT, widthActual, heightActual);
-            System.err.print(errMessage);
-        }
     }
 
     // MODIFIES: this
@@ -151,10 +155,22 @@ public class SimulationManager {
             handleSimulationState();
             drawPlanetListEditor();
             drawSimulationViewPort();
-        } catch (Exception errMsg) {
-            System.err.print(errMsg.toString());
+        } catch (Exception exception) {
+            System.err.print(exception.toString());
         }
         drawErrAndMessageText();
+    }
+
+    // MODIFIES: this
+    // EFFECTS: ensure that selectedPlanet is a reasonable value
+    public void ensureSelectedPlanetIsReasonable() {
+        if (!simulation.getPlanets().contains(selectedPlanet)) {
+            if (simulation.getPlanets().size() > 0) {
+                selectedPlanet = simulation.getPlanets().get(0);
+            } else {
+                selectedPlanet = null;
+            }
+        }
     }
 
     // MODIFIES: this
@@ -238,6 +254,10 @@ public class SimulationManager {
         gfx.drawLine(EDITOR_LEFT, EDITOR_TOP + 2, EDITOR_RIGHT, EDITOR_TOP + 2, '+');
 
         List<Planet> planetList = simulation.getPlanets();
+        if (planetList.size() == 0) {
+            gfx.putString(EDITOR_LEFT + 1, EDITOR_TOP + 3, " Press '+' to add a planet");
+            return;
+        }
 
         listViewOffset = Math.max(listViewOffset, planetList.indexOf(selectedPlanet) - PLANETLIST_ENTIRES + 1);
         listViewOffset = Math.min(listViewOffset, planetList.indexOf(selectedPlanet));
@@ -267,6 +287,11 @@ public class SimulationManager {
 
         // title and border
         gfx.drawLine(EDITOR_LEFT, PLANETINFO_TOP, EDITOR_RIGHT, PLANETINFO_TOP, '+');
+
+        if (selectedPlanet == null) {
+            gfx.putString(EDITOR_LEFT + 2, PLANETINFO_TOP + 1, "No planet selected");
+            return;
+        }
 
         String actionPrefix = "";
         if (editingSelectedPlanet) {
@@ -352,7 +377,7 @@ public class SimulationManager {
         // about ~16msec which really isn't good enough for my purposes. The only way to
         // do this the way I want is to go into a spin so here it is :3
         long startTime = System.nanoTime();
-        while (((System.nanoTime() - startTime) / 1000) <= waitMilliseconds) {
+        while (((System.nanoTime() - startTime) / 1000) < waitMilliseconds) {
             // wait
         }
     }
@@ -364,12 +389,40 @@ public class SimulationManager {
             simulationIsRunning = false;
         }
         if (simulationIsRunning) {
+            float latestTime = simulation.getTimeElapsed();
             simulation.progressBySeconds(lastDeltaTimeSeconds);
+            handleDebrisForSimuationTick(latestTime);
         }
     }
 
     // MODIFIES: this
-    // EFFECTS: handles debris creation behavior for when planets collide
+    // EFFECTS: handles debris behavior simulation
+    public void handleDebrisForSimuationTick(float latestTime) {
+        for (Collision col : simulation.getCollisions()) {
+            if (col.getCollisionTime() < latestTime) {
+                continue;
+            }
+            handleDebrisForCollision(col);
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: handles debris behavior for specific collision
+    public void handleDebrisForCollision(Collision col) {
+        Planet planetA = col.getPlanetsInvolved().get(0);
+        Planet planetB = col.getPlanetsInvolved().get(1);
+
+        float deltaV = Vector3.sub(planetA.getVelocity(), planetB.getVelocity()).magnitude();
+
+        float kineticA = 0.5f * planetA.getMass() * deltaV * deltaV;
+        float kineticB = 0.5f * planetB.getMass() * deltaV * deltaV;
+
+        float deltaK = Math.abs(kineticA - kineticB) / (kineticA + kineticB);
+        System.out.println("" + deltaK);
+
+        simulation.removePlanet(planetA);
+        simulation.removePlanet(planetB);
+    }
 
     // MODIFIES: this
     // EFFECTS: handles all user input
@@ -413,6 +466,11 @@ public class SimulationManager {
     // MODIFIES: this
     // EFFECTS: handles pausing/unpausing of the simulation
     public void handleSimulationPauseAndUnpause() {
+        if (selectedPlanet == null) {
+            simulationIsRunning = false;
+            return;
+        }
+
         Character key = lastUserKey.getCharacter();
         if (key == null) {
             return;
@@ -485,6 +543,7 @@ public class SimulationManager {
         }
     }
 
+    // REQUIRES: selectedPlanet is not null
     // EFFECTS: attempts to update the planet name
     public boolean tryApplyNewName() {
         if (userInputString.length() == 0) {
@@ -543,20 +602,27 @@ public class SimulationManager {
             addAndSelectNewPlanet();
         }
         if (lastChar == '-' || lastChar == '_') {
-            if (simulation.getPlanets().size() == 1) {
-                return;
-            }
             handleRemoveSelectedPlanet();
         }
     }
 
-    // REQUIRES: there are more than one planets remaining
     // MODFIES: this
     // EFFECTS: handles the updating of selectedPlanet when the current selected
     // planet is removed
     public void handleRemoveSelectedPlanet() {
+        if (selectedPlanet == null) {
+            return;
+        }
+        if (!simulation.getPlanets().contains(selectedPlanet)) {
+            throw new PlanetDoesntExistInSimulationException();
+        }
+
         int selectedIndex = simulation.getPlanets().indexOf(selectedPlanet);
-        simulation.getPlanets().remove(selectedPlanet);
+        simulation.removePlanet(selectedPlanet);
+        if (simulation.getPlanets().size() == 0) {
+            selectedPlanet = null;
+            return;
+        }
         if (selectedIndex >= simulation.getPlanets().size()) {
             selectedIndex = simulation.getPlanets().size() - 1;
         }
@@ -593,6 +659,10 @@ public class SimulationManager {
     // EFFECTS: cycles the selected planet based on the arrow keys, or selects if
     // detected enter key
     public void handleCycleSelectedPlanet() {
+        if (selectedPlanet == null) {
+            return;
+        }
+
         int selectedIndex = simulation.getPlanets().indexOf(selectedPlanet);
         if (lastUserKey.getKeyType() == KeyType.ArrowUp) {
             selectedIndex--;
@@ -616,12 +686,14 @@ public class SimulationManager {
     public void addAndSelectNewPlanet() {
 
         Random rand = new Random();
+        String name = NEW_PLANET_NAMES[rand.nextInt(NEW_PLANET_NAMES.length)];
+        String numberSuffix = String.format("%03d", rand.nextInt(NEW_PLANET_SUFFIX_MAX));
         float posX = (rand.nextFloat() - 0.5f) * NEW_PLANET_POS_OFFSET_BOUND;
         float posY = (rand.nextFloat() - 0.5f) * NEW_PLANET_POS_OFFSET_BOUND;
         float posZ = (rand.nextFloat() - 0.5f) * NEW_PLANET_POS_OFFSET_BOUND;
         float scale = NEW_PLANET_MIN_RAD + rand.nextFloat() * (NEW_PLANET_MAX_RAD - NEW_PLANET_MIN_RAD);
 
-        Planet newPlanet = new Planet("New Planet", new Vector3(posX, posY, posZ), new Vector3(), scale);
+        Planet newPlanet = new Planet(name + "-" + numberSuffix, new Vector3(posX, posY, posZ), new Vector3(), scale);
         simulation.addPlanet(newPlanet);
         selectedPlanet = newPlanet;
     }
