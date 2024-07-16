@@ -172,15 +172,40 @@ public class SimulationManager {
     // EFFECTS: handles all input and graphics
     private void handleEverythingAndiMeanEverything() {
         try {
-            ensureSelectedPlanetIsReasonable();
             handleUserInput();
             handleSimulationState();
+
+            // NOTE: the handling of the simulation and user input can cause it such that
+            // there is no planets left, which is a special state which must be recognised
+            // for when rendering, so drawing must be done last, after this is accounted for
+            ensureSelectedPlanetIsReasonable();
             drawPlanetListEditor();
             drawSimulationViewPort();
         } catch (Exception exception) {
-            System.err.print(exception.toString());
+            printException(exception);
         }
         drawErrAndMessageText();
+    }
+
+    // MODIFIES: this
+    // EFFECTS: prints the most useful error message given the callstack
+    private void printException(Exception exception) {
+        StackTraceElement[] callStack = exception.getStackTrace();
+        StackTraceElement elemOfInterest = callStack[0]; // DEFAULT: highest
+
+        // NOTE: gets the "highest" element within THIS class as to get around nested
+        // error checking in the JDK
+        for (int i = 0; i < callStack.length; i++) {
+            if (callStack[i].getClassName().equals(this.getClass().getName())) {
+                elemOfInterest = callStack[i];
+                break;
+            }
+        }
+
+        String methName = elemOfInterest.getMethodName();
+        String lineName = "" + elemOfInterest.getLineNumber();
+        String errMsg = methName + " failed at line " + lineName + ":" + exception.toString();
+        System.err.print(errMsg);
     }
 
     // MODIFIES: this
@@ -490,7 +515,9 @@ public class SimulationManager {
     // MODIFIES: this
     // EFFECTS: handles two planets colliding with low deltaK
     private void handleCollideLowDeltaK(Planet planetA, Planet planetB) {
-
+        // TODO: make actuall functional
+        simulation.removePlanet(planetA);
+        simulation.removePlanet(planetB);
     }
 
     // MODIFIES: this

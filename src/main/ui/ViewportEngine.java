@@ -215,8 +215,10 @@ public class ViewportEngine {
         if (point.getZ() >= CLIPPING_PLANE_DEPTH) {
             throw new InvalidRenderStateException();
         }
-        float posX = point.getX() / point.getZ();
-        float posY = point.getY() / point.getZ();
+        // NOTE: despite facing down the -Z axis, we dont want X and Y axis to be
+        // inverted, so we take the Abs of the Z
+        float posX = point.getX() / Math.abs(point.getZ());
+        float posY = point.getY() / Math.abs(point.getZ());
         // NOTE: this transforms a point from [-1, 1] to [0, width]
         posX = ((posX + 1.0f) * 0.5f) * (float) bufferWidth;
         posY = ((posY + 1.0f) * 0.5f) * (float) bufferWidth;
