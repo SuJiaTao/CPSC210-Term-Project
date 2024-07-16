@@ -16,7 +16,7 @@ import model.*;
 
 // Represents the current state of user-interface to managing simulations
 public class SimulationManager {
-    private static final int TERMINAL_WIDTH = 90;
+    private static final int TERMINAL_WIDTH = 100;
     private static final int TERMINAL_HEIGHT = 35;
     private static final int REFRESH_DELAY_MSEC = 10;
 
@@ -156,12 +156,11 @@ public class SimulationManager {
         while (true) {
             long startNanoTime = System.nanoTime();
 
-            screen.setCursorPosition(new TerminalPosition(0, 0));
+            screen.setCursorPosition(null);
             clearTerminal();
 
             handleEverythingAndiMeanEverything();
 
-            screen.setCursorPosition(new TerminalPosition(screen.getTerminalSize().getColumns() - 1, 0));
             screen.refresh();
 
             long endNanoTime = System.nanoTime();
@@ -257,7 +256,7 @@ public class SimulationManager {
         int anchorTop = VIEWPORT_TOP - vpOffsetY;
         for (int x = 0; x < viewport.getSize(); x++) {
             for (int y = 0; y < viewport.getSize(); y++) {
-                if (viewport.getPlanetMaskValue(x, y) == selectedPlanet) {
+                if (viewport.getPlanetMaskValue(x, y) == selectedPlanet && selectedPlanet != null) {
                     setTextGraphicsToHoverMode(gfx);
                     if (editingSelectedPlanet) {
                         setTextGraphicsToSelectMode(gfx);
