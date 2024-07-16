@@ -2,11 +2,14 @@ package ui;
 
 import java.util.*;
 
+import javax.swing.JFrame;
+
 import com.googlecode.lanterna.*;
 import com.googlecode.lanterna.graphics.*;
 import com.googlecode.lanterna.input.*;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
+import com.googlecode.lanterna.terminal.swing.SwingTerminalFrame;
 
 import exceptions.PlanetDoesntExistInSimulationException;
 import model.*;
@@ -98,12 +101,13 @@ public class SimulationManager {
         termFactory.setInitialTerminalSize(new TerminalSize(TERMINAL_WIDTH, TERMINAL_HEIGHT));
         screen = termFactory.createScreen();
         checkIfObtainedDesiredTerminalSize();
+        tryAndSetupWindowFrame();
         screen.startScreen();
     }
 
     // EFFECTS: prints an error to stderr if failed to construct screen of desired
     // size
-    private void checkIfObtainedDesiredTerminalSize() {
+    public void checkIfObtainedDesiredTerminalSize() {
         TerminalSize termSize = screen.getTerminalSize();
         int widthActual = termSize.getColumns();
         int heightActual = termSize.getRows();
@@ -112,6 +116,19 @@ public class SimulationManager {
             String formatStr = "Failed to create terminal of desired size: (%d, %d), instead got (%d %d)";
             String errMessage = String.format(formatStr, TERMINAL_WIDTH, TERMINAL_HEIGHT, widthActual, heightActual);
             System.err.print(errMessage);
+        }
+    }
+
+    // EFFECTS: tries to set some additional properties of the current screen and
+    // prints an error of unable to
+    public void tryAndSetupWindowFrame() {
+        try {
+            SwingTerminalFrame swingFrame = (SwingTerminalFrame) screen.getTerminal();
+            swingFrame.setResizable(false);
+            swingFrame.setTitle("n-Body Simulation");
+            swingFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        } catch (Exception excep) {
+            System.err.print("Failed to setup window. Error: " + excep.toString());
         }
     }
 
