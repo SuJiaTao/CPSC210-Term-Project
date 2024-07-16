@@ -47,7 +47,9 @@ public class SimulationManager {
     private static final int EDIT_PROP_MAX_INPUT_LEN = EDITOR_RIGHT - EDITOR_LEFT - 3;
 
     private static final String[] NEW_PLANET_NAMES = { "Kepler", "Earth", "Solaris", "Tatoonie", "Furball", "X",
-            "Atlas", "Gemini", "Spongey", "Arrakis", "Trapist", "Proxima", "Mundley", "Bongcloud" };
+            "Atlas", "Gemini", "Spongey", "Arrakis", "Trapist", "Proxima", "Mundley", "Bongcloud", "Euclid", "Hades",
+            "Jupiter", "Draper", "Draconis", "Cancri", "Awohali", "Vytis", "Igsael", "Chura", "Maskita", "Nanron",
+            "Ugaris", "Yvaga", "Lebnitz", "Doodski", "Phobos", "WASP" };
     private static final int NEW_PLANET_SUFFIX_MAX = 1000;
     private static final float NEW_PLANET_POS_OFFSET_BOUND = 30.0f;
     private static final float NEW_PLANET_MIN_RAD = 0.5f;
@@ -202,10 +204,8 @@ public class SimulationManager {
             }
         }
 
-        String methName = elemOfInterest.getMethodName();
-        String lineName = "" + elemOfInterest.getLineNumber();
-        String errMsg = methName + " failed at line " + lineName + ":" + exception.toString();
-        System.err.print(errMsg);
+        String method = elemOfInterest.getMethodName();
+        System.err.print(method + " threw " + exception.getClass().getSimpleName());
     }
 
     // MODIFIES: this
@@ -250,7 +250,6 @@ public class SimulationManager {
     private void drawViewportView(TextGraphics gfx) {
         // TODO: this is a hackjob that will be fixed once I can use a proper GUI
         // library
-        setTextGraphicsToViewMode(gfx);
         viewport.update();
         int vpOffsetX = (viewport.getSize() - VIEWPORT_PIX_WIDTH) / 2;
         int vpOffsetY = (viewport.getSize() - VIEWPORT_PIX_HEIGHT) / 2;
@@ -258,6 +257,14 @@ public class SimulationManager {
         int anchorTop = VIEWPORT_TOP - vpOffsetY;
         for (int x = 0; x < viewport.getSize(); x++) {
             for (int y = 0; y < viewport.getSize(); y++) {
+                if (viewport.getPlanetMaskValue(x, y) == selectedPlanet) {
+                    setTextGraphicsToHoverMode(gfx);
+                    if (editingSelectedPlanet) {
+                        setTextGraphicsToSelectMode(gfx);
+                    }
+                } else {
+                    setTextGraphicsToViewMode(gfx);
+                }
                 char fbChar = (char) viewport.getFrameBufferValue(x, y);
                 gfx.setCharacter(anchorLeft + (x * 2) + 0, anchorTop + y, fbChar);
                 gfx.setCharacter(anchorLeft + (x * 2) + 1, anchorTop + y, fbChar);
@@ -427,9 +434,9 @@ public class SimulationManager {
         textWriter.setBackgroundColor(TextColor.ANSI.BLACK);
 
         textWriter.setForegroundColor(TextColor.ANSI.WHITE);
-        textWriter.putString(0, TERMINAL_HEIGHT - 2, "Message:\t" + outRedirect.getStringToDisplay());
+        textWriter.putString(0, TERMINAL_HEIGHT - 2, "LastOut: " + outRedirect.getStringToDisplay());
         textWriter.setForegroundColor(TextColor.ANSI.RED);
-        textWriter.putString(0, TERMINAL_HEIGHT - 1, "Last Error:\t" + errRedirect.getStringToDisplay());
+        textWriter.putString(0, TERMINAL_HEIGHT - 1, "LastErr: " + errRedirect.getStringToDisplay());
     }
 
     // EFFECTS: waits for miliseconds via spin

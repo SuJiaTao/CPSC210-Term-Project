@@ -17,6 +17,7 @@ public class ViewportEngine {
 
     private float[] depthBuffer;
     private int[] frameBuffer;
+    private Planet[] planetMaskBuffer;
     private int bufferWidth;
     private int pixelCount;
 
@@ -74,6 +75,7 @@ public class ViewportEngine {
         pixelCount = size * size;
         depthBuffer = new float[pixelCount];
         frameBuffer = new int[pixelCount];
+        planetMaskBuffer = new Planet[pixelCount];
 
         viewTransform = new Transform();
         averagePlanetPos = new Vector3();
@@ -81,6 +83,10 @@ public class ViewportEngine {
 
     public int getFrameBufferValue(int x, int y) {
         return frameBuffer[new BufferPoint(x, y, 0.0f).getBufferIndexOffset(bufferWidth)];
+    }
+
+    public Planet getPlanetMaskValue(int x, int y) {
+        return planetMaskBuffer[new BufferPoint(x, y, 0.0f).getBufferIndexOffset(bufferWidth)];
     }
 
     public int getSize() {
@@ -165,7 +171,7 @@ public class ViewportEngine {
             Vector3 posF = getCircleVertPos(circleCenter, circleRadius, i + 1);
             BufferPoint projI = projectPointToScreenSpace(posI);
             BufferPoint projF = projectPointToScreenSpace(posF);
-            drawLine(projI, projF, planet.getName().charAt(0));
+            drawLine(planet, projI, projF, planet.getName().charAt(0));
         }
     }
 
@@ -178,8 +184,8 @@ public class ViewportEngine {
     }
 
     // MODIFIES: this
-    // EFFECTS: draws a line of specified char from the specified buffer points
-    private void drawLine(BufferPoint from, BufferPoint to, char visChar) {
+    // EFFECTS: draws a line of specified inputs onto the buffers
+    private void drawLine(Planet toMask, BufferPoint from, BufferPoint to, char visChar) {
         // NOTE:
         // yes, this is a terribly naiive way of drawing a line
         float deltaX = to.getBufferX() - from.getBufferX();
@@ -189,15 +195,15 @@ public class ViewportEngine {
         float drawY = from.getBufferY();
         for (float step = 0; step <= dist; step++) {
             float depth = from.getDepth() + (to.getDepth() - from.getDepth()) * (1.0f - step / dist);
-            drawPoint(new BufferPoint((int) (drawX + 0.5f), (int) (drawY + 0.5f), depth), visChar);
+            drawPoint(toMask, new BufferPoint((int) (drawX + 0.5f), (int) (drawY + 0.5f), depth), visChar);
             drawX += deltaX / dist;
             drawY += deltaY / dist;
         }
     }
 
     // MODIFIES: this
-    // EFFECTS: draws the specified char to the framebuffer
-    private void drawPoint(BufferPoint point, char visChar) {
+    // EFFECTS: draws the specified inputs to the buffer
+    private void drawPoint(Planet toMask, BufferPoint point, char visChar) {
         if (point.isOutOfBounds(bufferWidth)) {
             return;
         }
@@ -208,6 +214,7 @@ public class ViewportEngine {
 
         depthBuffer[point.getBufferIndexOffset(bufferWidth)] = point.getDepth();
         frameBuffer[point.getBufferIndexOffset(bufferWidth)] = (int) visChar;
+        planetMaskBuffer[point.getBufferIndexOffset(bufferWidth)] = toMask;
     }
 
     // EFFECTS: projects a "worldspace" Vector3 into screenspace coordinates
@@ -231,6 +238,7 @@ public class ViewportEngine {
         for (int i = 0; i < pixelCount; i++) {
             depthBuffer[i] = Float.NEGATIVE_INFINITY;
             frameBuffer[i] = (int) CLEAR_VALUE;
+            planetMaskBuffer[i] = null;
         }
     }
 }
