@@ -30,14 +30,14 @@ public class ConsoleOutputRedirectStream extends PrintStream {
 
     // EFFECTS: updates latest display string
     @Override
-    public void println(String toPrint) {
-        internalPrint(toPrint);
+    public void print(Object toPrint) {
+        internalPrint(toPrint.toString());
     }
 
     // EFFECTS: updates latest display string
     @Override
-    public void print(Object toPrint) {
-        internalPrint(toPrint.toString());
+    public void println(String toPrint) {
+        internalPrint(toPrint);
     }
 
     // EFFECTS: updates latest display string

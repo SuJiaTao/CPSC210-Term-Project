@@ -274,6 +274,12 @@ public class SimulationManager {
             return;
         }
 
+        drawPlanetListEntries(gfx, planetList);
+    }
+
+    // MODIFIES: this
+    // EFFECTS: draws entries of the planet list
+    public void drawPlanetListEntries(TextGraphics gfx, List<Planet> planetList) {
         listViewOffset = Math.max(listViewOffset, planetList.indexOf(selectedPlanet) - PLANETLIST_ENTIRES + 1);
         listViewOffset = Math.min(listViewOffset, planetList.indexOf(selectedPlanet));
 
@@ -434,9 +440,9 @@ public class SimulationManager {
 
         float deltaK = Math.abs(kineticA - kineticB) / (kineticA + kineticB);
         if (deltaK >= HIGH_DELTA_K) {
-
+            handleCollideHighDeltaK(planetA, planetB);
         } else {
-
+            handleCollideLowDeltaK(planetA, planetB);
         }
     }
 
