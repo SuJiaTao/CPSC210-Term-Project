@@ -50,6 +50,10 @@ public class SimulationManager {
     private static final float NEW_PLANET_MIN_RAD = 0.5f;
     private static final float NEW_PLANET_MAX_RAD = 1.5f;
 
+    private static final float HIGH_DELTA_K = 0.5f;
+    private static final float LOW_M_FACTOR_BOUNDARY = 1.2f;
+    private static final float MED_M_FACTOR_BOUNDARY = 3.5f;
+
     private ConsoleOutputRedirectStream errRedirect;
     private ConsoleOutputRedirectStream outRedirect;
 
@@ -429,10 +433,41 @@ public class SimulationManager {
         float kineticB = 0.5f * planetB.getMass() * deltaV * deltaV;
 
         float deltaK = Math.abs(kineticA - kineticB) / (kineticA + kineticB);
-        System.out.print(deltaK);
+        if (deltaK >= HIGH_DELTA_K) {
 
-        simulation.removePlanet(planetA);
-        simulation.removePlanet(planetB);
+        } else {
+
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: handles two planets colliding with high deltaK
+    public void handleCollideHighDeltaK(Planet bigPlanet, Planet smallPlanet) {
+        float bigMass = bigPlanet.getMass();
+        float smallMass = smallPlanet.getMass();
+        if (bigMass < smallMass) {
+            Planet temp = bigPlanet;
+            bigPlanet = smallPlanet;
+            smallPlanet = temp;
+        }
+        float massFactor = bigMass / smallMass;
+        if (massFactor < LOW_M_FACTOR_BOUNDARY) {
+            // low mFactor - both planets break up into pieces
+        } else if (LOW_M_FACTOR_BOUNDARY <= massFactor && massFactor <= MED_M_FACTOR_BOUNDARY) {
+            // medium mFactor - smaller planet is broken into pieces
+        } else {
+            // high mFactor - smaller planet is completly absorbed
+            simulation.removePlanet(smallPlanet);
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: breaks up planet into pieces
+
+    // MODIFIES: this
+    // EFFECTS: handles two planets colliding with low deltaK
+    public void handleCollideLowDeltaK(Planet planetA, Planet planetB) {
+
     }
 
     // MODIFIES: this

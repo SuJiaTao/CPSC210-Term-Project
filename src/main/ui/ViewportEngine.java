@@ -158,7 +158,7 @@ public class ViewportEngine {
         planetTransform = Transform.multiply(planetTransform, viewTransform);
 
         Vector3 circleCenter = Transform.extractTranslation(planetTransform);
-        float circleRadius = Transform.extractScale(planetTransform).magnitude();
+        float circleRadius = Transform.extractScale(planetTransform).getX();
 
         for (int i = 0; i < PLANET_CIRCLE_VERTS; i++) {
             Vector3 posI = getCircleVertPos(circleCenter, circleRadius, i);
