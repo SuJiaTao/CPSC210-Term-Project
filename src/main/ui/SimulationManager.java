@@ -88,7 +88,7 @@ public class SimulationManager {
     }
 
     // EFFECTS: setup output streams
-    public void initOutputStreams() {
+    private void initOutputStreams() {
         errRedirect = new ConsoleOutputRedirectStream(System.err);
         System.setErr(errRedirect);
         outRedirect = new ConsoleOutputRedirectStream(System.out);
@@ -96,7 +96,7 @@ public class SimulationManager {
     }
 
     // EFFECTS: sets up screen
-    public void initScreen() throws Exception {
+    private void initScreen() throws Exception {
         DefaultTerminalFactory termFactory = new DefaultTerminalFactory();
         termFactory.setInitialTerminalSize(new TerminalSize(TERMINAL_WIDTH, TERMINAL_HEIGHT));
         screen = termFactory.createScreen();
@@ -107,7 +107,7 @@ public class SimulationManager {
 
     // EFFECTS: prints an error to stderr if failed to construct screen of desired
     // size
-    public void checkIfObtainedDesiredTerminalSize() {
+    private void checkIfObtainedDesiredTerminalSize() {
         TerminalSize termSize = screen.getTerminalSize();
         int widthActual = termSize.getColumns();
         int heightActual = termSize.getRows();
@@ -121,7 +121,7 @@ public class SimulationManager {
 
     // EFFECTS: tries to set some additional properties of the current screen and
     // prints an error of unable to
-    public void tryAndSetupWindowFrame() {
+    private void tryAndSetupWindowFrame() {
         try {
             SwingTerminalFrame swingFrame = (SwingTerminalFrame) screen.getTerminal();
             swingFrame.setResizable(false);
@@ -133,7 +133,7 @@ public class SimulationManager {
     }
 
     // EFFECTS: sets up simulation related variables
-    public void initSimulationVariables() {
+    private void initSimulationVariables() {
         simulation = new Simulation();
         simulationIsRunning = false;
         lastDeltaTimeSeconds = 0.0f;
@@ -141,7 +141,7 @@ public class SimulationManager {
     }
 
     // EFFECTS: sets up editor related variables
-    public void initEditorVariables() {
+    private void initEditorVariables() {
         editingSelectedPlanet = false;
         editingSelectedProperty = false;
         userInputString = "";
@@ -170,7 +170,7 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: handles all input and graphics
-    public void handleEverythingAndiMeanEverything() {
+    private void handleEverythingAndiMeanEverything() {
         try {
             ensureSelectedPlanetIsReasonable();
             handleUserInput();
@@ -185,7 +185,7 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: ensure that selectedPlanet is a reasonable value
-    public void ensureSelectedPlanetIsReasonable() {
+    private void ensureSelectedPlanetIsReasonable() {
         if (!simulation.getPlanets().contains(selectedPlanet)) {
             if (simulation.getPlanets().size() > 0) {
                 selectedPlanet = simulation.getPlanets().get(0);
@@ -198,7 +198,7 @@ public class SimulationManager {
     // MODIFIES: this
     // EFFECTS: ensure the simulation is in the correct state for there being no
     // planets
-    public void setSimulationNoPlanets() {
+    private void setSimulationNoPlanets() {
         selectedPlanet = null;
         simulationIsRunning = false;
         editingSelectedPlanet = false;
@@ -207,14 +207,14 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: completely clears the terminal
-    public void clearTerminal() {
+    private void clearTerminal() {
         TextGraphics gfx = screen.newTextGraphics();
         gfx.fillRectangle(new TerminalPosition(0, 0), screen.getTerminalSize(), ' ');
     }
 
     // MODIFIES: this
     // EFFECTS: draws right-side 3D viewport
-    public void drawSimulationViewPort() {
+    private void drawSimulationViewPort() {
         TextGraphics gfx = screen.newTextGraphics();
         drawViewportFrame(gfx);
         drawViewportView(gfx);
@@ -222,7 +222,7 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: draw the viewport buffers to the terminal
-    public void drawViewportView(TextGraphics gfx) {
+    private void drawViewportView(TextGraphics gfx) {
         // TODO: this is a hackjob that will be fixed once I can use a proper GUI
         // library
         setTextGraphicsToViewMode(gfx);
@@ -242,7 +242,7 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: draws the viewport frame
-    public void drawViewportFrame(TextGraphics gfx) {
+    private void drawViewportFrame(TextGraphics gfx) {
         setTextGraphicsToViewMode(gfx);
 
         // DRAW VIEWPORT SURROUNDING BOX
@@ -264,7 +264,7 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: draws left-side planet editor
-    public void drawPlanetListEditor() {
+    private void drawPlanetListEditor() {
         TextGraphics gfx = screen.newTextGraphics();
         setTextGraphicsToViewMode(gfx);
 
@@ -280,7 +280,7 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: draws planet editor planet list
-    public void drawPlanetList(TextGraphics gfx) {
+    private void drawPlanetList(TextGraphics gfx) {
         // title and border
         gfx.putString(new TerminalPosition(EDITOR_LEFT + 2, EDITOR_TOP + 1), "PLANET LIST");
         gfx.drawLine(EDITOR_LEFT, EDITOR_TOP + 2, EDITOR_RIGHT, EDITOR_TOP + 2, '+');
@@ -296,7 +296,7 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: draws entries of the planet list
-    public void drawPlanetListEntries(TextGraphics gfx, List<Planet> planetList) {
+    private void drawPlanetListEntries(TextGraphics gfx, List<Planet> planetList) {
         listViewOffset = Math.max(listViewOffset, planetList.indexOf(selectedPlanet) - PLANETLIST_ENTIRES + 1);
         listViewOffset = Math.min(listViewOffset, planetList.indexOf(selectedPlanet));
 
@@ -320,7 +320,7 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: draws planet info viewer
-    public void drawPlanetInfo(TextGraphics gfx) {
+    private void drawPlanetInfo(TextGraphics gfx) {
         setTextGraphicsToViewMode(gfx);
 
         // title and border
@@ -345,7 +345,7 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: draws GUI for value editing input handler
-    public void drawPropertyEditingInputBox(TextGraphics gfx) {
+    private void drawPropertyEditingInputBox(TextGraphics gfx) {
         if (!editingSelectedProperty) {
             return;
         }
@@ -358,7 +358,7 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: draws planet property editor/viewer
-    public void drawPlanetProperties(TextGraphics gfx) {
+    private void drawPlanetProperties(TextGraphics gfx) {
         setTextGraphicsToViewMode(gfx);
         String[] propertyStrings = new String[EDIT_PROP_CYCLE_MOD];
         propertyStrings[0] = "Name: " + selectedPlanet.getName();
@@ -379,25 +379,25 @@ public class SimulationManager {
     }
 
     // EFFECTS: sets Textgraphics to "hover" appearance
-    public void setTextGraphicsToHoverMode(TextGraphics gfx) {
+    private void setTextGraphicsToHoverMode(TextGraphics gfx) {
         gfx.setBackgroundColor(TextColor.ANSI.WHITE);
         gfx.setForegroundColor(TextColor.ANSI.BLACK);
     }
 
     // EFFECTS: sets Textgraphics to "selection" appearance
-    public void setTextGraphicsToSelectMode(TextGraphics gfx) {
+    private void setTextGraphicsToSelectMode(TextGraphics gfx) {
         gfx.setBackgroundColor(TextColor.ANSI.BLUE);
         gfx.setForegroundColor(TextColor.ANSI.WHITE);
     }
 
     // EFFECTS: sets Textgraphics to "view" appearance
-    public void setTextGraphicsToViewMode(TextGraphics gfx) {
+    private void setTextGraphicsToViewMode(TextGraphics gfx) {
         gfx.setBackgroundColor(TextColor.ANSI.BLACK);
         gfx.setForegroundColor(TextColor.ANSI.WHITE);
     }
 
     // EFFECTS: draws stdout and stederr to the bottom of the screen
-    public void drawErrAndMessageText() {
+    private void drawErrAndMessageText() {
         TextGraphics textWriter = screen.newTextGraphics();
         textWriter.setBackgroundColor(TextColor.ANSI.BLACK);
 
@@ -408,7 +408,7 @@ public class SimulationManager {
     }
 
     // EFFECTS: waits for miliseconds via spin
-    public void spinWaitMiliseconds(int waitMilliseconds) {
+    private void spinWaitMiliseconds(int waitMilliseconds) {
         // NOTE: hi, you are probably wondering why I'm not using Thread.sleep()
         // right now. The issue with Thread.Sleep is that internally it is generally not
         // precice enough. At least on windows, Thread.sleep() has a granularity of
@@ -422,7 +422,7 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: runs the appropriate handler function based on the simulation state
-    public void handleSimulationState() throws Exception {
+    private void handleSimulationState() throws Exception {
         if (editingSelectedPlanet) {
             simulationIsRunning = false;
         }
@@ -435,7 +435,7 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: handles debris behavior simulation
-    public void handleDebrisForSimuationTick(float latestTime) {
+    private void handleDebrisForSimuationTick(float latestTime) {
         for (Collision col : simulation.getCollisions()) {
             if (col.getCollisionTime() < latestTime) {
                 continue;
@@ -446,7 +446,7 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: handles debris behavior for specific collision
-    public void handleDebrisForCollision(Collision col) {
+    private void handleDebrisForCollision(Collision col) {
         Planet planetA = col.getPlanetsInvolved().get(0);
         Planet planetB = col.getPlanetsInvolved().get(1);
 
@@ -465,7 +465,7 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: handles two planets colliding with high deltaK
-    public void handleCollideHighDeltaK(Planet bigPlanet, Planet smallPlanet) {
+    private void handleCollideHighDeltaK(Planet bigPlanet, Planet smallPlanet) {
         float bigMass = bigPlanet.getMass();
         float smallMass = smallPlanet.getMass();
         if (bigMass < smallMass) {
@@ -489,13 +489,13 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: handles two planets colliding with low deltaK
-    public void handleCollideLowDeltaK(Planet planetA, Planet planetB) {
+    private void handleCollideLowDeltaK(Planet planetA, Planet planetB) {
 
     }
 
     // MODIFIES: this
     // EFFECTS: handles all user input
-    public void handleUserInput() throws Exception {
+    private void handleUserInput() throws Exception {
         lastUserKey = screen.pollInput();
         if (lastUserKey == null) {
             return;
@@ -519,7 +519,7 @@ public class SimulationManager {
     // MODIFIES: this
     // EFFECTS: checks whether the program is in an acceptable state to quit given
     // that the quit key is pressed and quit accordingly
-    public void handleShouldQuit() {
+    private void handleShouldQuit() {
         if (editingSelectedProperty) {
             return;
         }
@@ -534,7 +534,7 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: handles pausing/unpausing of the simulation
-    public void handleSimulationPauseAndUnpause() {
+    private void handleSimulationPauseAndUnpause() {
         if (selectedPlanet == null) {
             simulationIsRunning = false;
             return;
@@ -553,7 +553,7 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: manages planet property editing input handling behavior
-    public void handleEditPlanetProperty() {
+    private void handleEditPlanetProperty() {
         if (lastUserKey.getKeyType() == KeyType.Escape) {
             editingSelectedProperty = false;
             return;
@@ -582,7 +582,7 @@ public class SimulationManager {
     // MODIFIES: this
     // EFFECTS: attempts to apply user input to replace the selected property, does
     // nothing if invalid input
-    public boolean handleUserInputSubmissionAttempt() {
+    private boolean handleUserInputSubmissionAttempt() {
         switch (selectedProperty) {
             case EDIT_PROP_NAME:
                 return tryApplyNewName();
@@ -614,7 +614,7 @@ public class SimulationManager {
 
     // REQUIRES: selectedPlanet is not null
     // EFFECTS: attempts to update the planet name
-    public boolean tryApplyNewName() {
+    private boolean tryApplyNewName() {
         if (userInputString.length() == 0) {
             return false;
         }
@@ -628,7 +628,7 @@ public class SimulationManager {
     }
 
     // EFFECTS: attempts to update the planet radius
-    public boolean tryApplyNewRadius() {
+    private boolean tryApplyNewRadius() {
         float newRadius;
         try {
             newRadius = Float.parseFloat(userInputString);
@@ -641,7 +641,7 @@ public class SimulationManager {
 
     // EFFECTS: attempts to parse a Vector3 out of the user input string, returns
     // null if it fails
-    public Vector3 tryParseVectorFromInputString() {
+    private Vector3 tryParseVectorFromInputString() {
         String[] components = userInputString.split(" ");
         if (components.length != 3) {
             return null;
@@ -661,7 +661,7 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: manages creating and destroying selected planet
-    public void handlePlanetAddAndRemove() {
+    private void handlePlanetAddAndRemove() {
         if (lastUserKey.getKeyType() != KeyType.Character) {
             return;
         }
@@ -678,7 +678,7 @@ public class SimulationManager {
     // MODFIES: this
     // EFFECTS: handles the updating of selectedPlanet when the current selected
     // planet is removed
-    public void handleRemoveSelectedPlanet() {
+    private void handleRemoveSelectedPlanet() {
         if (selectedPlanet == null) {
             return;
         }
@@ -701,7 +701,7 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: manages planet editing cycle behavior
-    public void handleCyclePlanetProperty() {
+    private void handleCyclePlanetProperty() {
         if (lastUserKey.getKeyType() == KeyType.Escape) {
             editingSelectedPlanet = false;
             return;
@@ -727,7 +727,7 @@ public class SimulationManager {
     // MODIFIES: this
     // EFFECTS: cycles the selected planet based on the arrow keys, or selects if
     // detected enter key
-    public void handleCycleSelectedPlanet() {
+    private void handleCycleSelectedPlanet() {
         if (selectedPlanet == null) {
             return;
         }
@@ -752,7 +752,7 @@ public class SimulationManager {
     // MODIFIES: this
     // EFFECTS: adds new planet to the simulation with some mildly randomized values
     // and selects it
-    public void addAndSelectNewPlanet() {
+    private void addAndSelectNewPlanet() {
 
         Random rand = new Random();
         String name = NEW_PLANET_NAMES[rand.nextInt(NEW_PLANET_NAMES.length)];

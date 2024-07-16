@@ -106,7 +106,7 @@ public class ViewportEngine {
 
     // MODIFIES: this
     // EFFECTS: updates average planet position
-    public void updateAveragePlanetPos() {
+    private void updateAveragePlanetPos() {
         averagePlanetPos = new Vector3();
         if (simulation.getPlanets().size() == 0) {
             return;
@@ -120,7 +120,7 @@ public class ViewportEngine {
 
     // MODIFIES: this
     // EFFECTS: updates the distance of the furthest planet away from the center
-    public void updateFurthestPlanetDistance() {
+    private void updateFurthestPlanetDistance() {
         furthestPlanetDistance = 0.0f;
         for (Planet planet : simulation.getPlanets()) {
             float dispFromCenter = Vector3.sub(averagePlanetPos, planet.getPosition()).magnitude();
@@ -130,7 +130,7 @@ public class ViewportEngine {
 
     // MODIFIES: this
     // EFFECTS: sets up view matrix for viewing planets
-    public void updateViewportMatrix() {
+    private void updateViewportMatrix() {
         viewTransform = new Transform();
 
         Vector3 trl = Vector3.multiply(averagePlanetPos, -1.0f);
@@ -144,7 +144,7 @@ public class ViewportEngine {
 
     // MODIFIES: this
     // EFFECTS: draws specific planet
-    public void drawPlanet(Planet planet) {
+    private void drawPlanet(Planet planet) {
 
         // TODO: finish this so it actually looks nice
 
@@ -171,7 +171,7 @@ public class ViewportEngine {
 
     // EFFECTS: returns the worldspace vertex position of the planet circle vertex
     // of index i
-    public Vector3 getCircleVertPos(Vector3 center, float radius, int index) {
+    private Vector3 getCircleVertPos(Vector3 center, float radius, int index) {
         float offsetX = (float) Math.cos(PLANET_CIRCLE_VERT_STEP * (float) index) * radius;
         float offsetY = (float) Math.sin(PLANET_CIRCLE_VERT_STEP * (float) index) * radius;
         return Vector3.add(center, new Vector3(offsetX, offsetY, 0.0f));
@@ -179,7 +179,7 @@ public class ViewportEngine {
 
     // MODIFIES: this
     // EFFECTS: draws a line of specified char from the specified buffer points
-    public void drawLine(BufferPoint from, BufferPoint to, char visChar) {
+    private void drawLine(BufferPoint from, BufferPoint to, char visChar) {
         // NOTE:
         // yes, this is a terribly naiive way of drawing a line
         float deltaX = to.getBufferX() - from.getBufferX();
@@ -197,7 +197,7 @@ public class ViewportEngine {
 
     // MODIFIES: this
     // EFFECTS: draws the specified char to the framebuffer
-    public void drawPoint(BufferPoint point, char visChar) {
+    private void drawPoint(BufferPoint point, char visChar) {
         if (point.isOutOfBounds(bufferWidth)) {
             return;
         }
@@ -211,7 +211,7 @@ public class ViewportEngine {
     }
 
     // EFFECTS: projects a "worldspace" Vector3 into screenspace coordinates
-    public BufferPoint projectPointToScreenSpace(Vector3 point) {
+    private BufferPoint projectPointToScreenSpace(Vector3 point) {
         if (point.getZ() >= CLIPPING_PLANE_DEPTH) {
             throw new InvalidRenderStateException();
         }
@@ -225,7 +225,7 @@ public class ViewportEngine {
 
     // MODIFIES: this
     // EFFECTS: clears graphical buffers
-    public void clearBuffers() {
+    private void clearBuffers() {
         for (int i = 0; i < pixelCount; i++) {
             depthBuffer[i] = Float.NEGATIVE_INFINITY;
             frameBuffer[i] = (int) CLEAR_VALUE;
