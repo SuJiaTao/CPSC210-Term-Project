@@ -24,8 +24,8 @@ public class SimulationManager {
     private static final int EDITOR_BOT = 32;
     private static final int EDITOR_LEFT = 0;
     private static final int EDITOR_RIGHT = 40;
-    private static final int PLANETLIST_ENTIRES = 20;
-    private static final int PLANETINFO_TOP = EDITOR_TOP + PLANETLIST_ENTIRES + 3;
+    private static final int EDITORLIST_ENTIRES = 20;
+    private static final int PLANETINFO_TOP = EDITOR_TOP + EDITORLIST_ENTIRES + 3;
 
     private static final int EDIT_PROP_NAME = 0;
     private static final int EDIT_PROP_POSITION = 1;
@@ -59,6 +59,10 @@ public class SimulationManager {
     private static final float LOW_M_FACTOR_BOUNDARY = 1.2f;
     private static final float MED_M_FACTOR_BOUNDARY = 3.5f;
 
+    private static final int EDITOR_VIEW_LIST_PLANETS = 0;
+    private static final int EDITOR_VIEW_LIST_COLLISIONS = 1;
+    private static final int EDITOR_VIEW_LIST_CYCLE_MOD = EDITOR_VIEW_LIST_COLLISIONS + 1;
+
     private ConsoleOutputRedirectStream errRedirect;
     private ConsoleOutputRedirectStream outRedirect;
 
@@ -69,12 +73,17 @@ public class SimulationManager {
     private float lastDeltaTimeSeconds;
     private boolean simulationIsRunning;
 
+    private int editorViewListSelection;
+
     private Planet selectedPlanet;
-    private int listViewOffset;
+    private int plntListViewOffset;
     private boolean editingSelectedPlanet;
     private boolean editingSelectedProperty;
     private int selectedProperty;
     private String userInputString;
+
+    private Collision selectedCollision;
+    private int colListViewOffset;
 
     private ViewportEngine viewport;
 
@@ -144,10 +153,16 @@ public class SimulationManager {
 
     // EFFECTS: sets up editor related variables
     private void initEditorVariables() {
+        editorViewListSelection = EDITOR_VIEW_LIST_PLANETS;
+
+        selectedPlanet = null;
         editingSelectedPlanet = false;
         editingSelectedProperty = false;
         userInputString = "";
-        listViewOffset = 0;
+        plntListViewOffset = 0;
+
+        selectedCollision = null;
+        colListViewOffset = 0;
     }
 
     // MODIFIES: this
@@ -180,12 +195,29 @@ public class SimulationManager {
             // there is no planets left, which is a special state which must be recognised
             // for when rendering, so drawing must be done last, after this is accounted for
             ensureSelectedPlanetIsReasonable();
-            drawPlanetListEditor();
+            ensureSelectedCollsisionIsReasonable();
+            drawEditorView();
             drawSimulationViewPort();
         } catch (Exception exception) {
             printException(exception);
         }
         drawErrAndMessageText();
+    }
+
+    // REQUIRES: editorViewListSelection must be a valid value
+    // MODIFIES: this
+    // EFFECTS: draws the appropriate visuals to the left-side editor
+    private void drawEditorView() {
+        switch (editorViewListSelection) {
+            case EDITOR_VIEW_LIST_PLANETS:
+                drawPlanetListEditor();
+                break;
+            case EDITOR_VIEW_LIST_COLLISIONS:
+                drawCollisionListEditor();
+                break;
+            default:
+                break;
+        }
     }
 
     // MODIFIES: this
@@ -204,7 +236,8 @@ public class SimulationManager {
         }
 
         String method = elemOfInterest.getMethodName();
-        System.err.print(method + " threw " + exception.getClass().getSimpleName());
+        int lineNum = elemOfInterest.getLineNumber();
+        System.err.print(method + " line " + lineNum + " threw " + exception.getClass().getSimpleName());
     }
 
     // MODIFIES: this
@@ -215,6 +248,16 @@ public class SimulationManager {
                 selectedPlanet = simulation.getPlanets().get(0);
             } else {
                 setSimulationNoPlanets();
+            }
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: ensure that selectedCollision is a reasonable value
+    private void ensureSelectedCollsisionIsReasonable() {
+        if (selectedCollision == null) {
+            if (simulation.getCollisions().size() > 0) {
+                selectedCollision = simulation.getCollisions().get(0);
             }
         }
     }
@@ -294,19 +337,106 @@ public class SimulationManager {
     }
 
     // MODIFIES: this
+    // EFFECTS: draws the collision list editor
+    private void drawCollisionListEditor() {
+        TextGraphics gfx = screen.newTextGraphics();
+        setTextGraphicsToViewMode(gfx);
+
+        drawEditorFrame(gfx);
+        drawCollisionList(gfx);
+    }
+
+    // MODIFIES: this
+    // EFFECTS: draw the list of collisions
+    private void drawCollisionList(TextGraphics gfx) {
+        gfx.putString(new TerminalPosition(EDITOR_LEFT + 2, EDITOR_TOP + 1), "COLLISION LIST");
+        gfx.drawLine(EDITOR_LEFT, EDITOR_TOP + 2, EDITOR_RIGHT, EDITOR_TOP + 2, '+');
+
+        List<Collision> colList = simulation.getCollisions();
+        if (colList.size() == 0) {
+            gfx.putString(EDITOR_LEFT + 1, EDITOR_TOP + 3, " No collisions yet!");
+            return;
+        }
+
+        drawCollisionListEntries(gfx, colList);
+        drawCollisionInfo(gfx);
+    }
+
+    // REQUIRES: selectedCollision to exist in colList
+    // MODIFIES: this
+    // EFFECTS: draw the entries of collisions
+    private void drawCollisionListEntries(TextGraphics gfx, List<Collision> colList) {
+        colListViewOffset = Math.max(colListViewOffset,
+                colList.indexOf(selectedCollision) - EDITORLIST_ENTIRES + 1);
+        colListViewOffset = Math.min(colListViewOffset, colList.indexOf(selectedCollision));
+
+        for (int i = 0; i < EDITORLIST_ENTIRES; i++) {
+            int indexActual = colListViewOffset + i;
+            if (indexActual >= colList.size()) {
+                break;
+            }
+
+            if (indexActual == colList.indexOf(selectedCollision)) {
+                setTextGraphicsToHoverMode(gfx);
+            } else {
+                setTextGraphicsToViewMode(gfx);
+            }
+            System.out.println("" + indexActual);
+            Collision col = colList.get(indexActual);
+            List<Planet> involved = col.getPlanetsInvolved();
+            String colName = "";
+            colName += involved.get(0).getName().charAt(0);
+            colName += "/";
+            colName += involved.get(1).getName().charAt(0);
+            colName += String.format("-%.3f", col.getCollisionTime());
+            String entryString = indexActual + ". Collision " + colName;
+            gfx.putString(EDITOR_LEFT + 1, EDITOR_TOP + 3 + i, entryString);
+        }
+    }
+
+    // REQUIRES: selectedCollision must be in collision list and NOT null
+    // MODIFIES: this
+    // EFFECTS: draws collision info viewer
+    private void drawCollisionInfo(TextGraphics gfx) {
+        setTextGraphicsToViewMode(gfx);
+
+        // title and border
+        gfx.drawLine(EDITOR_LEFT, PLANETINFO_TOP, EDITOR_RIGHT, PLANETINFO_TOP, '+');
+
+        if (selectedCollision == null) {
+            gfx.putString(EDITOR_LEFT + 2, PLANETINFO_TOP + 1, "No collision selected");
+            return;
+        }
+        gfx.putString(EDITOR_LEFT + 2, PLANETINFO_TOP + 1, "COLLISION INFO: ");
+        gfx.putString(EDITOR_LEFT + 3, PLANETINFO_TOP + 2, "Planets Involved:");
+        String involvedString = "";
+        involvedString += selectedCollision.getPlanetsInvolved().get(0).getName();
+        involvedString += ", ";
+        involvedString += selectedCollision.getPlanetsInvolved().get(1).getName();
+        gfx.putString(EDITOR_LEFT + 5, PLANETINFO_TOP + 3, involvedString);
+        String timeOccouredString = String.format("Time Occoured: %.3fs", selectedCollision.getCollisionTime());
+        gfx.putString(EDITOR_LEFT + 3, PLANETINFO_TOP + 4, timeOccouredString);
+    }
+
+    // MODIFIES: this
     // EFFECTS: draws left-side planet editor
     private void drawPlanetListEditor() {
         TextGraphics gfx = screen.newTextGraphics();
         setTextGraphicsToViewMode(gfx);
 
-        // DRAW EDITOR SURROUNDING BOX
+        drawEditorFrame(gfx);
+
+        drawPlanetList(gfx);
+        drawPlanetInfo(gfx);
+    }
+
+    // MODIFIES: this
+    // EFFECTS: draw the left-side editor frame
+    private void drawEditorFrame(TextGraphics gfx) {
         gfx.drawLine(EDITOR_LEFT, EDITOR_TOP, EDITOR_RIGHT, EDITOR_TOP, '+'); // TOP
         gfx.drawLine(EDITOR_LEFT, EDITOR_TOP, EDITOR_LEFT, EDITOR_BOT, '+'); // LEFT
         gfx.drawLine(EDITOR_RIGHT, EDITOR_TOP, EDITOR_RIGHT, EDITOR_BOT, '+'); // RIGHT
         gfx.drawLine(EDITOR_LEFT, EDITOR_BOT, EDITOR_RIGHT, EDITOR_BOT, '+'); // BOTTOM
-
-        drawPlanetList(gfx);
-        drawPlanetInfo(gfx);
     }
 
     // MODIFIES: this
@@ -328,11 +458,12 @@ public class SimulationManager {
     // MODIFIES: this
     // EFFECTS: draws entries of the planet list
     private void drawPlanetListEntries(TextGraphics gfx, List<Planet> planetList) {
-        listViewOffset = Math.max(listViewOffset, planetList.indexOf(selectedPlanet) - PLANETLIST_ENTIRES + 1);
-        listViewOffset = Math.min(listViewOffset, planetList.indexOf(selectedPlanet));
+        plntListViewOffset = Math.max(plntListViewOffset,
+                planetList.indexOf(selectedPlanet) - EDITORLIST_ENTIRES + 1);
+        plntListViewOffset = Math.min(plntListViewOffset, planetList.indexOf(selectedPlanet));
 
-        for (int i = 0; i < PLANETLIST_ENTIRES; i++) {
-            int indexActual = listViewOffset + i;
+        for (int i = 0; i < EDITORLIST_ENTIRES; i++) {
+            int indexActual = plntListViewOffset + i;
             if (indexActual >= planetList.size()) {
                 break;
             }
@@ -481,17 +612,32 @@ public class SimulationManager {
         Planet planetA = col.getPlanetsInvolved().get(0);
         Planet planetB = col.getPlanetsInvolved().get(1);
 
-        float deltaV = Vector3.sub(planetA.getVelocity(), planetB.getVelocity()).magnitude();
-
-        float kineticA = 0.5f * planetA.getMass() * deltaV * deltaV;
-        float kineticB = 0.5f * planetB.getMass() * deltaV * deltaV;
-
-        float deltaK = Math.abs(kineticA - kineticB) / (kineticA + kineticB);
-        if (deltaK >= HIGH_DELTA_K) {
-            handleCollideHighDeltaK(planetA, planetB);
-        } else {
-            handleCollideLowDeltaK(planetA, planetB);
+        try {
+            simulation.removePlanet(planetA);
+        } catch (Exception e) {
+            // DO NOTHING
         }
+
+        try {
+            simulation.removePlanet(planetB);
+        } catch (Exception e) {
+            // DO NOTHING
+        }
+        // NOTE: i will finish implementing this in Phase2/3
+        /*
+         * float deltaV = Vector3.sub(planetA.getVelocity(),
+         * planetB.getVelocity()).magnitude();
+         * 
+         * float kineticA = 0.5f * planetA.getMass() * deltaV * deltaV;
+         * float kineticB = 0.5f * planetB.getMass() * deltaV * deltaV;
+         * 
+         * float deltaK = Math.abs(kineticA - kineticB) / (kineticA + kineticB);
+         * if (deltaK >= HIGH_DELTA_K) {
+         * handleCollideHighDeltaK(planetA, planetB);
+         * } else {
+         * handleCollideLowDeltaK(planetA, planetB);
+         * }
+         */
     }
 
     // MODIFIES: this
@@ -526,6 +672,7 @@ public class SimulationManager {
         simulation.removePlanet(planetB);
     }
 
+    // REQUIRES: editorViewListSelection is a legal value
     // MODIFIES: this
     // EFFECTS: handles all user input
     private void handleUserInput() throws Exception {
@@ -536,7 +683,65 @@ public class SimulationManager {
 
         handleShouldQuit();
         handleSimulationPauseAndUnpause();
+        handleEditorCycleListView();
 
+        switch (editorViewListSelection) {
+            case EDITOR_VIEW_LIST_PLANETS:
+                handleEditorViewPlanetUserInput();
+                break;
+
+            case EDITOR_VIEW_LIST_COLLISIONS:
+                handleEditorViewCollisionsUserInput();
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    // MODIFES: this
+    // EFFECTS: handles the cycling of the editor list view
+    private void handleEditorCycleListView() {
+        if (lastUserKey.getKeyType() == KeyType.ArrowLeft) {
+            editorViewListSelection--;
+        }
+        if (lastUserKey.getKeyType() == KeyType.ArrowRight) {
+            editorViewListSelection++;
+        }
+        editorViewListSelection %= EDITOR_VIEW_LIST_CYCLE_MOD;
+        if (editorViewListSelection < 0) {
+            editorViewListSelection += EDITOR_VIEW_LIST_CYCLE_MOD;
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: handles inputs when editor is viewing collision list
+    private void handleEditorViewCollisionsUserInput() {
+        handleCycleSelectedCollision();
+    }
+
+    // MODIFIES: this
+    // EFFECTS: handles the cycling of the collision selection
+    private void handleCycleSelectedCollision() {
+        if (selectedCollision == null) {
+            return;
+        }
+
+        int selectedIndex = simulation.getCollisions().indexOf(selectedCollision);
+        if (lastUserKey.getKeyType() == KeyType.ArrowDown) {
+            selectedIndex++;
+        }
+        if (lastUserKey.getKeyType() == KeyType.ArrowUp) {
+            selectedIndex--;
+        }
+        selectedIndex = Math.max(0, selectedIndex);
+        selectedIndex = Math.min(selectedIndex, simulation.getCollisions().size() - 1);
+        selectedCollision = simulation.getCollisions().get(selectedIndex);
+    }
+
+    // MODIFES: this
+    // EFFECTS: handles inputs when editor is viewing planet list
+    private void handleEditorViewPlanetUserInput() {
         if (editingSelectedPlanet) {
             if (editingSelectedProperty) {
                 handleEditPlanetProperty();
