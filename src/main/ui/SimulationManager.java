@@ -20,6 +20,13 @@ public class SimulationManager {
     private static final int TERMINAL_HEIGHT = 35;
     private static final int REFRESH_DELAY_MSEC = 10;
 
+    private static final int TITLE_SCREEN_CENTER_X = TERMINAL_WIDTH / 2;
+    private static final int TITLE_SCREEN_CENTER_Y = TERMINAL_HEIGHT / 2;
+    private static final int TITLE_SCREEN_WIDTH = 70;
+    private static final int TITLE_SCREEN_HEIGHT = 16;
+    private static final int TITLE_SCREEN_LEFT = TITLE_SCREEN_CENTER_X - (TITLE_SCREEN_WIDTH / 2);
+    private static final int TITLE_SCREEN_TOP = TITLE_SCREEN_CENTER_Y - (TITLE_SCREEN_HEIGHT / 2);
+
     private static final int EDITOR_TOP = 0;
     private static final int EDITOR_BOT = 32;
     private static final int EDITOR_LEFT = 0;
@@ -87,6 +94,8 @@ public class SimulationManager {
 
     private ViewportEngine viewport;
 
+    private boolean onTitleScreen;
+
     // EFFECTS: initialize simulation, init graphical/user input, redirect
     // sterr+stdout, and set simulation state to the opening screen
     public SimulationManager() throws Exception {
@@ -96,6 +105,7 @@ public class SimulationManager {
         initEditorVariables();
 
         viewport = new ViewportEngine(Math.min(VIEWPORT_PIX_WIDTH, VIEWPORT_PIX_HEIGHT), simulation);
+        onTitleScreen = true;
     }
 
     // EFFECTS: setup output streams
@@ -136,7 +146,7 @@ public class SimulationManager {
         try {
             SwingTerminalFrame swingFrame = (SwingTerminalFrame) screen.getTerminal();
             swingFrame.setResizable(false);
-            swingFrame.setTitle("n-Body Simulation");
+            swingFrame.setTitle("N-Body Simulation");
             swingFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         } catch (Exception excep) {
             System.err.print("Failed to setup window. Error: " + excep.toString());
@@ -174,7 +184,11 @@ public class SimulationManager {
             screen.setCursorPosition(null);
             clearTerminal();
 
-            handleEverythingAndiMeanEverything();
+            if (onTitleScreen) {
+                handleTitleScreen();
+            } else {
+                handleEverythingAndiMeanEverything();
+            }
 
             screen.refresh();
 
@@ -182,6 +196,59 @@ public class SimulationManager {
             lastDeltaTimeSeconds = (float) (endNanoTime - startNanoTime) / 1000000000.0f;
             spinWaitMiliseconds((int) Math.max(0, REFRESH_DELAY_MSEC - (endNanoTime - startNanoTime) / 1000));
         }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: handles simple titlescreen logic
+    private void handleTitleScreen() throws Exception {
+        drawTitleScreen();
+
+        KeyStroke nextKey = screen.pollInput();
+        if (nextKey == null) {
+            return;
+        }
+        if (nextKey.getKeyType() != KeyType.Character) {
+            return;
+        }
+        if (nextKey.getCharacter() == ' ') {
+            onTitleScreen = false;
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: draws title screen text
+    private void drawTitleScreen() {
+        TextGraphics gfx = screen.newTextGraphics();
+        TerminalPosition borderTopLeft = new TerminalPosition(TITLE_SCREEN_LEFT, TITLE_SCREEN_TOP);
+        TerminalSize borderSize = new TerminalSize(TITLE_SCREEN_WIDTH, TITLE_SCREEN_HEIGHT);
+        gfx.drawRectangle(borderTopLeft, borderSize, '+');
+        drawTitleScreenCenteredText(gfx, "N-BODY SIMULATOR", 0);
+        drawTitleScreenCenteredText(gfx, "Bailey JT Brown 2024", 1);
+        drawTitleScreenleftText(gfx, " Controls:", 3);
+        drawTitleScreenleftText(gfx, "  - Left/Right to cycle between Planet/Collision list view", 4);
+        drawTitleScreenleftText(gfx, "  - Plus/Minus to add/remove planets", 5);
+        drawTitleScreenleftText(gfx, "  - Up/Down to cycle between elements", 6);
+        drawTitleScreenleftText(gfx, "  - Enter to select item", 7);
+        drawTitleScreenleftText(gfx, "  - Escape to unselect item", 8);
+        drawTitleScreenleftText(gfx, "  - Space to pause/unpause simulation", 9);
+        drawTitleScreenleftText(gfx, "  - Q or close window to quit", 10);
+        drawTitleScreenCenteredText(gfx, " Press Space to continue", TITLE_SCREEN_HEIGHT - 3);
+    }
+
+    // MODIFIES: this
+    // EFFECTS: draws centered text within the titlescreen box
+    private void drawTitleScreenCenteredText(TextGraphics gfx, String text, int line) {
+        int posX = TITLE_SCREEN_CENTER_X - (text.length() / 2);
+        int posY = TITLE_SCREEN_TOP + line + 1;
+        gfx.putString(posX, posY, text);
+    }
+
+    // MODIFIES: this
+    // EFFECTS: draws left-aligned text within the titlescreen box
+    private void drawTitleScreenleftText(TextGraphics gfx, String text, int line) {
+        int posX = TITLE_SCREEN_LEFT + 1;
+        int posY = TITLE_SCREEN_TOP + line + 1;
+        gfx.putString(posX, posY, text);
     }
 
     // MODIFIES: this
