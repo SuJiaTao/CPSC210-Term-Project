@@ -1,5 +1,7 @@
 package model;
 
+import exceptions.NonMatchingClassException;
+
 // Represents a 3-component vector which supports a common set of vector operations
 public class Vector3 {
     private static final float EPSILON = 0.001f;
@@ -90,7 +92,7 @@ public class Vector3 {
     @Override
     public boolean equals(Object other) {
         if (!(other instanceof Vector3)) {
-            throw new IllegalArgumentException("other must be of type Vector3");
+            throw new NonMatchingClassException();
         }
         Vector3 otherVector = (Vector3) other;
         float dx = Math.abs(this.getX() - otherVector.getX());

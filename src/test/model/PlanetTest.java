@@ -2,8 +2,11 @@ package model;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.Test;
+
+import exceptions.ArgumentOutOfBoundsException;
 
 public class PlanetTest {
     private static final float EPSILON = 0.001f;
@@ -14,6 +17,26 @@ public class PlanetTest {
         plnt = new Planet("testName", 5.0f);
         assertEquals("testName", plnt.getName());
         assertEquals(5.0f, plnt.getRadius());
+    }
+
+    @Test
+    public void testCtorThrow() {
+        try {
+            plnt = new Planet("failure", -5.0f);
+        } catch (ArgumentOutOfBoundsException excep) {
+            return;
+        }
+        fail("failed to throw ArgumentOutOfBoundsException");
+    }
+
+    @Test
+    public void testCtorThrowBoundary() {
+        try {
+            plnt = new Planet("failure", 0.0f);
+        } catch (ArgumentOutOfBoundsException excep) {
+            return;
+        }
+        fail("failed to throw ArgumentOutOfBoundsException");
     }
 
     @Test
@@ -43,6 +66,28 @@ public class PlanetTest {
     }
 
     @Test
+    public void testUpdatePositionThrow() {
+        plnt = new Planet("failure", 1.0f);
+        try {
+            plnt.updatePosition(-5.0f);
+        } catch (ArgumentOutOfBoundsException except) {
+            return;
+        }
+        fail("failed to throw ArgumentOutOfBoundsException");
+    }
+
+    @Test
+    public void testUpdatePositionThrowBoundary() {
+        plnt = new Planet("failure", 1.0f);
+        try {
+            plnt.updatePosition(0.0f);
+        } catch (ArgumentOutOfBoundsException except) {
+            fail("0.0 is a valid deltaTime for updatePosition");
+        }
+
+    }
+
+    @Test
     public void testUpdatePosition() {
         Vector3 velocity = new Vector3(1.0f, 1.0f, 1.0f);
         plnt = new Planet("P", new Vector3(), velocity, 1.0f);
@@ -59,6 +104,28 @@ public class PlanetTest {
         plnt.updatePosition(1.5f);
         plnt.updatePosition(1.2f);
         assertEquals(Vector3.multiply(velocity, 0.2f + 1.5f + 1.2f), plnt.getPosition());
+    }
+
+    @Test
+    public void testAddForceThrow() {
+        plnt = new Planet("failure", 1.0f);
+        try {
+            plnt.addForce(new Vector3(), -5.0f);
+        } catch (ArgumentOutOfBoundsException except) {
+            return;
+        }
+        fail("failed to throw ArgumentOutOfBoundsException");
+    }
+
+    @Test
+    public void testAddForceThrowBoundary() {
+        plnt = new Planet("failure", 1.0f);
+        try {
+            plnt.addForce(new Vector3(), 0.0f);
+        } catch (ArgumentOutOfBoundsException except) {
+            fail("0.0 is a valid deltaTime for addForce");
+        }
+
     }
 
     @Test

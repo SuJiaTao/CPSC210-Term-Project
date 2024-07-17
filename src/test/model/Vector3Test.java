@@ -2,8 +2,12 @@ package model;
 
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import exceptions.NonMatchingClassException;
 
 public class Vector3Test {
     private static final float EPSILON = 0.001f;
@@ -33,6 +37,16 @@ public class Vector3Test {
         assertEquals(1.0f, v2.getX(), EPSILON);
         assertEquals(2.0f, v2.getY(), EPSILON);
         assertEquals(-3.0f, v2.getZ(), EPSILON);
+    }
+
+    @Test
+    public void testEqualsThrow() {
+        try {
+            v1.equals(new Object());
+        } catch (NonMatchingClassException e) {
+            return;
+        }
+        fail("expected throw NonMatchingClassException");
     }
 
     @Test

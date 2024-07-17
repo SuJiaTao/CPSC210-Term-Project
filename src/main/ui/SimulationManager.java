@@ -11,7 +11,7 @@ import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.swing.SwingTerminalFrame;
 
-import exceptions.PlanetDoesntExistInSimulationException;
+import exceptions.PlanetDoesntExistException;
 import model.*;
 
 // Represents the current state of user-interface to managing simulations
@@ -381,7 +381,7 @@ public class SimulationManager {
             } else {
                 setTextGraphicsToViewMode(gfx);
             }
-            System.out.println("" + indexActual);
+
             Collision col = colList.get(indexActual);
             List<Planet> involved = col.getPlanetsInvolved();
             String colName = "";
@@ -389,7 +389,7 @@ public class SimulationManager {
             colName += "/";
             colName += involved.get(1).getName().charAt(0);
             colName += String.format("-%.3f", col.getCollisionTime());
-            String entryString = indexActual + ". Collision " + colName;
+            String entryString = (1 + indexActual) + ". Collision " + colName;
             gfx.putString(EDITOR_LEFT + 1, EDITOR_TOP + 3 + i, entryString);
         }
     }
@@ -921,7 +921,7 @@ public class SimulationManager {
             return;
         }
         if (!simulation.getPlanets().contains(selectedPlanet)) {
-            throw new PlanetDoesntExistInSimulationException();
+            throw new PlanetDoesntExistException();
         }
 
         int selectedIndex = simulation.getPlanets().indexOf(selectedPlanet);

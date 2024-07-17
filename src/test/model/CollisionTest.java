@@ -3,9 +3,12 @@ package model;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
+
+import exceptions.NonMatchingClassException;
 
 public class CollisionTest {
     Planet p1;
@@ -42,6 +45,16 @@ public class CollisionTest {
         assertTrue(col1.wasPlanetInvolved(p2));
         assertFalse(col1.wasPlanetInvolved(p3));
         assertFalse(col4.wasPlanetInvolved(p1));
+    }
+
+    @Test
+    public void testEqualsThrow() {
+        try {
+            col1.equals(new Object());
+        } catch (NonMatchingClassException e) {
+            return;
+        }
+        fail("expected throw NonMatchingClassException");
     }
 
     @Test

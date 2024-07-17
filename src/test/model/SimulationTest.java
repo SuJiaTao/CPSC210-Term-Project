@@ -2,10 +2,15 @@ package model;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import exceptions.ArgumentOutOfBoundsException;
+import exceptions.PlanetAlreadyExistsException;
+import exceptions.PlanetDoesntExistException;
 
 public class SimulationTest {
     private static final float EPSILON = 0.001f;
@@ -30,6 +35,17 @@ public class SimulationTest {
     }
 
     @Test
+    public void testAddPlanetThrow() {
+        sim.addPlanet(p1);
+        try {
+            sim.addPlanet(p1);
+        } catch (PlanetAlreadyExistsException e) {
+            return;
+        }
+        fail("expected throw PlanetAlreadyExistsException");
+    }
+
+    @Test
     public void testAddPlanet() {
         sim.addPlanet(p1);
         assertEquals(1, sim.getPlanets().size());
@@ -44,6 +60,47 @@ public class SimulationTest {
         assertTrue(sim.getPlanets().contains(p1));
         assertTrue(sim.getPlanets().contains(p2));
         assertFalse(sim.getPlanets().contains(p3));
+    }
+
+    @Test
+    public void testRemovePlanetThrow() {
+        sim.addPlanet(p1);
+        try {
+            sim.removePlanet(p2);
+        } catch (PlanetDoesntExistException e) {
+            return;
+        }
+        fail("expected throw PlanetDoesntExistException");
+    }
+
+    @Test
+    public void testRemoveNullPlanetThrow() {
+        sim.addPlanet(p1);
+        try {
+            sim.removePlanet(null);
+        } catch (PlanetDoesntExistException e) {
+            return;
+        }
+        fail("expected throw PlanetDoesntExistException");
+    }
+
+    @Test
+    public void testRemovePlanet() {
+        sim.addPlanet(p1);
+        sim.removePlanet(p1);
+        assertEquals(0, sim.getPlanets().size());
+        assertFalse(sim.getPlanets().contains(p1));
+    }
+
+    @Test
+    public void testRemovePlanetMultiple() {
+        sim.addPlanet(p1);
+        sim.addPlanet(p2);
+        sim.removePlanet(p1);
+        sim.removePlanet(p2);
+        assertEquals(0, sim.getPlanets().size());
+        assertFalse(sim.getPlanets().contains(p1));
+        assertFalse(sim.getPlanets().contains(p2));
     }
 
     @Test
@@ -188,6 +245,66 @@ public class SimulationTest {
         sim.progressBySeconds(1.0f);
         float distFinal = Vector3.add(p1.getPosition(), Vector3.multiply(p3.getPosition(), -1.0f)).magnitude();
         assertTrue(distFinal < distInitial);
+    }
+
+    @Test
+    public void testGravityMagThrowFT() {
+        try {
+            sim.calculateGravityMagnitude(-1.0f, 1.0f, 1.0f);
+        } catch (ArgumentOutOfBoundsException e) {
+            return;
+        }
+        fail("excepted tot throw ArgumentOutOfBoundsException");
+    }
+
+    @Test
+    public void testGravityMagThrowFTBoundary() {
+        try {
+            sim.calculateGravityMagnitude(0.0f, 1.0f, 1.0f);
+        } catch (ArgumentOutOfBoundsException e) {
+            return;
+        }
+        fail("excepted tot throw ArgumentOutOfBoundsException");
+    }
+
+    @Test
+    public void testGravityMagThrowTF() {
+        try {
+            sim.calculateGravityMagnitude(1.0f, -1.0f, 1.0f);
+        } catch (ArgumentOutOfBoundsException e) {
+            return;
+        }
+        fail("excepted tot throw ArgumentOutOfBoundsException");
+    }
+
+    @Test
+    public void testGravityMagThrowTFBoundary() {
+        try {
+            sim.calculateGravityMagnitude(1.0f, 0.0f, 1.0f);
+        } catch (ArgumentOutOfBoundsException e) {
+            return;
+        }
+        fail("excepted tot throw ArgumentOutOfBoundsException");
+    }
+
+    @Test
+    public void testGravityMagThrowFF() {
+        try {
+            sim.calculateGravityMagnitude(-1.0f, -1.0f, 1.0f);
+        } catch (ArgumentOutOfBoundsException e) {
+            return;
+        }
+        fail("excepted tot throw ArgumentOutOfBoundsException");
+    }
+
+    @Test
+    public void testGravityMagThrowFFBoundary() {
+        try {
+            sim.calculateGravityMagnitude(0.0f, 0.0f, 1.0f);
+        } catch (ArgumentOutOfBoundsException e) {
+            return;
+        }
+        fail("excepted tot throw ArgumentOutOfBoundsException");
     }
 
     @Test

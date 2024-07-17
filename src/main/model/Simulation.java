@@ -3,8 +3,8 @@ package model;
 import java.util.*;
 
 import exceptions.ArgumentOutOfBoundsException;
-import exceptions.PlanetAlreadyExistsInSimulationException;
-import exceptions.PlanetDoesntExistInSimulationException;
+import exceptions.PlanetAlreadyExistsException;
+import exceptions.PlanetDoesntExistException;
 
 // Represents the current n-body simulation state
 public class Simulation {
@@ -41,7 +41,7 @@ public class Simulation {
     // subsequent calls to update
     public void addPlanet(Planet planet) {
         if (planets.contains(planet)) {
-            throw new PlanetAlreadyExistsInSimulationException();
+            throw new PlanetAlreadyExistsException();
         }
         planets.add(planet);
     }
@@ -50,7 +50,7 @@ public class Simulation {
     // EFFECTS: removes a specific planet from the simulation, if it exists
     public void removePlanet(Planet planet) {
         if (!planets.contains(planet)) {
-            throw new PlanetDoesntExistInSimulationException();
+            throw new PlanetDoesntExistException();
         }
         planets.remove(planet);
     }

@@ -2,6 +2,8 @@ package model;
 
 import java.util.ArrayList;
 
+import exceptions.NonMatchingClassException;
+
 import java.util.*;
 
 // Represents a collision event between two planets at a given point in time
@@ -39,7 +41,7 @@ public class Collision {
     @Override
     public boolean equals(Object otherObject) {
         if (!(otherObject instanceof Collision)) {
-            throw new IllegalArgumentException("otherObject was not of type Collision");
+            throw new NonMatchingClassException();
         }
 
         Collision other = (Collision) otherObject;

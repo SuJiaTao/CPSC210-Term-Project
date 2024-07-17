@@ -1,6 +1,5 @@
 package ui;
 
-import exceptions.InvalidRenderStateException;
 import model.*;
 
 // Represents the internal graphics state and rendering logic that make up 
@@ -219,9 +218,6 @@ public class ViewportEngine {
 
     // EFFECTS: projects a "worldspace" Vector3 into screenspace coordinates
     private BufferPoint projectPointToScreenSpace(Vector3 point) {
-        if (point.getZ() >= CLIPPING_PLANE_DEPTH) {
-            throw new InvalidRenderStateException();
-        }
         // NOTE: despite facing down the -Z axis, we dont want X and Y axis to be
         // inverted, so we take the Abs of the Z
         float posX = point.getX() / Math.abs(point.getZ());
