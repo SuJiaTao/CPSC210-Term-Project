@@ -58,7 +58,8 @@ public class SimulationManager {
             "Jupiter", "Draper", "Draconis", "Cancri", "Awohali", "Vytis", "Igsael", "Chura", "Maskita", "Nanron",
             "Ugaris", "Yvaga", "Lebnitz", "Doodski", "Phobos", "WASP" };
     private static final int NEW_PLANET_SUFFIX_MAX = 1000;
-    private static final float NEW_PLANET_POS_OFFSET_BOUND = 30.0f;
+    private static final float NEW_PLANET_INITIAL_POS_BOUND = 30.0f;
+    private static final float NEW_PLANET_INITIAL_VEL_BOUND = 1.5f;
     private static final float NEW_PLANET_MIN_RAD = 0.5f;
     private static final float NEW_PLANET_MAX_RAD = 1.5f;
 
@@ -1062,12 +1063,20 @@ public class SimulationManager {
         Random rand = new Random();
         String name = NEW_PLANET_NAMES[rand.nextInt(NEW_PLANET_NAMES.length)];
         String numberSuffix = String.format("%03d", rand.nextInt(NEW_PLANET_SUFFIX_MAX));
-        float posX = (rand.nextFloat() - 0.5f) * NEW_PLANET_POS_OFFSET_BOUND;
-        float posY = (rand.nextFloat() - 0.5f) * NEW_PLANET_POS_OFFSET_BOUND;
-        float posZ = (rand.nextFloat() - 0.5f) * NEW_PLANET_POS_OFFSET_BOUND;
+
+        float posX = (rand.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_POS_BOUND;
+        float posY = (rand.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_POS_BOUND;
+        float posZ = (rand.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_POS_BOUND;
+        Vector3 newPos = new Vector3(posX, posY, posZ);
+
+        float velX = (rand.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_VEL_BOUND;
+        float velY = (rand.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_VEL_BOUND;
+        float velZ = (rand.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_VEL_BOUND;
+        Vector3 newVel = new Vector3(velX, velY, velZ);
+
         float scale = NEW_PLANET_MIN_RAD + rand.nextFloat() * (NEW_PLANET_MAX_RAD - NEW_PLANET_MIN_RAD);
 
-        Planet newPlanet = new Planet(name + "-" + numberSuffix, new Vector3(posX, posY, posZ), new Vector3(), scale);
+        Planet newPlanet = new Planet(name + "-" + numberSuffix, newPos, newVel, scale);
         simulation.addPlanet(newPlanet);
         selectedPlanet = newPlanet;
     }
