@@ -147,7 +147,7 @@ public class SimulationManager {
         try {
             SwingTerminalFrame swingFrame = (SwingTerminalFrame) screen.getTerminal();
             swingFrame.setResizable(false);
-            swingFrame.setTitle("N-Body Simulation");
+            swingFrame.setTitle("N-Body Simulator");
             swingFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         } catch (Exception excep) {
             System.err.print("Failed to setup window. Error: " + excep.toString());
