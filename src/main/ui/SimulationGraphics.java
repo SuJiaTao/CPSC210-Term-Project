@@ -1,5 +1,6 @@
 package ui;
 
+import java.io.IOException;
 import java.util.*;
 import javax.swing.JFrame;
 import com.googlecode.lanterna.*;
@@ -41,10 +42,47 @@ public class SimulationGraphics {
     public static final int VIEWPORT_PIX_WIDTH = (VIEWPORT_RIGHT - VIEWPORT_LEFT) / 2;
     public static final int VIEWPORT_PIX_HEIGHT = VIEWPORT_BOT - VIEWPORT_TOP;
 
+    private SimulationManager manager;
     private TerminalScreen screen;
     private ViewportEngine viewport;
 
-    public SimulationGraphics() {
+    public SimulationGraphics(SimulationManager manager) throws IOException {
+        this.manager = manager;
 
+        DefaultTerminalFactory termFactory = new DefaultTerminalFactory();
+        termFactory.setInitialTerminalSize(new TerminalSize(TERMINAL_WIDTH, TERMINAL_HEIGHT));
+        screen = termFactory.createScreen();
+
+        checkIfObtainedDesiredTerminalSize();
+        tryAndSetupWindowFrame();
+
+        screen.startScreen();
+    }
+
+    // EFFECTS: prints an error to stderr if failed to construct screen of desired
+    // size
+    private void checkIfObtainedDesiredTerminalSize() {
+        TerminalSize termSize = screen.getTerminalSize();
+        int widthActual = termSize.getColumns();
+        int heightActual = termSize.getRows();
+
+        if (heightActual != TERMINAL_HEIGHT || widthActual != TERMINAL_WIDTH) {
+            String formatStr = "Failed to create terminal of desired size: (%d, %d), instead got (%d %d)";
+            String errMessage = String.format(formatStr, TERMINAL_WIDTH, TERMINAL_HEIGHT, widthActual, heightActual);
+            System.err.print(errMessage);
+        }
+    }
+
+    // EFFECTS: tries to set some additional properties of the current screen and
+    // prints an error of unable to
+    private void tryAndSetupWindowFrame() {
+        try {
+            SwingTerminalFrame swingFrame = (SwingTerminalFrame) screen.getTerminal();
+            swingFrame.setResizable(false);
+            swingFrame.setTitle("N-Body Simulator");
+            swingFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        } catch (Exception excep) {
+            System.err.print("Failed to setup window. Error: " + excep.toString());
+        }
     }
 }

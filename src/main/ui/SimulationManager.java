@@ -81,14 +81,14 @@ public class SimulationManager {
 
     private int editorViewListSelection;
 
-    private Planet selectedPlanet;
+    private Planet selectedPlanet; // TODO: generalize
     private int plntListViewOffset;
     private boolean editingSelectedPlanet;
     private boolean editingSelectedProperty;
-    private int selectedProperty;
+    private int selectedProperty; // TODO: generalize
     private String userInputString;
 
-    private Collision selectedCollision;
+    private Collision selectedCollision; // TODO: generalize
     private int colListViewOffset;
 
     private ViewportEngine viewport;
@@ -105,6 +105,22 @@ public class SimulationManager {
 
         viewport = new ViewportEngine(Math.min(VIEWPORT_PIX_WIDTH, VIEWPORT_PIX_HEIGHT), simulation);
         onTitleScreen = true;
+    }
+
+    public Simulation getSimulation() {
+        return simulation;
+    }
+
+    public Planet getSelectedPlanet() {
+        return selectedPlanet;
+    }
+
+    public String getSelectedProperty() {
+        return null; // TODO: complete refactoring
+    }
+
+    public Collision getSelectedCollision() {
+        return selectedCollision;
     }
 
     // EFFECTS: setup output streams
