@@ -23,10 +23,17 @@ public class OptionSelector<T> {
         this.optionList = optionList;
         this.selectFwd = selectFwd;
         this.selectBack = selectBck;
+        this.selectedObject = null;
+        ensureSelectedObjectIsReasonable();
     }
 
     public T getSelectedObject() {
         return selectedObject;
+    }
+
+    // EFFECTS: returns whether getSelectedObject is null
+    public boolean noSelectedObject() {
+        return (getSelectedObject() == null);
     }
 
     // EFFECTS: ensures that selectedObject is a valid value and updates the current

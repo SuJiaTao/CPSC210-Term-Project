@@ -2,6 +2,8 @@ package ui;
 
 import java.util.*;
 import javax.swing.JFrame;
+import javax.swing.text.html.Option;
+
 import com.googlecode.lanterna.*;
 import com.googlecode.lanterna.graphics.*;
 import com.googlecode.lanterna.input.*;
@@ -65,10 +67,6 @@ public class SimulationManager {
     private static final float LOW_M_FACTOR_BOUNDARY = 1.2f;
     private static final float MED_M_FACTOR_BOUNDARY = 3.5f;
 
-    private static final int EDITOR_VIEW_LIST_PLANETS = 0;
-    private static final int EDITOR_VIEW_LIST_COLLISIONS = 1;
-    private static final int EDITOR_VIEW_LIST_CYCLE_MOD = EDITOR_VIEW_LIST_COLLISIONS + 1;
-
     private ConsoleOutputRedirectStream errRedirect;
     private ConsoleOutputRedirectStream outRedirect;
 
@@ -95,16 +93,62 @@ public class SimulationManager {
 
     private boolean onTitleScreen;
 
+    // NEW STUFF
+    private static final KeyStroke KS_ARROWUP = new KeyStroke(KeyType.ArrowUp);
+    private static final KeyStroke KS_ARROWDOWN = new KeyStroke(KeyType.ArrowDown);
+    private static final KeyStroke KS_ARROWLEFT = new KeyStroke(KeyType.ArrowLeft);
+    private static final KeyStroke KS_ARROWRIGHT = new KeyStroke(KeyType.ArrowRight);
+    private static final String EDITOR_OPTION_PLANETS = "EditPlanets";
+    private static final String EDITOR_OPTION_COLLISIONS = "EditCollision";
+
+    private SimulationGraphics simGraphics;
+
+    private OptionSelector<Planet> planetSelector;
+    private OptionSelector<Collision> collisionSelector;
+    private OptionSelector<String> editorSelector;
+
     // EFFECTS: initialize simulation, init graphical/user input, redirect
     // sterr+stdout, and set simulation state to the opening screen
     public SimulationManager() throws Exception {
         initOutputStreams();
-        initScreen();
+        simGraphics = new SimulationGraphics(this);
         initSimulationVariables();
         initEditorVariables();
 
         viewport = new ViewportEngine(Math.min(VIEWPORT_PIX_WIDTH, VIEWPORT_PIX_HEIGHT), simulation);
         onTitleScreen = true;
+    }
+
+    // EFFECTS: setup output streams
+    private void initOutputStreams() {
+        errRedirect = new ConsoleOutputRedirectStream(System.err);
+        System.setErr(errRedirect);
+        outRedirect = new ConsoleOutputRedirectStream(System.out);
+        System.setOut(outRedirect);
+    }
+
+    // EFFECTS: sets up simulation related variables
+    private void initSimulationVariables() {
+        simulation = new Simulation();
+        simulationIsRunning = false;
+        lastDeltaTimeSeconds = 0.0f;
+        addAndSelectNewPlanet();
+    }
+
+    // EFFECTS: sets up editor related variables
+    private void initEditorVariables() {
+        planetSelector = new OptionSelector<>(simulation.getPlanets(), KS_ARROWDOWN, KS_ARROWUP);
+        collisionSelector = new OptionSelector<>(simulation.getCollisions(), KS_ARROWDOWN, KS_ARROWUP);
+        String editorOptions[] = { EDITOR_OPTION_PLANETS, EDITOR_OPTION_PLANETS };
+        editorSelector = new OptionSelector<>(Arrays.asList(editorOptions), KS_ARROWRIGHT, KS_ARROWLEFT);
+        selectedPlanet = null;
+        editingSelectedPlanet = false;
+        editingSelectedProperty = false;
+        userInputString = "";
+        plntListViewOffset = 0;
+
+        selectedCollision = null;
+        colListViewOffset = 0;
     }
 
     public Simulation getSimulation() {
@@ -121,73 +165,6 @@ public class SimulationManager {
 
     public Collision getSelectedCollision() {
         return selectedCollision;
-    }
-
-    // EFFECTS: setup output streams
-    private void initOutputStreams() {
-        errRedirect = new ConsoleOutputRedirectStream(System.err);
-        System.setErr(errRedirect);
-        outRedirect = new ConsoleOutputRedirectStream(System.out);
-        System.setOut(outRedirect);
-    }
-
-    // EFFECTS: sets up screen
-    private void initScreen() throws Exception {
-        DefaultTerminalFactory termFactory = new DefaultTerminalFactory();
-        termFactory.setInitialTerminalSize(new TerminalSize(TERMINAL_WIDTH, TERMINAL_HEIGHT));
-        screen = termFactory.createScreen();
-        checkIfObtainedDesiredTerminalSize();
-        tryAndSetupWindowFrame();
-        screen.startScreen();
-    }
-
-    // EFFECTS: prints an error to stderr if failed to construct screen of desired
-    // size
-    private void checkIfObtainedDesiredTerminalSize() {
-        TerminalSize termSize = screen.getTerminalSize();
-        int widthActual = termSize.getColumns();
-        int heightActual = termSize.getRows();
-
-        if (heightActual != TERMINAL_HEIGHT || widthActual != TERMINAL_WIDTH) {
-            String formatStr = "Failed to create terminal of desired size: (%d, %d), instead got (%d %d)";
-            String errMessage = String.format(formatStr, TERMINAL_WIDTH, TERMINAL_HEIGHT, widthActual, heightActual);
-            System.err.print(errMessage);
-        }
-    }
-
-    // EFFECTS: tries to set some additional properties of the current screen and
-    // prints an error of unable to
-    private void tryAndSetupWindowFrame() {
-        try {
-            SwingTerminalFrame swingFrame = (SwingTerminalFrame) screen.getTerminal();
-            swingFrame.setResizable(false);
-            swingFrame.setTitle("N-Body Simulator");
-            swingFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        } catch (Exception excep) {
-            System.err.print("Failed to setup window. Error: " + excep.toString());
-        }
-    }
-
-    // EFFECTS: sets up simulation related variables
-    private void initSimulationVariables() {
-        simulation = new Simulation();
-        simulationIsRunning = false;
-        lastDeltaTimeSeconds = 0.0f;
-        addAndSelectNewPlanet();
-    }
-
-    // EFFECTS: sets up editor related variables
-    private void initEditorVariables() {
-        editorViewListSelection = EDITOR_VIEW_LIST_PLANETS;
-
-        selectedPlanet = null;
-        editingSelectedPlanet = false;
-        editingSelectedProperty = false;
-        userInputString = "";
-        plntListViewOffset = 0;
-
-        selectedCollision = null;
-        colListViewOffset = 0;
     }
 
     // MODIFIES: this
@@ -291,10 +268,10 @@ public class SimulationManager {
     // EFFECTS: draws the appropriate visuals to the left-side editor
     private void drawEditorView() {
         switch (editorViewListSelection) {
-            case EDITOR_VIEW_LIST_PLANETS:
+            case EDITOR_OPTION_PLANETS:
                 drawPlanetListEditor();
                 break;
-            case EDITOR_VIEW_LIST_COLLISIONS:
+            case EDITOR_OPTION_COLLISIONS:
                 drawCollisionListEditor();
                 break;
             default:
@@ -768,11 +745,11 @@ public class SimulationManager {
         handleEditorCycleListView();
 
         switch (editorViewListSelection) {
-            case EDITOR_VIEW_LIST_PLANETS:
+            case EDITOR_OPTION_PLANETS:
                 handleEditorViewPlanetUserInput();
                 break;
 
-            case EDITOR_VIEW_LIST_COLLISIONS:
+            case EDITOR_OPTION_COLLISIONS:
                 handleEditorViewCollisionsUserInput();
                 break;
 
