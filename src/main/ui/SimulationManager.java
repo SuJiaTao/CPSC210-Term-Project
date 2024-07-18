@@ -1,16 +1,13 @@
 package ui;
 
 import java.util.*;
-
 import javax.swing.JFrame;
-
 import com.googlecode.lanterna.*;
 import com.googlecode.lanterna.graphics.*;
 import com.googlecode.lanterna.input.*;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.swing.SwingTerminalFrame;
-
 import exceptions.PlanetDoesntExistException;
 import model.*;
 
@@ -51,7 +48,8 @@ public class SimulationManager {
     private static final int VIEWPORT_PIX_WIDTH = (VIEWPORT_RIGHT - VIEWPORT_LEFT) / 2;
     private static final int VIEWPORT_PIX_HEIGHT = VIEWPORT_BOT - VIEWPORT_TOP;
 
-    private static final int EDIT_PROP_MAX_INPUT_LEN = EDITOR_RIGHT - EDITOR_LEFT - 3;
+    private static final int EDIT_PROP_MAX_INPUT_LEN = SimulationGraphics.EDITOR_RIGHT - SimulationGraphics.EDITOR_LEFT
+            - 3;
 
     private static final String[] NEW_PLANET_NAMES = { "Kepler", "Earth", "Solaris", "Tatoonie", "Furball", "X",
             "Atlas", "Gemini", "Spongey", "Arrakis", "Trapist", "Proxima", "Mundley", "Bongcloud", "Euclid", "Hades",
@@ -59,7 +57,7 @@ public class SimulationManager {
             "Ugaris", "Yvaga", "Lebnitz", "Doodski", "Phobos", "WASP" };
     private static final int NEW_PLANET_SUFFIX_MAX = 1000;
     private static final float NEW_PLANET_INITIAL_POS_BOUND = 30.0f;
-    private static final float NEW_PLANET_INITIAL_VEL_BOUND = 1.5f;
+    private static final float NEW_PLANET_INITIAL_VEL_BOUND = 2.0f;
     private static final float NEW_PLANET_MIN_RAD = 0.5f;
     private static final float NEW_PLANET_MAX_RAD = 1.5f;
 
