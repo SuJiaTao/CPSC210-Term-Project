@@ -20,7 +20,7 @@ public class ViewportEngine {
     private int bufferWidth;
     private int pixelCount;
 
-    private Simulation simulation;
+    private SimulationManager manager;
 
     private Vector3 averagePlanetPos;
     private float furthestPlanetDistance;
@@ -67,8 +67,8 @@ public class ViewportEngine {
 
     // EFFECTS: initalizes a square viewport and other data given the specified
     // parameters
-    public ViewportEngine(int size, Simulation referenceSim) {
-        simulation = referenceSim;
+    public ViewportEngine(int size, SimulationManager referenceManager) {
+        manager = referenceManager;
 
         bufferWidth = size;
         pixelCount = size * size;
@@ -97,14 +97,14 @@ public class ViewportEngine {
     public void update() {
         clearBuffers();
 
-        if (simulation.getPlanets().size() == 0) {
+        if (manager.getSimulation().getPlanets().size() == 0) {
             return;
         }
 
         updateAveragePlanetPos();
         updateFurthestPlanetDistance();
         updateViewportMatrix();
-        for (Planet planet : simulation.getPlanets()) {
+        for (Planet planet : manager.getSimulation().getPlanets()) {
             drawPlanet(planet);
         }
     }
@@ -113,12 +113,13 @@ public class ViewportEngine {
     // EFFECTS: updates average planet position
     private void updateAveragePlanetPos() {
         averagePlanetPos = new Vector3();
-        if (simulation.getPlanets().size() == 0) {
+        if (manager.getSimulation().getPlanets().size() == 0) {
             return;
         }
 
-        for (Planet planet : simulation.getPlanets()) {
-            Vector3 posWeighted = Vector3.multiply(planet.getPosition(), 1.0f / simulation.getPlanets().size());
+        for (Planet planet : manager.getSimulation().getPlanets()) {
+            Vector3 posWeighted = Vector3.multiply(planet.getPosition(),
+                    1.0f / manager.getSimulation().getPlanets().size());
             averagePlanetPos = Vector3.add(averagePlanetPos, posWeighted);
         }
     }
@@ -127,7 +128,7 @@ public class ViewportEngine {
     // EFFECTS: updates the distance of the furthest planet away from the center
     private void updateFurthestPlanetDistance() {
         furthestPlanetDistance = 0.0f;
-        for (Planet planet : simulation.getPlanets()) {
+        for (Planet planet : manager.getSimulation().getPlanets()) {
             float dispFromCenter = Vector3.sub(averagePlanetPos, planet.getPosition()).magnitude();
             furthestPlanetDistance = Math.max(dispFromCenter + planet.getRadius() * 2.0f, furthestPlanetDistance);
         }

@@ -59,6 +59,9 @@ public class SimulationGraphics {
         checkIfObtainedDesiredTerminalSize();
         tryAndSetupWindowFrame();
 
+        int viewportSize = Math.max(VIEWPORT_PIX_WIDTH, VIEWPORT_PIX_HEIGHT);
+        viewport = new ViewportEngine(viewportSize, manager);
+
         plntListViewOffset = 0;
         colListViewOffset = 0;
         screen.startScreen();

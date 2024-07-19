@@ -1,7 +1,12 @@
 package ui;
 
 import model.*;
+
+import java.io.IOException;
 import java.util.*;
+
+import javax.swing.text.html.Option;
+
 import com.googlecode.lanterna.input.*;
 
 // Represents the current state of user-interface to managing simulations
@@ -68,7 +73,7 @@ public class SimulationManager {
         initSimulationVariables();
         initEditorVariables();
 
-        onTitleScreen = true;
+        onTitleScreen = false; // TODO: revert
     }
 
     // EFFECTS: setup output streams
@@ -84,7 +89,6 @@ public class SimulationManager {
         simulation = new Simulation();
         simulationIsRunning = false;
         lastDeltaTimeSeconds = 0.0f;
-        addAndSelectNewPlanet();
     }
 
     // EFFECTS: sets up editor related variables
@@ -137,7 +141,7 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: execute main input/rendering loop
-    public void mainLoop() throws Exception {
+    public void mainLoop() {
         while (true) {
             long startNanoTime = System.nanoTime();
             simGraphics.clear();
@@ -158,10 +162,16 @@ public class SimulationManager {
 
     // MODIFIES: this
     // EFFECTS: handles simple titlescreen logic
-    private void handleTitleScreen() throws Exception {
+    private void handleTitleScreen() {
         simGraphics.drawTitleScreen();
 
-        KeyStroke nextKey = simGraphics.getScreen().pollInput();
+        KeyStroke nextKey = null;
+        try {
+            nextKey = simGraphics.getScreen().pollInput();
+        } catch (IOException e) {
+            // DO NOTHING
+        }
+
         if (nextKey == null) {
             return;
         }
@@ -179,10 +189,6 @@ public class SimulationManager {
         try {
             handleUserInput();
             handleSimulationState();
-
-            // NOTE: the handling of the simulation and user input can cause it such that
-            // there is no planets left, which is a special state which must be recognised
-            // for when rendering, so drawing must be done last, after this is accounted for
             simGraphics.drawEditorView();
             simGraphics.drawSimulationViewPort();
         } catch (Exception exception) {
@@ -198,18 +204,38 @@ public class SimulationManager {
         StackTraceElement[] callStack = exception.getStackTrace();
         StackTraceElement elemOfInterest = callStack[0]; // DEFAULT: highest
 
-        // NOTE: gets the "highest" element within THIS class as to get around nested
-        // error checking in the JDK
+        // NOTE: gets the "highest" element within a decently releavent class as to get
+        // around nested error checking in the JDK
         for (int i = 0; i < callStack.length; i++) {
-            if (callStack[i].getClassName().equals(this.getClass().getName())) {
+            if (isExceptionFromAppropriateClass(callStack[i])) {
                 elemOfInterest = callStack[i];
                 break;
             }
         }
 
+        String className = elemOfInterest.getClassName();
         String method = elemOfInterest.getMethodName();
         int lineNum = elemOfInterest.getLineNumber();
-        System.err.print(method + " line " + lineNum + " threw " + exception.getClass().getSimpleName());
+        String excepName = exception.getClass().getSimpleName();
+        System.err.print(className + "." + method + " line " + lineNum + " threw " + excepName);
+    }
+
+    // EFFECTS: returns whether the exception is from an appropriate class to view
+    // in the error message
+    private boolean isExceptionFromAppropriateClass(StackTraceElement elem) {
+        if (elem.getClassName().equals(SimulationManager.class.getName())) {
+            return true;
+        }
+        if (elem.getClassName().equals(SimulationGraphics.class.getName())) {
+            return true;
+        }
+        if (elem.getClassName().equals(OptionSelector.class.getName())) {
+            return true;
+        }
+        if (elem.getClassName().equals(ViewportEngine.class.getName())) {
+            return true;
+        }
+        return false;
     }
 
     // EFFECTS: waits for miliseconds via spin
