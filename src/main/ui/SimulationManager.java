@@ -315,67 +315,27 @@ public class SimulationManager {
     // MODIFIES: this
     // EFFECTS: handles all user input
     private void handleUserInput() throws Exception {
-        lastUserKey = screen.pollInput();
+        lastUserKey = simGraphics.getScreen().pollInput();
         if (lastUserKey == null) {
             return;
         }
 
         handleShouldQuit();
         handleSimulationPauseAndUnpause();
-        handleEditorCycleListView();
+        editorSelector.update(lastUserKey);
 
-        switch (editorViewListSelection) {
+        switch (editorSelector.getSelectedObject()) {
             case EDITOR_OPTION_PLANETS:
                 handleEditorViewPlanetUserInput();
                 break;
 
             case EDITOR_OPTION_COLLISIONS:
-                handleEditorViewCollisionsUserInput();
+                collisionSelector.update(lastUserKey);
                 break;
 
             default:
                 break;
         }
-    }
-
-    // MODIFES: this
-    // EFFECTS: handles the cycling of the editor list view
-    private void handleEditorCycleListView() {
-        if (lastUserKey.getKeyType() == KeyType.ArrowLeft) {
-            editorViewListSelection--;
-        }
-        if (lastUserKey.getKeyType() == KeyType.ArrowRight) {
-            editorViewListSelection++;
-        }
-        editorViewListSelection %= EDITOR_VIEW_LIST_CYCLE_MOD;
-        if (editorViewListSelection < 0) {
-            editorViewListSelection += EDITOR_VIEW_LIST_CYCLE_MOD;
-        }
-    }
-
-    // MODIFIES: this
-    // EFFECTS: handles inputs when editor is viewing collision list
-    private void handleEditorViewCollisionsUserInput() {
-        handleCycleSelectedCollision();
-    }
-
-    // MODIFIES: this
-    // EFFECTS: handles the cycling of the collision selection
-    private void handleCycleSelectedCollision() {
-        if (selectedCollision == null) {
-            return;
-        }
-
-        int selectedIndex = simulation.getCollisions().indexOf(selectedCollision);
-        if (lastUserKey.getKeyType() == KeyType.ArrowDown) {
-            selectedIndex++;
-        }
-        if (lastUserKey.getKeyType() == KeyType.ArrowUp) {
-            selectedIndex--;
-        }
-        selectedIndex = Math.max(0, selectedIndex);
-        selectedIndex = Math.min(selectedIndex, simulation.getCollisions().size() - 1);
-        selectedCollision = simulation.getCollisions().get(selectedIndex);
     }
 
     // MODIFES: this
@@ -412,7 +372,7 @@ public class SimulationManager {
     // MODIFIES: this
     // EFFECTS: handles pausing/unpausing of the simulation
     private void handleSimulationPauseAndUnpause() {
-        if (selectedPlanet == null) {
+        if (planetSelector.getSelectedObject() == null) {
             simulationIsRunning = false;
             return;
         }
@@ -460,27 +420,27 @@ public class SimulationManager {
     // EFFECTS: attempts to apply user input to replace the selected property, does
     // nothing if invalid input
     private boolean handleUserInputSubmissionAttempt() {
-        switch (selectedProperty) {
-            case EDIT_PROP_NAME:
+        switch (propertySelector.getSelectedObject()) {
+            case PROP_OPTION_NAME:
                 return tryApplyNewName();
 
-            case EDIT_PROP_POSITION:
+            case PROP_OPTION_POS:
                 Vector3 newPos = tryParseVectorFromInputString();
                 if (newPos == null) {
                     return false;
                 }
-                selectedPlanet.setPosition(newPos);
+                planetSelector.getSelectedObject().setPosition(newPos);
                 return true;
 
-            case EDIT_PROP_VELOCITY:
+            case PROP_OPTION_VEL:
                 Vector3 newVel = tryParseVectorFromInputString();
                 if (newVel == null) {
                     return false;
                 }
-                selectedPlanet.setVelocity(newVel);
+                planetSelector.getSelectedObject().setVelocity(newVel);
                 return true;
 
-            case EDIT_PROP_RADIUS:
+            case PROP_OPTION_RAD:
                 return tryApplyNewRadius();
 
             default:
@@ -499,7 +459,7 @@ public class SimulationManager {
             return false;
         }
 
-        selectedPlanet.setName(userInputString);
+        planetSelector.getSelectedObject().setName(userInputString);
         return true;
 
     }
@@ -512,7 +472,7 @@ public class SimulationManager {
         } catch (Exception exception) {
             return false;
         }
-        selectedPlanet.setRadius(newRadius);
+        planetSelector.getSelectedObject().setRadius(newRadius);
         return true;
     }
 
@@ -556,9 +516,13 @@ public class SimulationManager {
     // EFFECTS: handles the updating of selectedPlanet when the current selected
     // planet is removed
     private void handleRemoveSelectedPlanet() {
-        if (selectedPlanet == null) {
+        if (planetSelector.noSelectedObject()) {
             return;
         }
+
+        Planet selectedPlanet = planetSelector.getSelectedObject();
+
+        // TODO: move this logic to OptionSelecto
         if (!simulation.getPlanets().contains(selectedPlanet)) {
             throw new PlanetDoesntExistException();
         }
@@ -573,56 +537,6 @@ public class SimulationManager {
             selectedIndex = simulation.getPlanets().size() - 1;
         }
 
-        selectedPlanet = simulation.getPlanets().get(selectedIndex);
-    }
-
-    // MODIFIES: this
-    // EFFECTS: manages planet editing cycle behavior
-    private void handleCyclePlanetProperty() {
-        if (lastUserKey.getKeyType() == KeyType.Escape) {
-            editingSelectedPlanet = false;
-            return;
-        }
-        if (lastUserKey.getKeyType() == KeyType.ArrowUp) {
-            selectedProperty--;
-        }
-        if (lastUserKey.getKeyType() == KeyType.ArrowDown) {
-            selectedProperty++;
-        }
-        if (lastUserKey.getKeyType() == KeyType.Enter) {
-            userInputString = "";
-            editingSelectedProperty = true;
-            return;
-        }
-        // NOTE: ensure positive modulous
-        selectedProperty %= EDIT_PROP_CYCLE_MOD;
-        if (selectedProperty < 0) {
-            selectedProperty += EDIT_PROP_CYCLE_MOD;
-        }
-    }
-
-    // MODIFIES: this
-    // EFFECTS: cycles the selected planet based on the arrow keys, or selects if
-    // detected enter key
-    private void handleCycleSelectedPlanet() {
-        if (selectedPlanet == null) {
-            return;
-        }
-
-        int selectedIndex = simulation.getPlanets().indexOf(selectedPlanet);
-        if (lastUserKey.getKeyType() == KeyType.ArrowUp) {
-            selectedIndex--;
-        }
-        if (lastUserKey.getKeyType() == KeyType.ArrowDown) {
-            selectedIndex++;
-        }
-        if (lastUserKey.getKeyType() == KeyType.Enter) {
-            editingSelectedPlanet = true;
-            selectedProperty = EDIT_PROP_NAME;
-            return;
-        }
-
-        selectedIndex = Math.max(0, Math.min(selectedIndex, simulation.getPlanets().size() - 1));
         selectedPlanet = simulation.getPlanets().get(selectedIndex);
     }
 
@@ -649,6 +563,5 @@ public class SimulationManager {
 
         Planet newPlanet = new Planet(name + "-" + numberSuffix, newPos, newVel, scale);
         simulation.addPlanet(newPlanet);
-        selectedPlanet = newPlanet;
     }
 }
