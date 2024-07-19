@@ -89,6 +89,8 @@ public class OptionSelector<T> {
         if (selectAfter) {
             selectedObject = object;
         }
+
+        ensureSelectedObjectIsReasonable();
     }
 
     // EFFECTS: removes the given object from the list and updates the selection
@@ -112,5 +114,7 @@ public class OptionSelector<T> {
             int newIndex = Math.min(oldSelectedIndex, optionList.size() - 1);
             selectedObject = optionList.get(newIndex);
         }
+
+        ensureSelectedObjectIsReasonable();
     }
 }

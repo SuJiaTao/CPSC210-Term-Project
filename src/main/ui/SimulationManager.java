@@ -183,8 +183,7 @@ public class SimulationManager {
     // EFFECTS: handles all input and graphics
     private void handleEverythingAndiMeanEverything() {
         try {
-            simGraphics.drawEditorView();
-            simGraphics.drawSimulationViewPort();
+            simGraphics.drawEverything();
             handleUserInput();
             handleSimulationState();
         } catch (Exception exception) {
@@ -257,6 +256,9 @@ public class SimulationManager {
             float latestTime = simulation.getTimeElapsed();
             simulation.progressBySeconds(lastDeltaTimeSeconds);
             handleDebrisForSimuationTick(latestTime);
+        }
+        if (planetSelector.getOptions().size() == 0) {
+            simulationIsRunning = false;
         }
     }
 
@@ -407,11 +409,6 @@ public class SimulationManager {
     // MODIFIES: this
     // EFFECTS: handles pausing/unpausing of the simulation
     private void handleSimulationPauseAndUnpause() {
-        if (planetSelector.getSelectedObject() == null) {
-            simulationIsRunning = false;
-            return;
-        }
-
         Character key = lastUserKey.getCharacter();
         if (key == null) {
             return;

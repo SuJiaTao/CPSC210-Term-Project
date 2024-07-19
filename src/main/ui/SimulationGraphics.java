@@ -149,10 +149,16 @@ public class SimulationGraphics {
         gfx.putString(posX, posY, text);
     }
 
-    // REQUIRES: editorViewListSelection must be a valid value
+    // MODIFIES: this
+    // EFFECTS: draws everything
+    public void drawEverything() {
+        drawEditorView();
+        drawSimulationViewPort();
+    }
+
     // MODIFIES: this
     // EFFECTS: draws the appropriate visuals to the left-side editor
-    public void drawEditorView() {
+    private void drawEditorView() {
         switch (manager.getSelectedEditorView()) {
             case SimulationManager.EDITOR_OPTION_PLANETS:
                 drawPlanetListEditor();
@@ -167,7 +173,7 @@ public class SimulationGraphics {
 
     // MODIFIES: this
     // EFFECTS: draws right-side 3D viewport
-    public void drawSimulationViewPort() {
+    private void drawSimulationViewPort() {
         TextGraphics gfx = screen.newTextGraphics();
         drawViewportFrame(gfx);
         drawViewportView(gfx);
