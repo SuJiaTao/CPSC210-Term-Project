@@ -69,7 +69,7 @@ public class SimulationManager {
         initSimulationVariables();
         initEditorVariables();
 
-        onTitleScreen = false; // TODO: revert
+        onTitleScreen = true;
     }
 
     // EFFECTS: setup output streams
@@ -424,6 +424,7 @@ public class SimulationManager {
     // EFFECTS: manages planet property editing input handling behavior
     private void handleEditPlanetProperty() {
         if (lastUserKey.getKeyType() == KeyType.Escape) {
+            userInputString = "";
             editingSelectedProperty = false;
             return;
         }
@@ -436,6 +437,7 @@ public class SimulationManager {
         }
         if (lastUserKey.getKeyType() == KeyType.Enter) {
             if (handleUserInputSubmissionAttempt()) {
+                userInputString = "";
                 editingSelectedProperty = false;
             }
             return;
