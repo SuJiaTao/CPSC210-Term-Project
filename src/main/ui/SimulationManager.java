@@ -1,17 +1,8 @@
 package ui;
 
-import java.util.*;
-import javax.swing.JFrame;
-import javax.swing.text.html.Option;
-
-import com.googlecode.lanterna.*;
-import com.googlecode.lanterna.graphics.*;
-import com.googlecode.lanterna.input.*;
-import com.googlecode.lanterna.screen.TerminalScreen;
-import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
-import com.googlecode.lanterna.terminal.swing.SwingTerminalFrame;
-import exceptions.PlanetDoesntExistException;
 import model.*;
+import java.util.*;
+import com.googlecode.lanterna.input.*;
 
 // Represents the current state of user-interface to managing simulations
 public class SimulationManager {
@@ -39,11 +30,13 @@ public class SimulationManager {
 
     public static final String EDITOR_OPTION_PLANETS = "EditPlanets";
     public static final String EDITOR_OPTION_COLLISIONS = "EditCollision";
+    public static final String[] EDITOR_OPTIONS = { EDITOR_OPTION_PLANETS, EDITOR_OPTION_COLLISIONS };
 
     public static final String PROP_OPTION_NAME = "PropName";
     public static final String PROP_OPTION_POS = "PropPosition";
     public static final String PROP_OPTION_VEL = "PropVelocity";
     public static final String PROP_OPTION_RAD = "PropRadius";
+    public static final String[] PROP_OPTIONS = { PROP_OPTION_NAME, PROP_OPTION_POS, PROP_OPTION_VEL, PROP_OPTION_RAD };
 
     private ConsoleOutputRedirectStream errRedirect;
     private ConsoleOutputRedirectStream outRedirect;
@@ -97,14 +90,9 @@ public class SimulationManager {
     // EFFECTS: sets up editor related variables
     private void initEditorVariables() {
         planetSelector = new OptionSelector<>(simulation.getPlanets(), KS_ARROWDOWN, KS_ARROWUP);
-
-        String propOptions[] = { PROP_OPTION_NAME, PROP_OPTION_POS, PROP_OPTION_VEL, PROP_OPTION_RAD };
-        propertySelector = new OptionSelector<>(Arrays.asList(propOptions), KS_ARROWDOWN, KS_ARROWUP);
-
+        propertySelector = new OptionSelector<>(Arrays.asList(PROP_OPTIONS), KS_ARROWDOWN, KS_ARROWUP);
         collisionSelector = new OptionSelector<>(simulation.getCollisions(), KS_ARROWDOWN, KS_ARROWUP);
-
-        String editorOptions[] = { EDITOR_OPTION_PLANETS, EDITOR_OPTION_PLANETS };
-        editorSelector = new OptionSelector<>(Arrays.asList(editorOptions), KS_ARROWRIGHT, KS_ARROWLEFT);
+        editorSelector = new OptionSelector<>(Arrays.asList(EDITOR_OPTIONS), KS_ARROWRIGHT, KS_ARROWLEFT);
 
         editingSelectedPlanet = false;
         editingSelectedProperty = false;
@@ -129,6 +117,22 @@ public class SimulationManager {
 
     public String getSelectedEditorView() {
         return editorSelector.getSelectedObject();
+    }
+
+    public boolean isEditingSelectedPlanet() {
+        return editingSelectedPlanet;
+    }
+
+    public boolean isEditingSelectedProperty() {
+        return editingSelectedProperty;
+    }
+
+    public boolean isSimulationRunning() {
+        return simulationIsRunning;
+    }
+
+    public String getUserInputString() {
+        return userInputString;
     }
 
     // MODIFIES: this
@@ -322,15 +326,15 @@ public class SimulationManager {
 
         handleShouldQuit();
         handleSimulationPauseAndUnpause();
-        editorSelector.update(lastUserKey);
+        editorSelector.cycleObjectSelection(lastUserKey);
 
         switch (editorSelector.getSelectedObject()) {
             case EDITOR_OPTION_PLANETS:
-                handleEditorViewPlanetUserInput();
+                handleEditorViewPlanetUserInput(lastUserKey);
                 break;
 
             case EDITOR_OPTION_COLLISIONS:
-                collisionSelector.update(lastUserKey);
+                collisionSelector.cycleObjectSelection(lastUserKey);
                 break;
 
             default:
@@ -340,16 +344,16 @@ public class SimulationManager {
 
     // MODIFES: this
     // EFFECTS: handles inputs when editor is viewing planet list
-    private void handleEditorViewPlanetUserInput() {
+    private void handleEditorViewPlanetUserInput(KeyStroke lastKeyStroke) {
         if (editingSelectedPlanet) {
             if (editingSelectedProperty) {
                 handleEditPlanetProperty();
             } else {
-                handleCyclePlanetProperty();
+                propertySelector.cycleObjectSelection(lastKeyStroke);
             }
         } else {
             handlePlanetAddAndRemove();
-            handleCycleSelectedPlanet();
+            propertySelector.cycleObjectSelection(lastKeyStroke);
         }
     }
 
@@ -444,7 +448,7 @@ public class SimulationManager {
                 return tryApplyNewRadius();
 
             default:
-                System.err.print("attempted to apply input to unknown property: " + selectedProperty);
+                assert false; // THIS SHOULD NEVER HAPPEN
                 return false;
         }
     }
@@ -521,23 +525,7 @@ public class SimulationManager {
         }
 
         Planet selectedPlanet = planetSelector.getSelectedObject();
-
-        // TODO: move this logic to OptionSelecto
-        if (!simulation.getPlanets().contains(selectedPlanet)) {
-            throw new PlanetDoesntExistException();
-        }
-
-        int selectedIndex = simulation.getPlanets().indexOf(selectedPlanet);
-        simulation.removePlanet(selectedPlanet);
-        if (simulation.getPlanets().size() == 0) {
-            setSimulationNoPlanets();
-            return;
-        }
-        if (selectedIndex >= simulation.getPlanets().size()) {
-            selectedIndex = simulation.getPlanets().size() - 1;
-        }
-
-        selectedPlanet = simulation.getPlanets().get(selectedIndex);
+        planetSelector.removeOptionFromSelection(selectedPlanet);
     }
 
     // MODIFIES: this
@@ -562,6 +550,6 @@ public class SimulationManager {
         float scale = NEW_PLANET_MIN_RAD + rand.nextFloat() * (NEW_PLANET_MAX_RAD - NEW_PLANET_MIN_RAD);
 
         Planet newPlanet = new Planet(name + "-" + numberSuffix, newPos, newVel, scale);
-        simulation.addPlanet(newPlanet);
+        planetSelector.addOptionToSelection(newPlanet, true);
     }
 }

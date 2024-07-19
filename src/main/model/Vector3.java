@@ -1,6 +1,6 @@
 package model;
 
-import exceptions.NonMatchingClassException;
+import model.exceptions.NonMatchingClassException;
 
 // Represents a 3-component vector which supports a common set of vector operations
 public class Vector3 {

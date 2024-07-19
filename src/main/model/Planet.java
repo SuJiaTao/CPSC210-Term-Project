@@ -1,6 +1,6 @@
 package model;
 
-import exceptions.ArgumentOutOfBoundsException;
+import model.exceptions.ArgumentOutOfBoundsException;
 
 // Represents a Planet within the simulation in 3D-space
 // The planet has a name, position, velocity and radius

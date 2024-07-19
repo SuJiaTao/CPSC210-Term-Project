@@ -9,8 +9,9 @@ import com.googlecode.lanterna.input.*;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.swing.SwingTerminalFrame;
-import exceptions.PlanetDoesntExistException;
+
 import model.*;
+import model.exceptions.PlanetDoesntExistException;
 
 public class SimulationGraphics {
     public static final int TERMINAL_WIDTH = 100;
@@ -45,6 +46,9 @@ public class SimulationGraphics {
     private TerminalScreen screen;
     private ViewportEngine viewport;
 
+    private int plntListViewOffset;
+    private int colListViewOffset;
+
     public SimulationGraphics(SimulationManager manager) throws IOException {
         this.manager = manager;
 
@@ -55,6 +59,8 @@ public class SimulationGraphics {
         checkIfObtainedDesiredTerminalSize();
         tryAndSetupWindowFrame();
 
+        plntListViewOffset = 0;
+        colListViewOffset = 0;
         screen.startScreen();
     }
 
@@ -179,9 +185,10 @@ public class SimulationGraphics {
         int anchorTop = VIEWPORT_TOP - vpOffsetY;
         for (int x = 0; x < viewport.getSize(); x++) {
             for (int y = 0; y < viewport.getSize(); y++) {
+                Planet selectedPlanet = manager.getSelectedPlanet();
                 if (viewport.getPlanetMaskValue(x, y) == selectedPlanet && selectedPlanet != null) {
                     setTextGraphicsToHoverMode(gfx);
-                    if (editingSelectedPlanet) {
+                    if (manager.isEditingSelectedPlanet()) {
                         setTextGraphicsToSelectMode(gfx);
                     }
                 } else {
@@ -207,12 +214,12 @@ public class SimulationGraphics {
 
         gfx.drawLine(VP_FRAME_LEFT, VP_FRAME_TOP + 2, VP_FRAME_RIGHT, VP_FRAME_TOP + 2, 'X');
         String viewportTitle = "Simulation ";
-        if (simulationIsRunning) {
+        if (manager.isSimulationRunning()) {
             viewportTitle += "Running";
         } else {
             viewportTitle += "Stopped";
         }
-        viewportTitle += String.format(" | Time Elapsed: %.2fs", simulation.getTimeElapsed());
+        viewportTitle += String.format(" | Time Elapsed: %.2fs", manager.getSimulation().getTimeElapsed());
         gfx.putString(VP_FRAME_LEFT + 2, VP_FRAME_TOP + 1, viewportTitle);
     }
 
@@ -232,7 +239,7 @@ public class SimulationGraphics {
         gfx.putString(new TerminalPosition(EDITOR_LEFT + 2, EDITOR_TOP + 1), "COLLISION LIST");
         gfx.drawLine(EDITOR_LEFT, EDITOR_TOP + 2, EDITOR_RIGHT, EDITOR_TOP + 2, '+');
 
-        List<Collision> colList = simulation.getCollisions();
+        List<Collision> colList = manager.getSimulation().getCollisions();
         if (colList.size() == 0) {
             gfx.putString(EDITOR_LEFT + 1, EDITOR_TOP + 3, " No collisions yet!");
             return;
@@ -246,6 +253,8 @@ public class SimulationGraphics {
     // MODIFIES: this
     // EFFECTS: draw the entries of collisions
     private void drawCollisionListEntries(TextGraphics gfx, List<Collision> colList) {
+        Collision selectedCollision = manager.getSelectedCollision();
+
         colListViewOffset = Math.max(colListViewOffset,
                 colList.indexOf(selectedCollision) - EDITORLIST_ENTIRES + 1);
         colListViewOffset = Math.min(colListViewOffset, colList.indexOf(selectedCollision));
@@ -279,6 +288,7 @@ public class SimulationGraphics {
     // EFFECTS: draws collision info viewer
     private void drawCollisionInfo(TextGraphics gfx) {
         setTextGraphicsToViewMode(gfx);
+        Collision selectedCollision = manager.getSelectedCollision();
 
         // title and border
         gfx.drawLine(EDITOR_LEFT, PLANETINFO_TOP, EDITOR_RIGHT, PLANETINFO_TOP, '+');
@@ -326,7 +336,7 @@ public class SimulationGraphics {
         gfx.putString(new TerminalPosition(EDITOR_LEFT + 2, EDITOR_TOP + 1), "PLANET LIST");
         gfx.drawLine(EDITOR_LEFT, EDITOR_TOP + 2, EDITOR_RIGHT, EDITOR_TOP + 2, '+');
 
-        List<Planet> planetList = simulation.getPlanets();
+        List<Planet> planetList = manager.getSimulation().getPlanets();
         if (planetList.size() == 0) {
             gfx.putString(EDITOR_LEFT + 1, EDITOR_TOP + 3, " Press '+' to add a planet");
             return;
@@ -338,6 +348,8 @@ public class SimulationGraphics {
     // MODIFIES: this
     // EFFECTS: draws entries of the planet list
     private void drawPlanetListEntries(TextGraphics gfx, List<Planet> planetList) {
+        Planet selectedPlanet = manager.getSelectedPlanet();
+
         plntListViewOffset = Math.max(plntListViewOffset,
                 planetList.indexOf(selectedPlanet) - EDITORLIST_ENTIRES + 1);
         plntListViewOffset = Math.min(plntListViewOffset, planetList.indexOf(selectedPlanet));
@@ -349,7 +361,7 @@ public class SimulationGraphics {
             }
             if (indexActual == planetList.indexOf(selectedPlanet)) {
                 setTextGraphicsToHoverMode(gfx);
-                if (editingSelectedPlanet) {
+                if (manager.isEditingSelectedPlanet()) {
                     setTextGraphicsToSelectMode(gfx);
                 }
             } else {
@@ -364,6 +376,7 @@ public class SimulationGraphics {
     // EFFECTS: draws planet info viewer
     private void drawPlanetInfo(TextGraphics gfx) {
         setTextGraphicsToViewMode(gfx);
+        Planet selectedPlanet = manager.getSelectedPlanet();
 
         // title and border
         gfx.drawLine(EDITOR_LEFT, PLANETINFO_TOP, EDITOR_RIGHT, PLANETINFO_TOP, '+');
@@ -374,7 +387,7 @@ public class SimulationGraphics {
         }
 
         String actionPrefix = "";
-        if (editingSelectedPlanet) {
+        if (manager.isEditingSelectedPlanet()) {
             actionPrefix = "EDIT";
         } else {
             actionPrefix = "VIEW";
@@ -388,35 +401,58 @@ public class SimulationGraphics {
     // MODIFIES: this
     // EFFECTS: draws GUI for value editing input handler
     private void drawPropertyEditingInputBox(TextGraphics gfx) {
-        if (!editingSelectedProperty) {
+        if (!manager.isEditingSelectedProperty()) {
             return;
         }
         setTextGraphicsToViewMode(gfx);
         gfx.drawLine(EDITOR_LEFT, EDITOR_BOT - 3, EDITOR_RIGHT, EDITOR_BOT - 3, '+');
         gfx.putString(EDITOR_LEFT + 1, EDITOR_BOT - 2, "Input Value:");
         setTextGraphicsToSelectMode(gfx);
-        gfx.putString(EDITOR_LEFT + 2, EDITOR_BOT - 1, userInputString);
+        gfx.putString(EDITOR_LEFT + 2, EDITOR_BOT - 1, manager.getUserInputString());
     }
 
     // MODIFIES: this
     // EFFECTS: draws planet property editor/viewer
     private void drawPlanetProperties(TextGraphics gfx) {
         setTextGraphicsToViewMode(gfx);
-        String[] propertyStrings = new String[EDIT_PROP_CYCLE_MOD];
-        propertyStrings[0] = "Name: " + selectedPlanet.getName();
-        propertyStrings[1] = "Pos: " + selectedPlanet.getPosition().toString();
-        propertyStrings[2] = "Vel: " + selectedPlanet.getVelocity().toString();
-        propertyStrings[3] = "Radius: " + String.format("%.2f", selectedPlanet.getRadius());
-        for (int i = 0; i < propertyStrings.length; i++) {
-            if (editingSelectedPlanet && selectedProperty == i) {
+
+        Planet selectedPlanet = manager.getSelectedPlanet();
+
+        int yOffset = 0;
+        for (String property : SimulationManager.PROP_OPTIONS) {
+            String propertyString = "";
+            switch (property) {
+                case SimulationManager.PROP_OPTION_NAME:
+                    propertyString += "Name: " + selectedPlanet.getName();
+                    break;
+
+                case SimulationManager.PROP_OPTION_POS:
+                    propertyString += "Pos: " + selectedPlanet.getPosition().toString();
+                    break;
+
+                case SimulationManager.PROP_OPTION_VEL:
+                    propertyString += "Vel: " + selectedPlanet.getVelocity().toString();
+                    break;
+
+                case SimulationManager.PROP_OPTION_RAD:
+                    propertyString += "Radius: " + String.format("%.2f", selectedPlanet.getRadius());
+                    break;
+
+                default:
+                    assert false; // THIS SHOULD NEVER HAPPEN
+                    break;
+            }
+
+            if (manager.isEditingSelectedPlanet() && manager.getSelectedProperty().equals(property)) {
                 setTextGraphicsToHoverMode(gfx);
-                if (editingSelectedProperty) {
+                if (manager.isEditingSelectedProperty()) {
                     setTextGraphicsToSelectMode(gfx);
                 }
             } else {
                 setTextGraphicsToViewMode(gfx);
             }
-            gfx.putString(EDITOR_LEFT + 3, PLANETINFO_TOP + 2 + i, propertyStrings[i]);
+            gfx.putString(EDITOR_LEFT + 3, PLANETINFO_TOP + 2 + yOffset, propertyString);
+            yOffset++;
         }
     }
 

@@ -1,4 +1,4 @@
-package exceptions;
+package model.exceptions;
 
 public class ArgumentOutOfBoundsException extends RuntimeException {
     public ArgumentOutOfBoundsException(String message) {

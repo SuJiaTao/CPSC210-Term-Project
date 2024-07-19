@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 
-import exceptions.NonMatchingClassException;
+import model.exceptions.NonMatchingClassException;
 
 public class CollisionTest {
     Planet p1;

@@ -8,9 +8,9 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 
-import exceptions.ArgumentOutOfBoundsException;
-import exceptions.PlanetAlreadyExistsException;
-import exceptions.PlanetDoesntExistException;
+import model.exceptions.ArgumentOutOfBoundsException;
+import model.exceptions.PlanetAlreadyExistsException;
+import model.exceptions.PlanetDoesntExistException;
 
 public class SimulationTest {
     private static final float EPSILON = 0.001f;

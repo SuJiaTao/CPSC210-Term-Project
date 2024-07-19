@@ -1,16 +1,9 @@
 package ui;
 
-import java.io.IOException;
 import java.util.*;
-import javax.swing.JFrame;
-import com.googlecode.lanterna.*;
-import com.googlecode.lanterna.graphics.*;
 import com.googlecode.lanterna.input.*;
-import com.googlecode.lanterna.screen.TerminalScreen;
-import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
-import com.googlecode.lanterna.terminal.swing.SwingTerminalFrame;
-import exceptions.PlanetDoesntExistException;
-import model.*;
+import ui.exceptions.OptionAlreadyExistsException;
+import ui.exceptions.OptionDoesntExistException;
 
 public class OptionSelector<T> {
     private List<T> optionList;
@@ -27,6 +20,10 @@ public class OptionSelector<T> {
         ensureSelectedObjectIsReasonable();
     }
 
+    public List<T> getOptions() {
+        return optionList;
+    }
+
     public T getSelectedObject() {
         return selectedObject;
     }
@@ -38,7 +35,7 @@ public class OptionSelector<T> {
 
     // EFFECTS: ensures that selectedObject is a valid value and updates the current
     // selected object based on the latest input
-    public void update(KeyStroke lastKeyStroke) {
+    public void cycleObjectSelection(KeyStroke lastKeyStroke) {
         ensureSelectedObjectIsReasonable();
         updateSelectedObject(lastKeyStroke);
     }
@@ -57,7 +54,7 @@ public class OptionSelector<T> {
     }
 
     // EFFECTS: cycles selectedObject based on the last keystroke
-    public void updateSelectedObject(KeyStroke lastKeyStroke) {
+    private void updateSelectedObject(KeyStroke lastKeyStroke) {
         if (lastKeyStroke == null || selectedObject == null) {
             return;
         }
@@ -77,5 +74,38 @@ public class OptionSelector<T> {
         }
 
         selectedObject = optionList.get(objIndex);
+    }
+
+    // EFFECTS: add the given object to the list and updates selection accordingly
+    public void addOptionToSelection(T object, boolean selectAfter) {
+        if (optionList.contains(object)) {
+            throw new OptionAlreadyExistsException();
+        }
+
+        optionList.add(object);
+        if (selectAfter) {
+            selectedObject = object;
+        }
+    }
+
+    // EFFECTS: removes the given object from the list and updates the selection
+    // accordingly
+    public void removeOptionFromSelection(T object) {
+        if (!optionList.contains(object)) {
+            throw new OptionDoesntExistException();
+        }
+
+        int oldSelectedIndex = optionList.indexOf(object);
+        optionList.remove(oldSelectedIndex);
+
+        if (optionList.size() == 0) {
+            selectedObject = null;
+            return;
+        }
+
+        if (object == selectedObject) {
+            int newIndex = Math.min(oldSelectedIndex, optionList.size() - 1);
+            selectedObject = optionList.get(newIndex);
+        }
     }
 }

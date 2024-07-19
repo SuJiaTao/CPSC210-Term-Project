@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.Before;
 import org.junit.Test;
 
-import exceptions.NonMatchingClassException;
+import model.exceptions.NonMatchingClassException;
 
 public class Vector3Test {
     private static final float EPSILON = 0.001f;

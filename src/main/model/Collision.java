@@ -2,7 +2,7 @@ package model;
 
 import java.util.ArrayList;
 
-import exceptions.NonMatchingClassException;
+import model.exceptions.NonMatchingClassException;
 
 import java.util.*;
 

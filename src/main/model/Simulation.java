@@ -2,9 +2,9 @@ package model;
 
 import java.util.*;
 
-import exceptions.ArgumentOutOfBoundsException;
-import exceptions.PlanetAlreadyExistsException;
-import exceptions.PlanetDoesntExistException;
+import model.exceptions.ArgumentOutOfBoundsException;
+import model.exceptions.PlanetAlreadyExistsException;
+import model.exceptions.PlanetDoesntExistException;
 
 // Represents the current n-body simulation state
 public class Simulation {
