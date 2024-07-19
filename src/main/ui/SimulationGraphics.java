@@ -1,17 +1,14 @@
 package ui;
 
-import java.io.IOException;
+import model.*;
 import java.util.*;
 import javax.swing.JFrame;
+import java.io.IOException;
 import com.googlecode.lanterna.*;
 import com.googlecode.lanterna.graphics.*;
-import com.googlecode.lanterna.input.*;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.swing.SwingTerminalFrame;
-
-import model.*;
-import model.exceptions.PlanetDoesntExistException;
 
 public class SimulationGraphics {
     public static final int TERMINAL_WIDTH = 100;

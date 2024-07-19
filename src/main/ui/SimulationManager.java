@@ -278,13 +278,13 @@ public class SimulationManager {
         Planet planetB = col.getPlanetsInvolved().get(1);
 
         try {
-            simulation.removePlanet(planetA);
+            planetSelector.removeOptionFromSelection(planetA);
         } catch (Exception e) {
             // DO NOTHING
         }
 
         try {
-            simulation.removePlanet(planetB);
+            planetSelector.removeOptionFromSelection(planetB);
         } catch (Exception e) {
             // DO NOTHING
         }

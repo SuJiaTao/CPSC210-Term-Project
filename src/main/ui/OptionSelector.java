@@ -25,6 +25,7 @@ public class OptionSelector<T> {
     }
 
     public T getSelectedObject() {
+        ensureSelectedObjectIsReasonable();
         return selectedObject;
     }
 
@@ -78,6 +79,8 @@ public class OptionSelector<T> {
 
     // EFFECTS: add the given object to the list and updates selection accordingly
     public void addOptionToSelection(T object, boolean selectAfter) {
+        ensureSelectedObjectIsReasonable();
+
         if (optionList.contains(object)) {
             throw new OptionAlreadyExistsException();
         }
@@ -91,6 +94,8 @@ public class OptionSelector<T> {
     // EFFECTS: removes the given object from the list and updates the selection
     // accordingly
     public void removeOptionFromSelection(T object) {
+        ensureSelectedObjectIsReasonable();
+
         if (!optionList.contains(object)) {
             throw new OptionDoesntExistException();
         }
