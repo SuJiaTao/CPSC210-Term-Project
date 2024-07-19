@@ -62,10 +62,10 @@ public class OptionSelector<T> {
         assert (objIndex != -1); // this should NEVER happen
 
         if (lastKeyStroke.equals(selectFwd)) {
-            objIndex--;
+            objIndex++;
         }
         if (lastKeyStroke.equals(selectBack)) {
-            objIndex++;
+            objIndex--;
         }
 
         objIndex %= optionList.size();

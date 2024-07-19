@@ -1,12 +1,8 @@
 package ui;
 
 import model.*;
-
-import java.io.IOException;
 import java.util.*;
-
-import javax.swing.text.html.Option;
-
+import java.io.IOException;
 import com.googlecode.lanterna.input.*;
 
 // Represents the current state of user-interface to managing simulations
@@ -187,10 +183,10 @@ public class SimulationManager {
     // EFFECTS: handles all input and graphics
     private void handleEverythingAndiMeanEverything() {
         try {
-            handleUserInput();
-            handleSimulationState();
             simGraphics.drawEditorView();
             simGraphics.drawSimulationViewPort();
+            handleUserInput();
+            handleSimulationState();
         } catch (Exception exception) {
             printException(exception);
         }
@@ -216,8 +212,8 @@ public class SimulationManager {
         String className = elemOfInterest.getClassName();
         String method = elemOfInterest.getMethodName();
         int lineNum = elemOfInterest.getLineNumber();
-        String excepName = exception.getClass().getSimpleName();
-        System.err.print(className + "." + method + " line " + lineNum + " threw " + excepName);
+        String excepNameAndMsg = exception.getClass().getSimpleName();
+        System.err.print(className + "." + method + " line " + lineNum + " threw " + excepNameAndMsg);
     }
 
     // EFFECTS: returns whether the exception is from an appropriate class to view
@@ -356,7 +352,7 @@ public class SimulationManager {
 
         switch (editorSelector.getSelectedObject()) {
             case EDITOR_OPTION_PLANETS:
-                handleEditorViewPlanetUserInput(lastUserKey);
+                handleEditorViewPlanetUserInput();
                 break;
 
             case EDITOR_OPTION_COLLISIONS:
@@ -370,16 +366,25 @@ public class SimulationManager {
 
     // MODIFES: this
     // EFFECTS: handles inputs when editor is viewing planet list
-    private void handleEditorViewPlanetUserInput(KeyStroke lastKeyStroke) {
+    private void handleEditorViewPlanetUserInput() {
         if (editingSelectedPlanet) {
             if (editingSelectedProperty) {
                 handleEditPlanetProperty();
             } else {
-                propertySelector.cycleObjectSelection(lastKeyStroke);
+                propertySelector.cycleObjectSelection(lastUserKey);
+                if (lastUserKey.getKeyType() == KeyType.Enter) {
+                    editingSelectedProperty = true;
+                }
+                if (lastUserKey.getKeyType() == KeyType.Escape) {
+                    editingSelectedPlanet = false;
+                }
             }
         } else {
             handlePlanetAddAndRemove();
-            propertySelector.cycleObjectSelection(lastKeyStroke);
+            planetSelector.cycleObjectSelection(lastUserKey);
+            if (lastUserKey.getKeyType() == KeyType.Enter) {
+                editingSelectedPlanet = true;
+            }
         }
     }
 
