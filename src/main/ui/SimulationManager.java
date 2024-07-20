@@ -372,18 +372,21 @@ public class SimulationManager {
         if (editingSelectedPlanet) {
             if (editingSelectedProperty) {
                 handleEditPlanetProperty();
-            } else {
-                propertySelector.cycleObjectSelection(lastUserKey);
-                if (lastUserKey.getKeyType() == KeyType.Enter) {
-                    editingSelectedProperty = true;
-                }
-                if (lastUserKey.getKeyType() == KeyType.Escape) {
-                    editingSelectedPlanet = false;
-                }
+                return;
             }
+
+            propertySelector.cycleObjectSelection(lastUserKey);
+            if (lastUserKey.getKeyType() == KeyType.Enter) {
+                editingSelectedProperty = true;
+            }
+            if (lastUserKey.getKeyType() == KeyType.Escape) {
+                editingSelectedPlanet = false;
+            }
+
         } else {
             handlePlanetAddAndRemove();
             planetSelector.cycleObjectSelection(lastUserKey);
+
             if (lastUserKey.getKeyType() == KeyType.Enter) {
                 editingSelectedPlanet = true;
             }

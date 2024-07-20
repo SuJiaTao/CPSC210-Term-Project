@@ -19,9 +19,10 @@
 
 ## User Stories
 
-> ### Phase 0
 > - I want to be able to insert an arbitrary number of planets into my simulation, and give them each starting positions, velocities, and radii
 > - I want to be able to advance the simulation by an arbitrary number of seconds, including fractional numbers of seconds
 > - I want to be able to view the current positions, velocities, and radii of all planets at the current point in time of the simulation
 > - I want to be able to view the current position, velocity and radius of a specific planet at the current point in time of the simulation
 > - I want to be able to check if a specific planet has collided with any other planets
+> - I want to be able to save the specific simulation state as a named file
+> - I want to be able to load a specific simulation state that I saved earlier by its name
