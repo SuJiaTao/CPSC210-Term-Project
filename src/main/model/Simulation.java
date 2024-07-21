@@ -37,6 +37,10 @@ public class Simulation {
         return planets;
     }
 
+    public List<Planet> getHistoricPlanets() {
+        return historicPlanets;
+    }
+
     // MODIFIES: this
     // EFFECTS:
     // adds a planet to the simulation which will be updated with
