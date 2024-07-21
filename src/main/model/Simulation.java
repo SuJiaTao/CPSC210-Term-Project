@@ -41,6 +41,10 @@ public class Simulation {
         return historicPlanets;
     }
 
+    public void setTimeElapsed(float newTimeElapsed) {
+        timeElapsed = newTimeElapsed;
+    }
+
     // MODIFIES: this
     // EFFECTS:
     // adds a planet to the simulation which will be updated with
@@ -50,6 +54,33 @@ public class Simulation {
             throw new PlanetAlreadyExistsException();
         }
         planets.add(planet);
+    }
+
+    // MODIFIES: this
+    // EFFECTS:
+    // adds a planet to the simulation's historic planet list which will not be
+    // updated with subsequent calls but is expected to be referenced by a collision
+    // in the simulation collision list
+    public void addHistoricPlanet(Planet historicPlanet) {
+        if (historicPlanets.contains(historicPlanet)) {
+            throw new PlanetAlreadyExistsException();
+        }
+        historicPlanets.add(historicPlanet);
+    }
+
+    // MODIFIES: this
+    // EFFECTS: adds a collision to the list of collisions in the simulation
+    public void addCollision(Collision collision) {
+        Planet planet1 = collision.getPlanetsInvolved().get(0);
+        Planet planet2 = collision.getPlanetsInvolved().get(1);
+        if (!(planets.contains(planet1) || historicPlanets.contains(planet1))) {
+            throw new PlanetDoesntExistException();
+        }
+        if (!(planets.contains(planet2) || historicPlanets.contains(planet2))) {
+            throw new PlanetDoesntExistException();
+        }
+
+        collisions.add(collision);
     }
 
     // MODIFIES: this

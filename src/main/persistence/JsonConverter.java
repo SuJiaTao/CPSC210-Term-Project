@@ -5,8 +5,6 @@ import org.json.*;
 import java.util.*;
 
 public class JsonConverter {
-    public static final String SAVE_PATH = "./data/";
-
     public static final String VECTOR3_KEY_X = "x";
     public static final String VECTOR3_KEY_Y = "y";
     public static final String VECTOR3_KEY_Z = "z";
@@ -142,5 +140,26 @@ public class JsonConverter {
         jsonObject.append(SIM_KEY_PLANETS_HISTORIC, planetListToJsonArray(simulation.getHistoricPlanets()));
         jsonObject.append(SIM_KEY_COLLISIONS, collisionListToJsonArray(simulation.getCollisions(), simulation));
         return jsonObject;
+    }
+
+    public static Simulation jsonObjectToSimulation(JSONObject jsonObject) {
+        Simulation simulation = new Simulation();
+
+        float timeElapsed = Float.parseFloat(jsonObject.getString(SIM_KEY_TIME_ELAPSED));
+        simulation.setTimeElapsed(timeElapsed);
+
+        for (Object jsonPlanet : jsonObject.getJSONArray(SIM_KEY_PLANETS_INSIM)) {
+            simulation.addPlanet(jsonObjectToPlanet((JSONObject) jsonPlanet));
+        }
+
+        for (Object jsonHistoricPlanet : jsonObject.getJSONArray(SIM_KEY_PLANETS_INSIM)) {
+            simulation.addHistoricPlanet(jsonObjectToPlanet((JSONObject) jsonHistoricPlanet));
+        }
+
+        for (Object jsonCollision : jsonObject.getJSONArray(SIM_KEY_COLLISIONS)) {
+            simulation.addCollision(jsonObjectToCollision((JSONObject) jsonCollision, simulation));
+        }
+
+        return simulation;
     }
 }
