@@ -13,6 +13,7 @@ public class Simulation {
 
     private float timeElapsed;
     private List<Planet> planets;
+    private List<Planet> historicPlanets;
     private List<Collision> collisions;
 
     // EFFECTS: creates a simulation with no time elapsed and no planets or
@@ -20,6 +21,7 @@ public class Simulation {
     public Simulation() {
         timeElapsed = 0.0f;
         planets = new ArrayList<Planet>();
+        historicPlanets = new ArrayList<Planet>();
         collisions = new ArrayList<Collision>();
     }
 
@@ -53,6 +55,16 @@ public class Simulation {
             throw new PlanetDoesntExistException();
         }
         planets.remove(planet);
+
+        // NOTE:
+        // for purposes of reading and writing, we want the simulation to actually hold
+        // on to planets that are no longer involed in the simulation but still apart of
+        // the collision list
+        for (Collision collision : collisions) {
+            if (collision.wasPlanetInvolved(planet) && !historicPlanets.contains(planet)) {
+                historicPlanets.add(planet);
+            }
+        }
     }
 
     // MODIFIES: this

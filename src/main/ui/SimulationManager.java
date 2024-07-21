@@ -31,7 +31,9 @@ public class SimulationManager {
 
     public static final String EDITOR_OPTION_PLANETS = "EditPlanets";
     public static final String EDITOR_OPTION_COLLISIONS = "EditCollision";
-    public static final String[] EDITOR_OPTIONS = { EDITOR_OPTION_PLANETS, EDITOR_OPTION_COLLISIONS };
+    public static final String EDITOR_OPTION_SAVELOAD = "EditSaveLoad";
+    public static final String[] EDITOR_OPTIONS = { EDITOR_OPTION_PLANETS, EDITOR_OPTION_COLLISIONS,
+            EDITOR_OPTION_SAVELOAD };
 
     public static final String PROP_OPTION_NAME = "PropName";
     public static final String PROP_OPTION_POS = "PropPosition";
@@ -60,6 +62,7 @@ public class SimulationManager {
     private OptionSelector<String> propertySelector;
     private OptionSelector<Collision> collisionSelector;
     private OptionSelector<String> editorSelector;
+    private OptionSelector<String> savedSimSelector;
 
     // EFFECTS: initialize simulation, init graphical/user input, redirect
     // sterr+stdout, and set simulation state to the opening screen
@@ -67,7 +70,7 @@ public class SimulationManager {
         initOutputStreams();
         simGraphics = new SimulationGraphics(this);
         initSimulationVariables();
-        initEditorVariables();
+        initEditorSelectors();
 
         onTitleScreen = true;
     }
@@ -87,12 +90,13 @@ public class SimulationManager {
         lastDeltaTimeSeconds = 0.0f;
     }
 
-    // EFFECTS: sets up editor related variables
-    private void initEditorVariables() {
+    // EFFECTS: sets up editor selection related variables
+    private void initEditorSelectors() {
         planetSelector = new OptionSelector<>(simulation.getPlanets(), KS_ARROWDOWN, KS_ARROWUP);
         propertySelector = new OptionSelector<>(Arrays.asList(PROP_OPTIONS), KS_ARROWDOWN, KS_ARROWUP);
         collisionSelector = new OptionSelector<>(simulation.getCollisions(), KS_ARROWDOWN, KS_ARROWUP);
         editorSelector = new OptionSelector<>(Arrays.asList(EDITOR_OPTIONS), KS_ARROWRIGHT, KS_ARROWLEFT);
+        savedSimSelector = new OptionSelector<>(new ArrayList<String>(), KS_ARROWDOWN, KS_ARROWUP);
 
         editingSelectedPlanet = false;
         editingSelectedProperty = false;
@@ -354,21 +358,26 @@ public class SimulationManager {
 
         switch (editorSelector.getSelectedObject()) {
             case EDITOR_OPTION_PLANETS:
-                handleEditorViewPlanetUserInput();
+                handlePlanetViewUserInput();
                 break;
 
             case EDITOR_OPTION_COLLISIONS:
                 collisionSelector.cycleObjectSelection(lastUserKey);
                 break;
 
+            case EDITOR_OPTION_SAVELOAD:
+                // TODO: implement
+                break;
+
             default:
+                assert false; // THIS SHOULD NEVER HAPPEN
                 break;
         }
     }
 
     // MODIFES: this
     // EFFECTS: handles inputs when editor is viewing planet list
-    private void handleEditorViewPlanetUserInput() {
+    private void handlePlanetViewUserInput() {
         if (editingSelectedPlanet) {
             if (editingSelectedProperty) {
                 handleEditPlanetProperty();
@@ -439,7 +448,7 @@ public class SimulationManager {
             return;
         }
         if (lastUserKey.getKeyType() == KeyType.Enter) {
-            if (handleUserInputSubmissionAttempt()) {
+            if (handleUserApplyPlanetEditAttempt()) {
                 userInputString = "";
                 editingSelectedProperty = false;
             }
@@ -456,7 +465,7 @@ public class SimulationManager {
     // MODIFIES: this
     // EFFECTS: attempts to apply user input to replace the selected property, does
     // nothing if invalid input
-    private boolean handleUserInputSubmissionAttempt() {
+    private boolean handleUserApplyPlanetEditAttempt() {
         switch (propertySelector.getSelectedObject()) {
             case PROP_OPTION_NAME:
                 return tryApplyNewName();

@@ -86,6 +86,8 @@ public class SimulationGraphics {
             swingFrame.setResizable(false);
             swingFrame.setTitle("N-Body Simulator");
             swingFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        } catch (ClassCastException excep) {
+            System.err.print("Make sure to run with javaw!! This program should appear in a Swing window!");
         } catch (Exception excep) {
             System.err.print("Failed to setup window. Error: " + excep.toString());
         }
@@ -424,7 +426,7 @@ public class SimulationGraphics {
 
         Planet selectedPlanet = manager.getSelectedPlanet();
 
-        int yOffset = 0;
+        int drawOffsetY = 0;
         for (String property : SimulationManager.PROP_OPTIONS) {
             String propertyString = "";
             switch (property) {
@@ -457,8 +459,8 @@ public class SimulationGraphics {
             } else {
                 setTextGraphicsToViewMode(gfx);
             }
-            gfx.putString(EDITOR_LEFT + 3, PLANETINFO_TOP + 2 + yOffset, propertyString);
-            yOffset++;
+            gfx.putString(EDITOR_LEFT + 3, PLANETINFO_TOP + 2 + drawOffsetY, propertyString);
+            drawOffsetY++;
         }
     }
 
