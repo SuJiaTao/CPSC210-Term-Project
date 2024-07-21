@@ -2,9 +2,7 @@ package persistence;
 
 import model.*;
 import org.json.*;
-import java.nio.*;
-import java.nio.file.*;
-import java.util.List;
+import java.util.*;
 
 public class JsonConverter {
     public static final String SAVE_PATH = "./data/";
@@ -26,6 +24,11 @@ public class JsonConverter {
     public static final String COLLISION_KEY_PLANETREF1 = "PlanetRef1";
     public static final String COLLISION_KEY_PLANETREF2 = "PlanetRef2";
     public static final String COLLISION_KEY_TIMEOCCOURED = "TimeOccoured";
+
+    public static final String SIM_KEY_TIME_ELAPSED = "TimeElapsed";
+    public static final String SIM_KEY_PLANETS_INSIM = "PlanetsInSim";
+    public static final String SIM_KEY_PLANETS_HISTORIC = "PlanetsHistoric";
+    public static final String SIM_KEY_COLLISIONS = "Collisions";
 
     public static JSONObject vector3ToJsonObject(Vector3 vector3) {
         JSONObject jsonObject = new JSONObject();
@@ -116,4 +119,28 @@ public class JsonConverter {
         return new Collision(planet1, planet2, timeOccoured);
     }
 
+    private static JSONArray planetListToJsonArray(List<Planet> planetList) {
+        JSONArray jsonArray = new JSONArray();
+        for (Planet planet : planetList) {
+            jsonArray.put(planetToJsonObject(planet));
+        }
+        return jsonArray;
+    }
+
+    private static JSONArray collisionListToJsonArray(List<Collision> collisionlist, Simulation parent) {
+        JSONArray jsonArray = new JSONArray();
+        for (Collision collision : collisionlist) {
+            jsonArray.put(collisionToJsonObject(collision, parent));
+        }
+        return jsonArray;
+    }
+
+    public static JSONObject simulationToJsonObject(Simulation simulation) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.append(SIM_KEY_TIME_ELAPSED, Float.toString(simulation.getTimeElapsed()));
+        jsonObject.append(SIM_KEY_PLANETS_INSIM, planetListToJsonArray(simulation.getPlanets()));
+        jsonObject.append(SIM_KEY_PLANETS_HISTORIC, planetListToJsonArray(simulation.getHistoricPlanets()));
+        jsonObject.append(SIM_KEY_COLLISIONS, collisionListToJsonArray(simulation.getCollisions(), simulation));
+        return jsonObject;
+    }
 }
