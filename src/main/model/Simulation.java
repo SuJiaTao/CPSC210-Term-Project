@@ -96,7 +96,7 @@ public class Simulation {
         // on to planets that are no longer involed in the simulation but still apart of
         // the collision list
         for (Collision collision : collisions) {
-            if (collision.wasPlanetInvolved(planet) && !historicPlanets.contains(planet)) {
+            if (collision.wasPlanetInvolved(planet)) {
                 historicPlanets.add(planet);
             }
         }

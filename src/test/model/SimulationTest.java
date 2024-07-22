@@ -35,10 +35,46 @@ public class SimulationTest {
     }
 
     @Test
+    public void testSetTimeElapsed() {
+        for (float f = 0; f <= 10000.0f; f += 0.15f) {
+            sim.setTimeElapsed(f);
+            assertEquals(f, sim.getTimeElapsed(), EPSILON);
+        }
+    }
+
+    @Test
     public void testAddPlanetThrow() {
         sim.addPlanet(p1);
         try {
             sim.addPlanet(p1);
+        } catch (PlanetAlreadyExistsException e) {
+            return;
+        }
+        fail("expected throw PlanetAlreadyExistsException");
+    }
+
+    @Test
+    public void testAddHistoricPlanet() {
+        sim.addHistoricPlanet(p1);
+        assertEquals(1, sim.getHistoricPlanets().size());
+        assertTrue(sim.getHistoricPlanets().contains(p1));
+    }
+
+    @Test
+    public void testAddHistoricPlanetMultiple() {
+        sim.addHistoricPlanet(p1);
+        sim.addHistoricPlanet(p2);
+        assertEquals(2, sim.getHistoricPlanets().size());
+        assertTrue(sim.getHistoricPlanets().contains(p1));
+        assertTrue(sim.getHistoricPlanets().contains(p2));
+        assertFalse(sim.getHistoricPlanets().contains(p3));
+    }
+
+    @Test
+    public void testAddHistoricPlanetThrow() {
+        sim.addHistoricPlanet(p1);
+        try {
+            sim.addHistoricPlanet(p1);
         } catch (PlanetAlreadyExistsException e) {
             return;
         }
@@ -60,6 +96,117 @@ public class SimulationTest {
         assertTrue(sim.getPlanets().contains(p1));
         assertTrue(sim.getPlanets().contains(p2));
         assertFalse(sim.getPlanets().contains(p3));
+    }
+
+    @Test
+    public void testAddCollisionMissingBothThrow() {
+        Collision col = new Collision(p1, p2, 0);
+        try {
+            sim.addCollision(col);
+        } catch (PlanetDoesntExistException e) {
+            return;
+        }
+        fail("expected throw PlanetDoesntExistException");
+    }
+
+    @Test
+    public void testAddCollisionMissingFirstThrow() {
+        Collision col = new Collision(p1, p2, 0);
+        sim.addPlanet(p1);
+        try {
+            sim.addCollision(col);
+        } catch (PlanetDoesntExistException e) {
+            return;
+        }
+        fail("expected throw PlanetDoesntExistException");
+    }
+
+    @Test
+    public void testAddCollisionMissingFirstHistoricThrow() {
+        Collision col = new Collision(p1, p2, 0);
+        sim.addHistoricPlanet(p1);
+        try {
+            sim.addCollision(col);
+        } catch (PlanetDoesntExistException e) {
+            return;
+        }
+        fail("expected throw PlanetDoesntExistException");
+    }
+
+    @Test
+    public void testAddCollisionMissingSecondThrow() {
+        Collision col = new Collision(p1, p2, 0);
+        sim.addPlanet(p2);
+        try {
+            sim.addCollision(col);
+        } catch (PlanetDoesntExistException e) {
+            return;
+        }
+        fail("expected throw PlanetDoesntExistException");
+    }
+
+    @Test
+    public void testAddCollisionMissingSecondHistoricThrow() {
+        Collision col = new Collision(p1, p2, 0);
+        sim.addHistoricPlanet(p2);
+        try {
+            sim.addCollision(col);
+        } catch (PlanetDoesntExistException e) {
+            return;
+        }
+        fail("expected throw PlanetDoesntExistException");
+    }
+
+    @Test
+    public void testAddCollisionBothInSim() {
+        Collision col = new Collision(p1, p2, 0);
+        sim.addPlanet(p1);
+        sim.addPlanet(p2);
+        try {
+            sim.addCollision(col);
+        } catch (PlanetDoesntExistException e) {
+            fail("should not throw PlanetDoesntExistException");
+        }
+        // goodo!
+    }
+
+    @Test
+    public void testAddCollisionBothHistoric() {
+        Collision col = new Collision(p1, p2, 0);
+        sim.addHistoricPlanet(p1);
+        sim.addHistoricPlanet(p2);
+        try {
+            sim.addCollision(col);
+        } catch (PlanetDoesntExistException e) {
+            fail("should not throw PlanetDoesntExistException");
+        }
+        // goodo!
+    }
+
+    @Test
+    public void testAddCollisionMixed1() {
+        Collision col = new Collision(p1, p2, 0);
+        sim.addPlanet(p1);
+        sim.addHistoricPlanet(p2);
+        try {
+            sim.addCollision(col);
+        } catch (PlanetDoesntExistException e) {
+            fail("should not throw PlanetDoesntExistException");
+        }
+        // goodo!
+    }
+
+    @Test
+    public void testAddCollisionMixed2() {
+        Collision col = new Collision(p1, p2, 0);
+        sim.addHistoricPlanet(p1);
+        sim.addPlanet(p2);
+        try {
+            sim.addCollision(col);
+        } catch (PlanetDoesntExistException e) {
+            fail("should not throw PlanetDoesntExistException");
+        }
+        // goodo!
     }
 
     @Test
@@ -101,6 +248,38 @@ public class SimulationTest {
         assertEquals(0, sim.getPlanets().size());
         assertFalse(sim.getPlanets().contains(p1));
         assertFalse(sim.getPlanets().contains(p2));
+    }
+
+    @Test
+    public void testRemoveNoPlanetMoveToHistoric() {
+        sim.addPlanet(p1);
+        sim.addPlanet(p2);
+        sim.addPlanet(p3);
+        sim.addCollision(new Collision(p1, p2, 0.0f));
+        sim.removePlanet(p3);
+        assertFalse(sim.getHistoricPlanets().contains(p1));
+        assertFalse(sim.getHistoricPlanets().contains(p2));
+        assertFalse(sim.getHistoricPlanets().contains(p3));
+    }
+
+    @Test
+    public void testRemoveFirstPlanetMoveToHistoric() {
+        sim.addPlanet(p1);
+        sim.addPlanet(p2);
+        sim.addCollision(new Collision(p1, p2, 0.0f));
+        sim.removePlanet(p1);
+        assertTrue(sim.getHistoricPlanets().contains(p1));
+        assertFalse(sim.getHistoricPlanets().contains(p2));
+    }
+
+    @Test
+    public void testRemoveSecondPlanetMoveToHistoric() {
+        sim.addPlanet(p1);
+        sim.addPlanet(p2);
+        sim.addCollision(new Collision(p1, p2, 0.0f));
+        sim.removePlanet(p2);
+        assertTrue(sim.getHistoricPlanets().contains(p2));
+        assertFalse(sim.getHistoricPlanets().contains(p1));
     }
 
     @Test
