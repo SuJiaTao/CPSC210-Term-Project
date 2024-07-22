@@ -14,6 +14,8 @@ import model.exceptions.PlanetDoesntExistException;
 import org.json.*;
 import java.util.*;
 
+import javax.management.RuntimeErrorException;
+
 public class JsonConverterTest {
     private static final float EPSILON = 0.001f;
 
@@ -22,6 +24,8 @@ public class JsonConverterTest {
     private Planet p1;
     private Planet p2;
     private Planet p3;
+    private Planet p4;
+    private Planet p5;
 
     @Before
     public void init() {
@@ -30,6 +34,8 @@ public class JsonConverterTest {
         p1 = new Planet("bonnie", 1.0f);
         p2 = new Planet("dundie", 2.0f);
         p3 = new Planet("blackbear", 3.5f);
+        p4 = new Planet("highland", 1.0f);
+        p5 = new Planet("marie", 2.0f);
     }
 
     @Test
@@ -178,6 +184,128 @@ public class JsonConverterTest {
 
         Collision tc2 = JsonConverter.jsonObjectToCollision(JsonConverter.collisionToJsonObject(col2, sim), sim);
         assertEquals(col2, tc2);
+    }
+
+    @Test
+    public void testSimulationEncodeDecode() {
+        sim.addPlanet(p1);
+        sim.addPlanet(p2);
+        sim.addHistoricPlanet(p3);
+        sim.addHistoricPlanet(p4);
+        sim.addPlanet(p5);
+        sim.addCollision(new Collision(p2, p1, 0.0f));
+        sim.addCollision(new Collision(p3, p2, 1.0f));
+        sim.addCollision(new Collision(p1, p3, 5.0f));
+        sim.addCollision(new Collision(p5, p1, 3.0f));
+        sim.addCollision(new Collision(p4, p2, 3.0f));
+
+        Simulation testSim = JsonConverter.jsonObjectToSimulation(JsonConverter.simulationToJsonObject(sim));
+        try {
+            checkPlanetListEquals(sim.getPlanets(), testSim.getPlanets());
+            checkPlanetListEquals(sim.getHistoricPlanets(), testSim.getHistoricPlanets());
+            checkCollisionListEquals(sim.getCollisions(), testSim.getCollisions());
+        } catch (RuntimeException e) {
+            fail("testSim not the same! error: " + e.getMessage());
+        }
+        assertEquals(sim.getTimeElapsed(), testSim.getTimeElapsed(), EPSILON);
+
+    }
+
+    public void checkCollisionListEquals(List<Collision> cl1, List<Collision> cl2) {
+        // NOTE:
+        // to figure out what the hell im doing, please reference
+        // planetListsEqualsButNotSameObject
+        if (cl1 == cl2) {
+            throw new RuntimeException("same object!");
+        }
+        if (cl1.size() != cl2.size()) {
+            throw new RuntimeException("mismathced size!");
+        }
+
+        for (Collision cl1Col : cl1) {
+            for (Collision cl2Col : cl2) {
+                if (checkCollisionEquals(cl2Col, cl1Col)) {
+                    break;
+                }
+                throw new RuntimeException("not all elements of cl1 were in cl2!");
+            }
+        }
+
+        for (Collision cl2Col : cl2) {
+            for (Collision cl1Col : cl1) {
+                if (checkCollisionEquals(cl1Col, cl2Col)) {
+                    break;
+                }
+                throw new RuntimeException("not all elements of cl2 were in cl1!");
+            }
+        }
+    }
+
+    public boolean checkCollisionEquals(Collision c1, Collision c2) {
+        if (c1 == c2) {
+            return false;
+        }
+        if (Math.abs(c1.getCollisionTime() - c2.getCollisionTime()) >= 0.001f) {
+            return false;
+        }
+        Planet c1P1 = c1.getPlanetsInvolved().get(0);
+        Planet c1P2 = c1.getPlanetsInvolved().get(1);
+        Planet c2P1 = c2.getPlanetsInvolved().get(0);
+        Planet c2P2 = c2.getPlanetsInvolved().get(1);
+        return checkPlanetEquals(c1P1, c2P1) || checkPlanetEquals(c1P1, c2P2) ||
+                checkPlanetEquals(c1P2, c2P1) || checkPlanetEquals(c1P2, c2P2);
+    }
+
+    public void checkPlanetListEquals(List<Planet> pl1, List<Planet> pl2) {
+        // NOTE:
+        // this is kinda like a set equals, where if we show that x \in pl1 \implies x
+        // \in pl2 and then x \in pl2 \implies x \in pl1 means that they are the same
+        // list
+        if (pl1 == pl2) {
+            throw new RuntimeException("same object!");
+        }
+        if (pl1.size() != pl2.size()) {
+            throw new RuntimeException("mismatched size");
+        }
+
+        // NOTE:
+        // this is slow as hell
+        for (Planet pl1Planet : pl1) {
+            for (Planet pl2Planet : pl2) {
+                if (checkPlanetEquals(pl1Planet, pl2Planet)) {
+                    break;
+                }
+                throw new RuntimeException("not all elements of pl1 were in pl2");
+            }
+        }
+
+        for (Planet pl2Planet : pl2) {
+            for (Planet pl1Planet : pl1) {
+                if (checkPlanetEquals(pl2Planet, pl1Planet)) {
+                    break;
+                }
+                throw new RuntimeException("not all elements of pl2 were in pl1");
+            }
+        }
+    }
+
+    public boolean checkPlanetEquals(Planet p1, Planet p2) {
+        if (p1 == p2) {
+            throw new RuntimeException("same object!");
+        }
+        if (!p1.getName().equals(p2.getName())) {
+            return false;
+        }
+        if (!p1.getPosition().equals(p2.getPosition())) {
+            return false;
+        }
+        if (!p1.getVelocity().equals(p2.getVelocity())) {
+            return false;
+        }
+        if (!(Math.abs(p1.getRadius() - p2.getRadius()) < 0.001f)) {
+            return false;
+        }
+        return true;
     }
 
     public Vector3 randomVector3() {

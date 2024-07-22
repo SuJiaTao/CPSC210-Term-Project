@@ -99,7 +99,7 @@ public class JsonConverter {
 
         int index = Integer.parseInt(jsonObject.getString(PLANETREF_KEY_INDEX));
         if (index < 0 || index >= planetList.size()) {
-            throw new JSONException("invalid jsonObject value for key: " + PLANETREF_KEY_INDEX);
+            throw new JSONException("invalid jsonObject value for key: " + PLANETREF_KEY_TYPE);
         }
         return planetList.get(index);
     }
