@@ -13,8 +13,7 @@ import persistence.*;
 
 import org.json.*;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 public class SimulationReadWriterTest {
@@ -29,6 +28,36 @@ public class SimulationReadWriterTest {
         sim.addHistoricPlanet(new Planet("c", 1));
         sim.addHistoricPlanet(new Planet("d", 2));
         sim.addPlanet(new Planet("e", 8));
+    }
+
+    @Test
+    public void testSaveOverExistingFile() throws Exception {
+        File existingFile = new File(SimulationReadWriter.SAVE_PATH + "temp.json");
+        existingFile.createNewFile();
+
+        try {
+            SimulationReadWriter.writeSimulation(sim, "temp");
+        } catch (FileNotFoundException fefe) {
+            fail("should NOT have thrown FileNotFoundException: " + fefe.getMessage());
+        } catch (IOException ioex) {
+            fail("should NOT have thrown IOException: " + ioex.getMessage());
+        }
+    }
+
+    @Test
+    public void testSaveOverWhereFileNotExist() throws Exception {
+        File existingFile = new File(SimulationReadWriter.SAVE_PATH + "temp.json");
+        if (existingFile.isFile()) {
+            existingFile.delete();
+        }
+
+        try {
+            SimulationReadWriter.writeSimulation(sim, "temp");
+        } catch (FileNotFoundException fefe) {
+            fail("should NOT have thrown FileNotFoundException: " + fefe.getMessage());
+        } catch (IOException ioex) {
+            fail("should NOT have thrown IOException: " + ioex.getMessage());
+        }
     }
 
     @Test
