@@ -1,6 +1,8 @@
 package persistence;
 
 import model.*;
+import model.exceptions.PlanetDoesntExistException;
+
 import org.json.*;
 import java.util.*;
 
@@ -65,14 +67,14 @@ public class JsonConverter {
 
         int index = -1;
         String planetTypeValue = "";
-        if ((index = parent.getPlanets().indexOf(planetRef)) != -1) {
+        if (parent.getPlanets().contains(planetRef)) {
             planetTypeValue = PLANETREF_VALUE_TYPE_INSIM;
-        }
-        if ((index = parent.getHistoricPlanets().indexOf(planetRef)) != -1) {
+            index = parent.getPlanets().indexOf(planetRef);
+        } else if (parent.getHistoricPlanets().contains(planetRef)) {
             planetTypeValue = PLANETREF_VALUE_TYPE_HISTORIC;
-        }
-        if (index == -1) {
-            assert false; // this should never happen
+            index = parent.getHistoricPlanets().indexOf(planetRef);
+        } else {
+            throw new PlanetDoesntExistException();
         }
 
         jsonObject.put(PLANETREF_KEY_TYPE, planetTypeValue);
@@ -92,11 +94,13 @@ public class JsonConverter {
                 break;
 
             default:
-                assert false; // THIS SHOULD NEVER HAPPEN
-                break;
+                throw new JSONException("invalid jsonObject value for key: " + PLANETREF_KEY_TYPE);
         }
 
         int index = Integer.parseInt(jsonObject.getString(PLANETREF_KEY_INDEX));
+        if (index < 0 || index >= planetList.size()) {
+            throw new JSONException("invalid jsonObject value for key: " + PLANETREF_KEY_INDEX);
+        }
         return planetList.get(index);
     }
 
