@@ -9,19 +9,20 @@ public class SimulationReadWriter {
     public static final String SAVE_PATH = "./data/";
     public static final int TAB_SPACES = 4;
 
-    private static File fileFromFileTitle(String fileTitle) throws FileNotFoundException {
+    private static File fileFromFileTitle(String fileTitle) {
         File file = new File(SAVE_PATH + fileTitle + ".json");
-        if (!file.isFile()) {
-            throw new FileNotFoundException();
-        }
         return file;
     }
 
-    public static void writeSimulation(Simulation simulation, String fileTitle) throws FileNotFoundException {
+    public static void writeSimulation(Simulation simulation, String fileTitle)
+            throws IOException, FileNotFoundException {
         JSONObject jsonSimulation = JsonConverter.simulationToJsonObject(simulation);
         File writeFile = fileFromFileTitle(fileTitle);
+        if (!writeFile.isFile()) {
+            writeFile.createNewFile();
+        }
 
-        PrintStream writeStream = new PrintStream(writeFile);
+        PrintWriter writeStream = new PrintWriter(writeFile);
         writeStream.print(jsonSimulation.toString(TAB_SPACES));
         writeStream.flush();
         writeStream.close();
@@ -29,6 +30,9 @@ public class SimulationReadWriter {
 
     public static Simulation readSimulation(String fileTitle) throws FileNotFoundException {
         File readFile = fileFromFileTitle(fileTitle);
+        if (!readFile.isFile()) {
+            throw new FileNotFoundException();
+        }
 
         String jsonStringBuffer = "";
         Scanner readScanner = new Scanner(readFile);

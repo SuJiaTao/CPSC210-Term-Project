@@ -1,6 +1,5 @@
 package persistence;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -13,8 +12,6 @@ import model.exceptions.PlanetDoesntExistException;
 
 import org.json.*;
 import java.util.*;
-
-import javax.management.RuntimeErrorException;
 
 public class JsonConverterTest {
     private static final float EPSILON = 0.001f;
