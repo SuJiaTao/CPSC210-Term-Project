@@ -19,6 +19,7 @@ public class SimulationReadWriter {
         JSONObject jsonSimulation = JsonConverter.simulationToJsonObject(simulation);
         File writeFile = fileFromFileTitle(fileTitle);
         if (!writeFile.isFile()) {
+            writeFile.getParentFile().mkdirs();
             writeFile.createNewFile();
         }
 
