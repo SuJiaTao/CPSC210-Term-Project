@@ -30,9 +30,9 @@ public class JsonConverter {
 
     public static JSONObject vector3ToJsonObject(Vector3 vector3) {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.append(VECTOR3_KEY_X, Float.toString(vector3.getX()));
-        jsonObject.append(VECTOR3_KEY_Y, Float.toString(vector3.getY()));
-        jsonObject.append(VECTOR3_KEY_Z, Float.toString(vector3.getZ()));
+        jsonObject.put(VECTOR3_KEY_X, Float.toString(vector3.getX()));
+        jsonObject.put(VECTOR3_KEY_Y, Float.toString(vector3.getY()));
+        jsonObject.put(VECTOR3_KEY_Z, Float.toString(vector3.getZ()));
         return jsonObject;
     }
 
@@ -45,10 +45,10 @@ public class JsonConverter {
 
     public static JSONObject planetToJsonObject(Planet planet) {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.append(PLANET_KEY_NAME, planet.getName());
-        jsonObject.append(PLANET_KEY_POSITION, vector3ToJsonObject(planet.getPosition()));
-        jsonObject.append(PLANET_KEY_VELOCITY, vector3ToJsonObject(planet.getVelocity()));
-        jsonObject.append(PLANET_KEY_RADIUS, Float.toString(planet.getRadius()));
+        jsonObject.put(PLANET_KEY_NAME, planet.getName());
+        jsonObject.put(PLANET_KEY_POSITION, vector3ToJsonObject(planet.getPosition()));
+        jsonObject.put(PLANET_KEY_VELOCITY, vector3ToJsonObject(planet.getVelocity()));
+        jsonObject.put(PLANET_KEY_RADIUS, Float.toString(planet.getRadius()));
         return jsonObject;
     }
 
@@ -75,8 +75,8 @@ public class JsonConverter {
             assert false; // this should never happen
         }
 
-        jsonObject.append(PLANETREF_KEY_TYPE, planetTypeValue);
-        jsonObject.append(PLANETREF_KEY_INDEX, Integer.toString(index));
+        jsonObject.put(PLANETREF_KEY_TYPE, planetTypeValue);
+        jsonObject.put(PLANETREF_KEY_INDEX, Integer.toString(index));
         return jsonObject;
     }
 
@@ -104,9 +104,9 @@ public class JsonConverter {
         JSONObject jsonObject = new JSONObject();
         Planet planet1 = collision.getPlanetsInvolved().get(0);
         Planet planet2 = collision.getPlanetsInvolved().get(1);
-        jsonObject.append(COLLISION_KEY_PLANETREF1, planetReferenceToJsonObject(planet1, parent));
-        jsonObject.append(COLLISION_KEY_PLANETREF2, planetReferenceToJsonObject(planet2, parent));
-        jsonObject.append(COLLISION_KEY_TIMEOCCOURED, Float.toString(collision.getCollisionTime()));
+        jsonObject.put(COLLISION_KEY_PLANETREF1, planetReferenceToJsonObject(planet1, parent));
+        jsonObject.put(COLLISION_KEY_PLANETREF2, planetReferenceToJsonObject(planet2, parent));
+        jsonObject.put(COLLISION_KEY_TIMEOCCOURED, Float.toString(collision.getCollisionTime()));
         return jsonObject;
     }
 
@@ -135,10 +135,10 @@ public class JsonConverter {
 
     public static JSONObject simulationToJsonObject(Simulation simulation) {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.append(SIM_KEY_TIME_ELAPSED, Float.toString(simulation.getTimeElapsed()));
-        jsonObject.append(SIM_KEY_PLANETS_INSIM, planetListToJsonArray(simulation.getPlanets()));
-        jsonObject.append(SIM_KEY_PLANETS_HISTORIC, planetListToJsonArray(simulation.getHistoricPlanets()));
-        jsonObject.append(SIM_KEY_COLLISIONS, collisionListToJsonArray(simulation.getCollisions(), simulation));
+        jsonObject.put(SIM_KEY_TIME_ELAPSED, Float.toString(simulation.getTimeElapsed()));
+        jsonObject.put(SIM_KEY_PLANETS_INSIM, planetListToJsonArray(simulation.getPlanets()));
+        jsonObject.put(SIM_KEY_PLANETS_HISTORIC, planetListToJsonArray(simulation.getHistoricPlanets()));
+        jsonObject.put(SIM_KEY_COLLISIONS, collisionListToJsonArray(simulation.getCollisions(), simulation));
         return jsonObject;
     }
 
