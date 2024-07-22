@@ -156,7 +156,7 @@ public class JsonConverter {
             simulation.addPlanet(jsonObjectToPlanet((JSONObject) jsonPlanet));
         }
 
-        for (Object jsonHistoricPlanet : jsonObject.getJSONArray(SIM_KEY_PLANETS_INSIM)) {
+        for (Object jsonHistoricPlanet : jsonObject.getJSONArray(SIM_KEY_PLANETS_HISTORIC)) {
             simulation.addHistoricPlanet(jsonObjectToPlanet((JSONObject) jsonHistoricPlanet));
         }
 

@@ -219,23 +219,31 @@ public class JsonConverterTest {
             throw new RuntimeException("same object!");
         }
         if (cl1.size() != cl2.size()) {
-            throw new RuntimeException("mismathced size!");
+            throw new RuntimeException("collisionlist mismatched size!");
         }
 
         for (Collision cl1Col : cl1) {
+            boolean foundMatch = false;
             for (Collision cl2Col : cl2) {
                 if (checkCollisionEquals(cl2Col, cl1Col)) {
+                    foundMatch = true;
                     break;
                 }
+            }
+            if (!foundMatch) {
                 throw new RuntimeException("not all elements of cl1 were in cl2!");
             }
         }
 
         for (Collision cl2Col : cl2) {
+            boolean foundMatch = false;
             for (Collision cl1Col : cl1) {
                 if (checkCollisionEquals(cl1Col, cl2Col)) {
+                    foundMatch = true;
                     break;
                 }
+            }
+            if (!foundMatch) {
                 throw new RuntimeException("not all elements of cl2 were in cl1!");
             }
         }
@@ -265,25 +273,33 @@ public class JsonConverterTest {
             throw new RuntimeException("same object!");
         }
         if (pl1.size() != pl2.size()) {
-            throw new RuntimeException("mismatched size");
+            throw new RuntimeException("planetlist mismatched size");
         }
 
         // NOTE:
         // this is slow as hell
         for (Planet pl1Planet : pl1) {
+            boolean foundMatch = false;
             for (Planet pl2Planet : pl2) {
                 if (checkPlanetEquals(pl1Planet, pl2Planet)) {
+                    foundMatch = true;
                     break;
                 }
+            }
+            if (!foundMatch) {
                 throw new RuntimeException("not all elements of pl1 were in pl2");
             }
         }
 
         for (Planet pl2Planet : pl2) {
+            boolean foundMatch = false;
             for (Planet pl1Planet : pl1) {
                 if (checkPlanetEquals(pl2Planet, pl1Planet)) {
+                    foundMatch = true;
                     break;
                 }
+            }
+            if (!foundMatch) {
                 throw new RuntimeException("not all elements of pl2 were in pl1");
             }
         }
