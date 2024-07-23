@@ -7,6 +7,7 @@ import ui.exceptions.OptionDoesntExistException;
 
 public class OptionSelector<T> {
     private List<T> optionList;
+    private int selectedIndex;
     private T selectedObject;
     private KeyStroke selectFwd;
     private KeyStroke selectBack;
@@ -16,6 +17,7 @@ public class OptionSelector<T> {
         this.optionList = optionList;
         this.selectFwd = selectFwd;
         this.selectBack = selectBck;
+        this.selectedIndex = -1;
         this.selectedObject = null;
         ensureSelectedObjectIsReasonable();
     }
@@ -27,6 +29,14 @@ public class OptionSelector<T> {
     public T getSelectedObject() {
         ensureSelectedObjectIsReasonable();
         return selectedObject;
+    }
+
+    public void setSelectedObject(T object) {
+        if (!optionList.contains(object)) {
+            throw new OptionDoesntExistException();
+        }
+        selectedIndex = optionList.indexOf(object);
+        selectedObject = object;
     }
 
     // EFFECTS: returns whether getSelectedObject is null
@@ -47,11 +57,14 @@ public class OptionSelector<T> {
         if (optionList.contains(selectedObject)) {
             return;
         }
-        if (optionList.size() > 0) {
-            selectedObject = optionList.get(0);
+        if (optionList.isEmpty()) {
+            selectedObject = null;
+            selectedIndex = -1;
             return;
         }
-        selectedObject = null;
+
+        selectedIndex = Math.max(0, Math.min(selectedIndex, optionList.size() - 1));
+        selectedObject = optionList.get(selectedIndex);
     }
 
     // EFFECTS: cycles selectedObject based on the last keystroke
@@ -75,46 +88,5 @@ public class OptionSelector<T> {
         }
 
         selectedObject = optionList.get(objIndex);
-    }
-
-    // EFFECTS: add the given object to the list and updates selection accordingly
-    public void addOptionToSelection(T object, boolean selectAfter) {
-        ensureSelectedObjectIsReasonable();
-
-        if (optionList.contains(object)) {
-            throw new OptionAlreadyExistsException();
-        }
-
-        optionList.add(object);
-        if (selectAfter) {
-            selectedObject = object;
-        }
-
-        ensureSelectedObjectIsReasonable();
-    }
-
-    // EFFECTS: removes the given object from the list and updates the selection
-    // accordingly
-    public void removeOptionFromSelection(T object) {
-        ensureSelectedObjectIsReasonable();
-
-        if (!optionList.contains(object)) {
-            throw new OptionDoesntExistException();
-        }
-
-        int oldSelectedIndex = optionList.indexOf(object);
-        optionList.remove(oldSelectedIndex);
-
-        if (optionList.size() == 0) {
-            selectedObject = null;
-            return;
-        }
-
-        if (object == selectedObject) {
-            int newIndex = Math.min(oldSelectedIndex, optionList.size() - 1);
-            selectedObject = optionList.get(newIndex);
-        }
-
-        ensureSelectedObjectIsReasonable();
     }
 }

@@ -284,13 +284,13 @@ public class SimulationManager {
         Planet planetB = col.getPlanetsInvolved().get(1);
 
         try {
-            planetSelector.removeOptionFromSelection(planetA);
+            simulation.removePlanet(planetA);
         } catch (Exception e) {
             // DO NOTHING
         }
 
         try {
-            planetSelector.removeOptionFromSelection(planetB);
+            simulation.removePlanet(planetB);
         } catch (Exception e) {
             // DO NOTHING
         }
@@ -567,7 +567,7 @@ public class SimulationManager {
         }
 
         Planet selectedPlanet = planetSelector.getSelectedObject();
-        planetSelector.removeOptionFromSelection(selectedPlanet);
+        simulation.removePlanet(selectedPlanet);
     }
 
     // MODIFIES: this
@@ -592,6 +592,7 @@ public class SimulationManager {
         float scale = NEW_PLANET_MIN_RAD + rand.nextFloat() * (NEW_PLANET_MAX_RAD - NEW_PLANET_MIN_RAD);
 
         Planet newPlanet = new Planet(name + "-" + numberSuffix, newPos, newVel, scale);
-        planetSelector.addOptionToSelection(newPlanet, true);
+        simulation.addPlanet(newPlanet);
+        planetSelector.setSelectedObject(newPlanet);
     }
 }
