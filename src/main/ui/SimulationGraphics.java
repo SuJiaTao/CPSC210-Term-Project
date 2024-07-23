@@ -416,7 +416,7 @@ public class SimulationGraphics {
         gfx.drawLine(EDITOR_LEFT, EDITOR_BOT - 3, EDITOR_RIGHT, EDITOR_BOT - 3, '+');
         gfx.putString(EDITOR_LEFT + 1, EDITOR_BOT - 2, "Input Value:");
         setTextGraphicsToSelectMode(gfx);
-        gfx.putString(EDITOR_LEFT + 2, EDITOR_BOT - 1, manager.getUserInputString());
+        gfx.putString(EDITOR_LEFT + 2, EDITOR_BOT - 1, manager.getPropertyUserInputString());
     }
 
     // MODIFIES: this

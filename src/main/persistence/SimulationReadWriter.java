@@ -9,7 +9,7 @@ public class SimulationReadWriter {
     public static final String SAVE_PATH = "./data/";
     public static final int TAB_SPACES = 4;
 
-    private static File fileFromFileTitle(String fileTitle) {
+    public static File fileFromFileTitle(String fileTitle) {
         File file = new File(SAVE_PATH + fileTitle + ".json");
         return file;
     }

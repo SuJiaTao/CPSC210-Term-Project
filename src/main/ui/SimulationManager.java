@@ -1,8 +1,9 @@
 package ui;
 
 import model.*;
+import persistence.*;
 import java.util.*;
-import java.io.IOException;
+import java.io.*;
 import com.googlecode.lanterna.input.*;
 
 // Represents the current state of user-interface to managing simulations
@@ -52,7 +53,10 @@ public class SimulationManager {
 
     private boolean editingSelectedPlanet;
     private boolean editingSelectedProperty;
-    private String userInputString;
+    private String propertyUserInputString;
+
+    private boolean editingSavedSimName;
+    private String newSimNameUserInputString;
 
     private boolean onTitleScreen;
 
@@ -100,7 +104,10 @@ public class SimulationManager {
 
         editingSelectedPlanet = false;
         editingSelectedProperty = false;
-        userInputString = "";
+        propertyUserInputString = "";
+
+        editingSavedSimName = false;
+        newSimNameUserInputString = "";
     }
 
     public Simulation getSimulation() {
@@ -135,8 +142,12 @@ public class SimulationManager {
         return simulationIsRunning;
     }
 
-    public String getUserInputString() {
-        return userInputString;
+    public String getPropertyUserInputString() {
+        return propertyUserInputString;
+    }
+
+    public String getNewSimNameUserInputString() {
+        return newSimNameUserInputString;
     }
 
     // MODIFIES: this
@@ -366,7 +377,7 @@ public class SimulationManager {
                 break;
 
             case EDITOR_OPTION_SAVELOAD:
-                // TODO: implement
+                handleSavedSimViewUserInput();
                 break;
 
             default:
@@ -375,7 +386,69 @@ public class SimulationManager {
         }
     }
 
-    // MODIFES: this
+    // MODIFIES: this
+    // EFFECTS: handles inputs when editor is viewing load/saved simulation list
+    private void handleSavedSimViewUserInput() {
+        updateSavedSimList();
+        if (savedSimSelector.noSelectedObject()) {
+            return;
+        }
+
+        if (editingSavedSimName) {
+            handleEditSimNameUserInput();
+        } else {
+            savedSimSelector.cycleObjectSelection(lastUserKey);
+            if (lastUserKey.getKeyType() == KeyType.Enter) {
+                editingSavedSimName = true;
+            }
+        }
+
+    }
+
+    // MODIFIES: this
+    // EFFECTS: handles user inputs when editing a saved simulation name
+    private void handleEditSimNameUserInput() {
+        if (lastUserKey.getKeyType() == KeyType.Character) {
+            newSimNameUserInputString += lastUserKey.getCharacter();
+        }
+        if (lastUserKey.getKeyType() == KeyType.Enter) {
+            if (newSimNameUserInputString.length() < 1) {
+                return;
+            }
+            if (newSimNameUserInputString.charAt(0) == ' ') {
+                return;
+            }
+            handleRenameSavedSim();
+            newSimNameUserInputString = "";
+            editingSavedSimName = false;
+        }
+    }
+
+    // EFFECTS: renames the selected savedsim file name
+    private void handleRenameSavedSim() {
+        File toRename = SimulationReadWriter.fileFromFileTitle(savedSimSelector.getSelectedObject());
+        // TODO: WHY THE FUCK IS IT SO HARD TO RENAME FILES IN JAVA WHAT THE FUCK
+    }
+
+    // MODIFIES: this
+    // EFFECTS: updates the list in savedSimSelector to accurately represent the
+    // files that can be loaded and saved
+    private void updateSavedSimList() {
+        savedSimSelector.getOptions().clear();
+
+        File saveDir = new File(SimulationReadWriter.SAVE_PATH);
+        File[] subFiles = saveDir.listFiles();
+        for (File subFile : subFiles) {
+            if (!subFile.isFile()) {
+                continue;
+            }
+            String subFileName = subFile.getName();
+            String displayName = subFileName.substring(0, subFileName.lastIndexOf("."));
+            savedSimSelector.getOptions().add(displayName);
+        }
+    }
+
+    // MODIFIES: this
     // EFFECTS: handles inputs when editor is viewing planet list
     private void handlePlanetViewUserInput() {
         if (editingSelectedPlanet) {
@@ -436,29 +509,29 @@ public class SimulationManager {
     // EFFECTS: manages planet property editing input handling behavior
     private void handleEditPlanetProperty() {
         if (lastUserKey.getKeyType() == KeyType.Escape) {
-            userInputString = "";
+            propertyUserInputString = "";
             editingSelectedProperty = false;
             return;
         }
         if (lastUserKey.getKeyType() == KeyType.Backspace) {
-            if (userInputString.length() == 0) {
+            if (propertyUserInputString.length() == 0) {
                 return;
             }
-            userInputString = userInputString.substring(0, userInputString.length() - 1);
+            propertyUserInputString = propertyUserInputString.substring(0, propertyUserInputString.length() - 1);
             return;
         }
         if (lastUserKey.getKeyType() == KeyType.Enter) {
             if (handleUserApplyPlanetEditAttempt()) {
-                userInputString = "";
+                propertyUserInputString = "";
                 editingSelectedProperty = false;
             }
             return;
         }
         if (lastUserKey.getCharacter() != null) {
-            if (userInputString.length() >= EDIT_PROP_MAX_INPUT_LEN) {
+            if (propertyUserInputString.length() >= EDIT_PROP_MAX_INPUT_LEN) {
                 return;
             }
-            userInputString += lastUserKey.getCharacter().toString();
+            propertyUserInputString += lastUserKey.getCharacter().toString();
         }
     }
 
@@ -498,14 +571,14 @@ public class SimulationManager {
     // REQUIRES: selectedPlanet is not null
     // EFFECTS: attempts to update the planet name
     private boolean tryApplyNewName() {
-        if (userInputString.length() == 0) {
+        if (propertyUserInputString.length() == 0) {
             return false;
         }
-        if (userInputString.charAt(0) == ' ') {
+        if (propertyUserInputString.charAt(0) == ' ') {
             return false;
         }
 
-        planetSelector.getSelectedObject().setName(userInputString);
+        planetSelector.getSelectedObject().setName(propertyUserInputString);
         return true;
 
     }
@@ -514,7 +587,7 @@ public class SimulationManager {
     private boolean tryApplyNewRadius() {
         float newRadius;
         try {
-            newRadius = Float.parseFloat(userInputString);
+            newRadius = Float.parseFloat(propertyUserInputString);
         } catch (Exception exception) {
             return false;
         }
@@ -525,7 +598,7 @@ public class SimulationManager {
     // EFFECTS: attempts to parse a Vector3 out of the user input string, returns
     // null if it fails
     private Vector3 tryParseVectorFromInputString() {
-        String[] components = userInputString.split(" ");
+        String[] components = propertyUserInputString.split(" ");
         if (components.length != 3) {
             return null;
         }
