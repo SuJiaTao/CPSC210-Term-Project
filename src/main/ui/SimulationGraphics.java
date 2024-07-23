@@ -168,9 +168,21 @@ public class SimulationGraphics {
             case SimulationManager.EDITOR_OPTION_COLLISIONS:
                 drawCollisionListEditor();
                 break;
+            case SimulationManager.EDITOR_OPTION_SAVELOAD:
+                drawSavedSimEditor();
+                break;
             default:
                 break;
         }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: draws simulatiom load/save editor
+    private void drawSavedSimEditor() {
+        TextGraphics gfx = screen.newTextGraphics();
+        setTextGraphicsToViewMode(gfx);
+
+        drawEditorFrame(gfx);
     }
 
     // MODIFIES: this

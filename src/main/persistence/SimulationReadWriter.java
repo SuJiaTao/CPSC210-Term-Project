@@ -11,6 +11,7 @@ public class SimulationReadWriter {
 
     public static File fileFromFileTitle(String fileTitle) {
         File file = new File(SAVE_PATH + fileTitle + ".json");
+        file.getParentFile().mkdirs();
         return file;
     }
 

@@ -18,6 +18,8 @@ import java.util.*;
 
 public class SimulationReadWriterTest {
     private static final float EPSILON = 0.001f;
+    private static final String TEST_FILE_NAME = "/testing/temp";
+    private static final String TEST_NOTEXIST_FILE_NAME = "/testing/thisFileDoesntExist";
     private Simulation sim;
 
     @Before
@@ -32,11 +34,11 @@ public class SimulationReadWriterTest {
 
     @Test
     public void testSaveOverExistingFile() throws Exception {
-        File existingFile = new File(SimulationReadWriter.SAVE_PATH + "temp.json");
+        File existingFile = SimulationReadWriter.fileFromFileTitle(TEST_FILE_NAME);
         existingFile.createNewFile();
 
         try {
-            SimulationReadWriter.writeSimulation(sim, "temp");
+            SimulationReadWriter.writeSimulation(sim, TEST_FILE_NAME);
         } catch (FileNotFoundException fefe) {
             fail("should NOT have thrown FileNotFoundException: " + fefe.getMessage());
         } catch (IOException ioex) {
@@ -46,13 +48,13 @@ public class SimulationReadWriterTest {
 
     @Test
     public void testSaveOverWhereFileNotExist() throws Exception {
-        File existingFile = new File(SimulationReadWriter.SAVE_PATH + "temp.json");
+        File existingFile = SimulationReadWriter.fileFromFileTitle(TEST_FILE_NAME);
         if (existingFile.isFile()) {
             existingFile.delete();
         }
 
         try {
-            SimulationReadWriter.writeSimulation(sim, "temp");
+            SimulationReadWriter.writeSimulation(sim, TEST_FILE_NAME);
         } catch (FileNotFoundException fefe) {
             fail("should NOT have thrown FileNotFoundException: " + fefe.getMessage());
         } catch (IOException ioex) {
@@ -63,7 +65,7 @@ public class SimulationReadWriterTest {
     @Test
     public void testSaveAndLoad() {
         try {
-            SimulationReadWriter.writeSimulation(sim, "temp");
+            SimulationReadWriter.writeSimulation(sim, TEST_FILE_NAME);
         } catch (FileNotFoundException fefe) {
             fail("should NOT have thrown FileNotFoundException: " + fefe.getMessage());
         } catch (IOException ioex) {
@@ -72,7 +74,7 @@ public class SimulationReadWriterTest {
 
         Simulation sim2 = null;
         try {
-            sim2 = SimulationReadWriter.readSimulation("temp");
+            sim2 = SimulationReadWriter.readSimulation(TEST_FILE_NAME);
         } catch (FileNotFoundException fefe) {
             fail("should NOT have throw FileNotFoundException");
         }
@@ -87,7 +89,7 @@ public class SimulationReadWriterTest {
     @Test
     public void testLoadAndFail() {
         try {
-            SimulationReadWriter.readSimulation("thisFileDoesNOTExist");
+            SimulationReadWriter.readSimulation(TEST_NOTEXIST_FILE_NAME);
         } catch (FileNotFoundException fefe) {
             // goodo
             return;

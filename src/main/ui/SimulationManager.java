@@ -3,6 +3,7 @@ package ui;
 import model.*;
 import persistence.*;
 import java.util.*;
+import java.time.*;
 import java.io.*;
 import com.googlecode.lanterna.input.*;
 
@@ -41,6 +42,8 @@ public class SimulationManager {
     public static final String PROP_OPTION_VEL = "PropVelocity";
     public static final String PROP_OPTION_RAD = "PropRadius";
     public static final String[] PROP_OPTIONS = { PROP_OPTION_NAME, PROP_OPTION_POS, PROP_OPTION_VEL, PROP_OPTION_RAD };
+
+    public static final String NEW_SAVE_STRING = "New Save";
 
     private ConsoleOutputRedirectStream errRedirect;
     private ConsoleOutputRedirectStream outRedirect;
@@ -399,10 +402,26 @@ public class SimulationManager {
         } else {
             savedSimSelector.cycleObjectSelection(lastUserKey);
             if (lastUserKey.getKeyType() == KeyType.Enter) {
+                // if pressed enter on newsave option, add new
+                if (savedSimSelector.getSelectedObject() == NEW_SAVE_STRING) {
+                    handleSaveCurrentSim();
+                    return;
+                }
+                // else, rename currently selected object
                 editingSavedSimName = true;
             }
         }
+    }
 
+    // EFFECTS:
+    // creates new save file from current simulation
+    private void handleSaveCurrentSim() {
+        String simFileTitle = "Simulation-" + Instant.now().toString() + "-" + System.nanoTime();
+        try {
+            SimulationReadWriter.writeSimulation(simulation, simFileTitle);
+        } catch (Exception e) {
+            System.out.print("Failed to save simulation!");
+        }
     }
 
     // MODIFIES: this
@@ -418,6 +437,13 @@ public class SimulationManager {
             if (newSimNameUserInputString.charAt(0) == ' ') {
                 return;
             }
+            // NOTE:
+            // disallow overwriting
+            if (savedSimSelector.getOptions().size() != 0) {
+                if (savedSimSelector.getOptions().contains(newSimNameUserInputString)) {
+                    return;
+                }
+            }
             handleRenameSavedSim();
             newSimNameUserInputString = "";
             editingSavedSimName = false;
@@ -427,7 +453,8 @@ public class SimulationManager {
     // EFFECTS: renames the selected savedsim file name
     private void handleRenameSavedSim() {
         File toRename = SimulationReadWriter.fileFromFileTitle(savedSimSelector.getSelectedObject());
-        // TODO: WHY THE FUCK IS IT SO HARD TO RENAME FILES IN JAVA WHAT THE FUCK
+        File newName = SimulationReadWriter.fileFromFileTitle(newSimNameUserInputString);
+        toRename.renameTo(newName);
     }
 
     // MODIFIES: this
@@ -446,6 +473,9 @@ public class SimulationManager {
             String displayName = subFileName.substring(0, subFileName.lastIndexOf("."));
             savedSimSelector.getOptions().add(displayName);
         }
+
+        // ensure to always have the option to add a new save at the end
+        savedSimSelector.getOptions().add(NEW_SAVE_STRING);
     }
 
     // MODIFIES: this
