@@ -88,8 +88,6 @@ public class SimulationGraphics {
             swingFrame.setResizable(false);
             swingFrame.setTitle("N-Body Simulator");
             swingFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        } catch (ClassCastException excep) {
-            System.err.print("Make sure to run with javaw!! This program should appear in a Swing window!");
         } catch (Exception excep) {
             System.err.print("Failed to setup window. Error: " + excep.toString());
         }
