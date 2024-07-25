@@ -127,8 +127,8 @@ public class SimulationGraphics {
         drawTitleScreenCenteredText(gfx, "N-BODY SIMULATOR", 0);
         drawTitleScreenCenteredText(gfx, "Bailey JT Brown 2024", 1);
         drawTitleScreenleftText(gfx, " Controls:", 3);
-        drawTitleScreenleftText(gfx, "  - Left/Right to cycle between Planet/Collision list view", 4);
-        drawTitleScreenleftText(gfx, "  - Plus/Minus to add/remove planets", 5);
+        drawTitleScreenleftText(gfx, "  - Left/Right to cycle between different list view menus", 4);
+        drawTitleScreenleftText(gfx, "  - Plus/Minus to add/remove elements", 5);
         drawTitleScreenleftText(gfx, "  - Up/Down to cycle between elements", 6);
         drawTitleScreenleftText(gfx, "  - Enter to select item", 7);
         drawTitleScreenleftText(gfx, "  - Escape to unselect item", 8);
@@ -186,7 +186,7 @@ public class SimulationGraphics {
         drawEditorFrame(gfx);
 
         // draw title
-        gfx.putString(EDITOR_LEFT + 2, EDITOR_TOP + 1, "SAVED SIMULATIONS");
+        gfx.putString(EDITOR_LEFT + 2, EDITOR_TOP + 1, "SAVED SIMULATIONS LIST");
         gfx.drawLine(EDITOR_LEFT, EDITOR_TOP + 2, EDITOR_RIGHT, EDITOR_TOP + 2, '+');
         drawSavedSimList(gfx);
         drawSavedSimActionMenu(gfx);
@@ -195,13 +195,15 @@ public class SimulationGraphics {
     // MODIFIES: this
     // EFFECTS: draws saved simulation action menu
     public void drawSavedSimActionMenu(TextGraphics gfx) {
+        setTextGraphicsToViewMode(gfx);
+
         if (!manager.isEditingSavedSim()) {
             return;
         }
 
         // title and border
         gfx.drawLine(EDITOR_LEFT, EDITORMENU_TOP, EDITOR_RIGHT, EDITORMENU_TOP, '+');
-        gfx.putString(EDITOR_LEFT + 2, EDITORMENU_TOP + 1, "EDIT SAVE:");
+        gfx.putString(EDITOR_LEFT + 2, EDITORMENU_TOP + 1, "EDIT SAVE");
 
         int drawOffsetY = 0;
         for (String action : SimulationManager.SAVEDSIM_ACTIONS) {
@@ -220,6 +222,7 @@ public class SimulationGraphics {
     public void drawSavedSimList(TextGraphics gfx) {
         if (manager.getSavedSimSelector().getOptions().size() == 0) {
             gfx.putString(EDITOR_LEFT + 2, EDITOR_TOP + 3, "No saved simulations yet!");
+            gfx.putString(EDITOR_LEFT + 2, EDITOR_TOP + 4, "Press '+' to save the simulation");
             return;
         }
 
@@ -430,7 +433,8 @@ public class SimulationGraphics {
 
         List<Planet> planetList = manager.getSimulation().getPlanets();
         if (planetList.size() == 0) {
-            gfx.putString(EDITOR_LEFT + 1, EDITOR_TOP + 3, " Press '+' to add a planet");
+            gfx.putString(EDITOR_LEFT + 1, EDITOR_TOP + 3, " No planets yet!");
+            gfx.putString(EDITOR_LEFT + 1, EDITOR_TOP + 4, " Press '+' to add a planet");
             return;
         }
 
@@ -469,14 +473,12 @@ public class SimulationGraphics {
     private void drawPlanetInfo(TextGraphics gfx) {
         setTextGraphicsToViewMode(gfx);
         Planet selectedPlanet = manager.getSelectedPlanet();
+        if (selectedPlanet == null) {
+            return;
+        }
 
         // title and border
         gfx.drawLine(EDITOR_LEFT, EDITORMENU_TOP, EDITOR_RIGHT, EDITORMENU_TOP, '+');
-
-        if (selectedPlanet == null) {
-            gfx.putString(EDITOR_LEFT + 2, EDITORMENU_TOP + 1, "No planet selected");
-            return;
-        }
 
         String actionPrefix = "";
         if (manager.isEditingSelectedPlanet()) {

@@ -441,7 +441,7 @@ public class SimulationManager {
     // EFFECTS: handles the user input for performing actions on saved sim
     private void handleSavedSimActionUserInput() {
         if (editingSavedSimName) {
-            handleRenameSavedSim();
+            handleEditSimNameUserInput();
         } else {
             savedSimActionSelector.cycleObjectSelection(lastUserKey);
 
@@ -459,7 +459,7 @@ public class SimulationManager {
                     handleLoadSavedSim(savedSimSelector.getSelectedObject());
                     break;
                 case SAVEDSIM_ACTION_RENAME:
-                    editingSavedSim = true;
+                    editingSavedSimName = true;
                     break;
                 case SAVEDSIM_ACTION_SAVE:
                     handleSaveCurrentSim(savedSimSelector.getSelectedObject());
@@ -476,8 +476,8 @@ public class SimulationManager {
     private void handleSavedSimAddRemove() {
         Character lastChar = lastUserKey.getCharacter();
         if (lastChar != null && (lastChar == '+' || lastChar == '=')) {
-            DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd-HHmmssSSS");
-            String newSimName = "Simulation-" + dateFormat.format(new Date());
+            DateFormat dateFormat = new SimpleDateFormat("ddMMyy_HHmmssSS");
+            String newSimName = "Sim_" + dateFormat.format(new Date());
             handleSaveCurrentSim(newSimName);
         }
 
