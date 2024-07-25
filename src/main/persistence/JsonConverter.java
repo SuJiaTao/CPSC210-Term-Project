@@ -30,6 +30,11 @@ public class JsonConverter {
     public static final String SIM_KEY_PLANETS_HISTORIC = "PlanetsHistoric";
     public static final String SIM_KEY_COLLISIONS = "Collisions";
 
+    private JsonConverter() {
+        // instantiation not allowed
+    }
+
+    // EFFECTS: converts a Vector3 into a JSONObject
     public static JSONObject vector3ToJsonObject(Vector3 vector3) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(VECTOR3_KEY_X, Float.toString(vector3.getX()));
@@ -38,6 +43,7 @@ public class JsonConverter {
         return jsonObject;
     }
 
+    // EFFECTS: converts a JSONObject into a Vector3
     public static Vector3 jsonObjectToVector3(JSONObject jsonObject) {
         float x = Float.parseFloat(jsonObject.getString(VECTOR3_KEY_X));
         float y = Float.parseFloat(jsonObject.getString(VECTOR3_KEY_Y));
@@ -45,6 +51,7 @@ public class JsonConverter {
         return new Vector3(x, y, z);
     }
 
+    // EFFECTS: converts a planet to a JSONObject
     public static JSONObject planetToJsonObject(Planet planet) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(PLANET_KEY_NAME, planet.getName());
@@ -54,6 +61,7 @@ public class JsonConverter {
         return jsonObject;
     }
 
+    // EFFFECTS: converts a JSONObject into a planet
     public static Planet jsonObjectToPlanet(JSONObject jsonObject) {
         String name = jsonObject.getString(PLANET_KEY_NAME);
         Vector3 position = jsonObjectToVector3(jsonObject.getJSONObject(PLANET_KEY_POSITION));
@@ -62,6 +70,8 @@ public class JsonConverter {
         return new Planet(name, position, velocity, radius);
     }
 
+    // EFFECTS: creates a JSONObject which represents a reference to a planet within
+    // the parent simulation
     public static JSONObject planetReferenceToJsonObject(Planet planetRef, Simulation parent) {
         JSONObject jsonObject = new JSONObject();
 
@@ -82,6 +92,9 @@ public class JsonConverter {
         return jsonObject;
     }
 
+    // EFFECTS: given a JSONObject representing a reference to a planet in the
+    // parent simulation, return that planet, if it can be found. Throws a
+    // JSONException otherwise
     public static Planet jsonObjectToPlanetReference(JSONObject jsonObject, Simulation parent) {
         List<Planet> planetList = null;
         switch (jsonObject.getString(PLANETREF_KEY_TYPE)) {
@@ -98,12 +111,14 @@ public class JsonConverter {
         }
 
         int index = Integer.parseInt(jsonObject.getString(PLANETREF_KEY_INDEX));
-        if (index < 0 || index >= planetList.size()) {
+        if (index >= planetList.size()) {
             throw new JSONException("invalid jsonObject value for key: " + PLANETREF_KEY_TYPE);
         }
         return planetList.get(index);
     }
 
+    // EFFECTS: converts a collision to a JSONObject, using references to planets in
+    // the parent simulation
     public static JSONObject collisionToJsonObject(Collision collision, Simulation parent) {
         JSONObject jsonObject = new JSONObject();
         Planet planet1 = collision.getPlanetsInvolved().get(0);
@@ -114,6 +129,8 @@ public class JsonConverter {
         return jsonObject;
     }
 
+    // EFFECTS: converts a JSONObject into a collision, with references to planets
+    // in the parent simulation
     public static Collision jsonObjectToCollision(JSONObject jsonObject, Simulation parent) {
         Planet planet1 = jsonObjectToPlanetReference(jsonObject.getJSONObject(COLLISION_KEY_PLANETREF1), parent);
         Planet planet2 = jsonObjectToPlanetReference(jsonObject.getJSONObject(COLLISION_KEY_PLANETREF2), parent);
@@ -121,6 +138,7 @@ public class JsonConverter {
         return new Collision(planet1, planet2, timeOccoured);
     }
 
+    // EFFECTS: converts a list of planets into a JSONArray
     private static JSONArray planetListToJsonArray(List<Planet> planetList) {
         JSONArray jsonArray = new JSONArray();
         for (Planet planet : planetList) {
@@ -129,6 +147,7 @@ public class JsonConverter {
         return jsonArray;
     }
 
+    // EFFECTS: converts a list of collisions into a JSONArray
     private static JSONArray collisionListToJsonArray(List<Collision> collisionlist, Simulation parent) {
         JSONArray jsonArray = new JSONArray();
         for (Collision collision : collisionlist) {
@@ -137,6 +156,7 @@ public class JsonConverter {
         return jsonArray;
     }
 
+    // EFFECTS: converts a simulation to a JSONObject
     public static JSONObject simulationToJsonObject(Simulation simulation) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(SIM_KEY_TIME_ELAPSED, Float.toString(simulation.getTimeElapsed()));
@@ -146,6 +166,7 @@ public class JsonConverter {
         return jsonObject;
     }
 
+    // EFFECTS: converts a JSONObject into a simulation
     public static Simulation jsonObjectToSimulation(JSONObject jsonObject) {
         Simulation simulation = new Simulation();
 

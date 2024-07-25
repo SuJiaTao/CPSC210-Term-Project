@@ -40,6 +40,10 @@ public class Collision {
     // EFFECTS: returns whether collisions are identical
     @Override
     public boolean equals(Object otherObject) {
+        if (otherObject == null) {
+            return false;
+        }
+
         if (!(otherObject instanceof Collision)) {
             throw new NonMatchingClassException();
         }

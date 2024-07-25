@@ -58,6 +58,12 @@ public class CollisionTest {
     }
 
     @Test
+    public void testNotEqualsNull() {
+        assertNotEquals(col1, null);
+        assertNotEquals(col2, null);
+    }
+
+    @Test
     public void testEqualsWithSymmetry() {
         assertEquals(col1, col2);
         assertEquals(col2, col1);

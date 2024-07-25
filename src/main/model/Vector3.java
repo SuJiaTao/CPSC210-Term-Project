@@ -91,6 +91,9 @@ public class Vector3 {
     // EFFECTS: returns whether all components of the vector are the same
     @Override
     public boolean equals(Object other) {
+        if (other == null) {
+            return false;
+        }
         if (!(other instanceof Vector3)) {
             throw new NonMatchingClassException();
         }

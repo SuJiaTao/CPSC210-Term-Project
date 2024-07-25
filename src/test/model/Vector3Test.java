@@ -50,6 +50,14 @@ public class Vector3Test {
     }
 
     @Test
+    public void testNotEqualsNull() {
+        assertNotEquals(new Vector3(), null);
+        assertNotEquals(v1, null);
+        assertNotEquals(v2, null);
+        assertNotEquals(v3, null);
+    }
+
+    @Test
     public void testEquals() {
         assertEquals(new Vector3(0.0f, 0.0f, 0.0f), v1);
         assertEquals(new Vector3(1.0f, 2.0f, -3.0f), v2);
