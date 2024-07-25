@@ -533,8 +533,7 @@ public class SimulationGraphics {
                     break;
 
                 default:
-                    assert false; // THIS SHOULD NEVER HAPPEN
-                    break;
+                    throw new IllegalStateException(); // THIS SHOULD NEVER HAPPEN
             }
 
             if (manager.isEditingSelectedPlanet() && manager.getSelectedProperty().equals(property)) {

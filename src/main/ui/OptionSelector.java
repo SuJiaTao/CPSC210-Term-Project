@@ -73,7 +73,9 @@ public class OptionSelector<T> {
             return;
         }
         int objIndex = optionList.indexOf(selectedObject);
-        assert (objIndex != -1); // this should NEVER happen
+        if (objIndex == -1) {
+            throw new IllegalStateException(); // this should NEVER happen
+        }
 
         if (lastKeyStroke.equals(selectFwd)) {
             objIndex++;

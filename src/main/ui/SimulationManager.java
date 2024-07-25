@@ -416,8 +416,7 @@ public class SimulationManager {
                 break;
 
             default:
-                assert false; // THIS SHOULD NEVER HAPPEN
-                break;
+                throw new IllegalStateException(); // THIS SHOULD NEVER HAPPEN
         }
     }
 
@@ -465,8 +464,7 @@ public class SimulationManager {
                     handleSaveCurrentSim(savedSimSelector.getSelectedObject());
                     break;
                 default:
-                    assert false; // this should NEVER happen
-                    break;
+                    throw new IllegalStateException(); // this should NEVER happen
             }
         }
     }
@@ -730,8 +728,7 @@ public class SimulationManager {
                 return tryApplyNewRadius();
 
             default:
-                assert false; // THIS SHOULD NEVER HAPPEN
-                return false;
+                throw new IllegalStateException(); // THIS SHOULD NEVER EVER HAPPEN
         }
     }
 
