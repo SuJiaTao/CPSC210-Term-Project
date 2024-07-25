@@ -88,5 +88,6 @@ public class OptionSelector<T> {
         }
 
         selectedObject = optionList.get(objIndex);
+        selectedIndex = objIndex;
     }
 }

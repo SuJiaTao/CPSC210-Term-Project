@@ -26,7 +26,7 @@ public class SimulationGraphics {
     public static final int EDITOR_LEFT = 0;
     public static final int EDITOR_RIGHT = 40;
     public static final int EDITORLIST_ENTIRES = 20;
-    public static final int PLANETINFO_TOP = EDITOR_TOP + EDITORLIST_ENTIRES + 3;
+    public static final int EDITORMENU_TOP = EDITOR_TOP + EDITORLIST_ENTIRES + 3;
 
     public static final int VP_FRAME_TOP = 0;
     public static final int VP_FRAME_BOT = 32;
@@ -45,6 +45,7 @@ public class SimulationGraphics {
 
     private int plntListViewOffset;
     private int colListViewOffset;
+    private int saveListViewOffset;
 
     public SimulationGraphics(SimulationManager manager) throws IOException {
         this.manager = manager;
@@ -61,6 +62,7 @@ public class SimulationGraphics {
 
         plntListViewOffset = 0;
         colListViewOffset = 0;
+        saveListViewOffset = 0;
         screen.startScreen();
     }
 
@@ -181,8 +183,78 @@ public class SimulationGraphics {
     private void drawSavedSimEditor() {
         TextGraphics gfx = screen.newTextGraphics();
         setTextGraphicsToViewMode(gfx);
-
         drawEditorFrame(gfx);
+
+        // draw title
+        gfx.putString(EDITOR_LEFT + 2, EDITOR_TOP + 1, "SAVED SIMULATIONS");
+        gfx.drawLine(EDITOR_LEFT, EDITOR_TOP + 2, EDITOR_RIGHT, EDITOR_TOP + 2, '+');
+        drawSavedSimList(gfx);
+        drawSavedSimActionMenu(gfx);
+    }
+
+    // MODIFIES: this
+    // EFFECTS: draws saved simulation action menu
+    public void drawSavedSimActionMenu(TextGraphics gfx) {
+        if (!manager.isEditingSavedSim()) {
+            return;
+        }
+
+        // title and border
+        gfx.drawLine(EDITOR_LEFT, EDITORMENU_TOP, EDITOR_RIGHT, EDITORMENU_TOP, '+');
+        gfx.putString(EDITOR_LEFT + 2, EDITORMENU_TOP + 1, "EDIT SAVE:");
+
+        int drawOffsetY = 0;
+        for (String action : SimulationManager.SAVEDSIM_ACTIONS) {
+            if (action.equals(manager.getSelectedSavedSimAction())) {
+                setTextGraphicsToHoverMode(gfx);
+            } else {
+                setTextGraphicsToViewMode(gfx);
+            }
+            gfx.putString(EDITOR_LEFT + 3, EDITORMENU_TOP + 2 + drawOffsetY, action);
+            drawOffsetY++;
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: draws saved simulation list
+    public void drawSavedSimList(TextGraphics gfx) {
+        if (manager.getSavedSimSelector().getOptions().size() == 0) {
+            gfx.putString(EDITOR_LEFT + 2, EDITOR_TOP + 3, "No saved simulations yet!");
+            return;
+        }
+
+        String selectedSave = manager.getSavedSimSelector().getSelectedObject();
+        List<String> saveList = manager.getSavedSimSelector().getOptions();
+
+        saveListViewOffset = Math.max(saveListViewOffset,
+                saveList.indexOf(selectedSave) - EDITORLIST_ENTIRES + 1);
+        saveListViewOffset = Math.min(saveListViewOffset, saveList.indexOf(selectedSave));
+
+        for (int i = 0; i < EDITORLIST_ENTIRES; i++) {
+            int indexActual = i + saveListViewOffset;
+            if (indexActual >= saveList.size()) {
+                return;
+            }
+
+            String currentSimName = saveList.get(indexActual);
+            if (currentSimName.equals(selectedSave)) {
+                setTextGraphicsToHoverMode(gfx);
+                if (manager.isEditingSavedSimName()) {
+                    setTextGraphicsToSelectMode(gfx);
+                }
+            } else {
+                setTextGraphicsToViewMode(gfx);
+            }
+
+            String writeStringName = "";
+            writeStringName += (indexActual + 1) + ". ";
+            if (manager.isEditingSavedSimName()) {
+                writeStringName += manager.getNewSimNameUserInputString();
+            } else {
+                writeStringName += currentSimName;
+            }
+            gfx.putString(EDITOR_LEFT + 1, EDITOR_TOP + 3 + i, writeStringName);
+        }
     }
 
     // MODIFIES: this
@@ -311,21 +383,21 @@ public class SimulationGraphics {
         Collision selectedCollision = manager.getSelectedCollision();
 
         // title and border
-        gfx.drawLine(EDITOR_LEFT, PLANETINFO_TOP, EDITOR_RIGHT, PLANETINFO_TOP, '+');
+        gfx.drawLine(EDITOR_LEFT, EDITORMENU_TOP, EDITOR_RIGHT, EDITORMENU_TOP, '+');
 
         if (selectedCollision == null) {
-            gfx.putString(EDITOR_LEFT + 2, PLANETINFO_TOP + 1, "No collision selected");
+            gfx.putString(EDITOR_LEFT + 2, EDITORMENU_TOP + 1, "No collision selected");
             return;
         }
-        gfx.putString(EDITOR_LEFT + 2, PLANETINFO_TOP + 1, "COLLISION INFO: ");
-        gfx.putString(EDITOR_LEFT + 3, PLANETINFO_TOP + 2, "Planets Involved:");
+        gfx.putString(EDITOR_LEFT + 2, EDITORMENU_TOP + 1, "COLLISION INFO: ");
+        gfx.putString(EDITOR_LEFT + 3, EDITORMENU_TOP + 2, "Planets Involved:");
         String involvedString = "";
         involvedString += selectedCollision.getPlanetsInvolved().get(0).getName();
         involvedString += ", ";
         involvedString += selectedCollision.getPlanetsInvolved().get(1).getName();
-        gfx.putString(EDITOR_LEFT + 5, PLANETINFO_TOP + 3, involvedString);
+        gfx.putString(EDITOR_LEFT + 5, EDITORMENU_TOP + 3, involvedString);
         String timeOccouredString = String.format("Time Occoured: %.3fs", selectedCollision.getCollisionTime());
-        gfx.putString(EDITOR_LEFT + 3, PLANETINFO_TOP + 4, timeOccouredString);
+        gfx.putString(EDITOR_LEFT + 3, EDITORMENU_TOP + 4, timeOccouredString);
     }
 
     // MODIFIES: this
@@ -399,10 +471,10 @@ public class SimulationGraphics {
         Planet selectedPlanet = manager.getSelectedPlanet();
 
         // title and border
-        gfx.drawLine(EDITOR_LEFT, PLANETINFO_TOP, EDITOR_RIGHT, PLANETINFO_TOP, '+');
+        gfx.drawLine(EDITOR_LEFT, EDITORMENU_TOP, EDITOR_RIGHT, EDITORMENU_TOP, '+');
 
         if (selectedPlanet == null) {
-            gfx.putString(EDITOR_LEFT + 2, PLANETINFO_TOP + 1, "No planet selected");
+            gfx.putString(EDITOR_LEFT + 2, EDITORMENU_TOP + 1, "No planet selected");
             return;
         }
 
@@ -412,7 +484,7 @@ public class SimulationGraphics {
         } else {
             actionPrefix = "VIEW";
         }
-        gfx.putString(EDITOR_LEFT + 2, PLANETINFO_TOP + 1, actionPrefix + " PLANET ");
+        gfx.putString(EDITOR_LEFT + 2, EDITORMENU_TOP + 1, actionPrefix + " PLANET ");
 
         drawPlanetProperties(gfx);
         drawPropertyEditingInputBox(gfx);
@@ -471,7 +543,7 @@ public class SimulationGraphics {
             } else {
                 setTextGraphicsToViewMode(gfx);
             }
-            gfx.putString(EDITOR_LEFT + 3, PLANETINFO_TOP + 2 + drawOffsetY, propertyString);
+            gfx.putString(EDITOR_LEFT + 3, EDITORMENU_TOP + 2 + drawOffsetY, propertyString);
             drawOffsetY++;
         }
     }

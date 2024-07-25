@@ -3,8 +3,15 @@ package ui;
 import model.*;
 import persistence.*;
 import java.util.*;
+
+import javax.management.RuntimeErrorException;
+import javax.swing.text.html.Option;
+
 import java.time.*;
 import java.io.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+
 import com.googlecode.lanterna.input.*;
 
 // Represents the current state of user-interface to managing simulations
@@ -43,8 +50,11 @@ public class SimulationManager {
     public static final String PROP_OPTION_RAD = "PropRadius";
     public static final String[] PROP_OPTIONS = { PROP_OPTION_NAME, PROP_OPTION_POS, PROP_OPTION_VEL, PROP_OPTION_RAD };
 
-    public static final String NEW_SAVE_STRING = "New Save";
-
+    public static final String SAVEDSIM_ACTION_SAVE = "Save To File";
+    public static final String SAVEDSIM_ACTION_LOAD = "Load Saved Simulation";
+    public static final String SAVEDSIM_ACTION_RENAME = "Rename Saved Simulation";
+    public static final String[] SAVEDSIM_ACTIONS = { SAVEDSIM_ACTION_SAVE, SAVEDSIM_ACTION_LOAD,
+            SAVEDSIM_ACTION_RENAME };
     private ConsoleOutputRedirectStream errRedirect;
     private ConsoleOutputRedirectStream outRedirect;
 
@@ -58,6 +68,7 @@ public class SimulationManager {
     private boolean editingSelectedProperty;
     private String propertyUserInputString;
 
+    private boolean editingSavedSim;
     private boolean editingSavedSimName;
     private String newSimNameUserInputString;
 
@@ -70,14 +81,19 @@ public class SimulationManager {
     private OptionSelector<Collision> collisionSelector;
     private OptionSelector<String> editorSelector;
     private OptionSelector<String> savedSimSelector;
+    private OptionSelector<String> savedSimActionSelector;
 
     // EFFECTS: initialize simulation, init graphical/user input, redirect
     // sterr+stdout, and set simulation state to the opening screen
     public SimulationManager() throws Exception {
         initOutputStreams();
+
         simGraphics = new SimulationGraphics(this);
-        initSimulationVariables();
-        initEditorSelectors();
+        simulation = new Simulation();
+        lastDeltaTimeSeconds = 0.0f;
+
+        initEditorSimulationVariables();
+        initEditorSaveVariables();
 
         onTitleScreen = true;
     }
@@ -90,26 +106,26 @@ public class SimulationManager {
         System.setOut(outRedirect);
     }
 
-    // EFFECTS: sets up simulation related variables
-    private void initSimulationVariables() {
-        simulation = new Simulation();
+    // EFFECTS: sets up editor simulation interface related variables
+    private void initEditorSimulationVariables() {
         simulationIsRunning = false;
-        lastDeltaTimeSeconds = 0.0f;
-    }
 
-    // EFFECTS: sets up editor selection related variables
-    private void initEditorSelectors() {
         planetSelector = new OptionSelector<>(simulation.getPlanets(), KS_ARROWDOWN, KS_ARROWUP);
         propertySelector = new OptionSelector<>(Arrays.asList(PROP_OPTIONS), KS_ARROWDOWN, KS_ARROWUP);
         collisionSelector = new OptionSelector<>(simulation.getCollisions(), KS_ARROWDOWN, KS_ARROWUP);
         editorSelector = new OptionSelector<>(Arrays.asList(EDITOR_OPTIONS), KS_ARROWRIGHT, KS_ARROWLEFT);
-        savedSimSelector = new OptionSelector<>(new ArrayList<String>(), KS_ARROWDOWN, KS_ARROWUP);
 
         editingSelectedPlanet = false;
         editingSelectedProperty = false;
         propertyUserInputString = "";
+    }
 
+    // EFFECTS: setus up the editor's save related variables
+    private void initEditorSaveVariables() {
+        savedSimSelector = new OptionSelector<>(new ArrayList<String>(), KS_ARROWDOWN, KS_ARROWUP);
+        savedSimActionSelector = new OptionSelector<>(Arrays.asList(SAVEDSIM_ACTIONS), KS_ARROWDOWN, KS_ARROWUP);
         editingSavedSimName = false;
+        editingSavedSim = false;
         newSimNameUserInputString = "";
     }
 
@@ -141,6 +157,14 @@ public class SimulationManager {
         return editingSelectedProperty;
     }
 
+    public boolean isEditingSavedSim() {
+        return editingSavedSim;
+    }
+
+    public boolean isEditingSavedSimName() {
+        return editingSavedSimName;
+    }
+
     public boolean isSimulationRunning() {
         return simulationIsRunning;
     }
@@ -149,8 +173,16 @@ public class SimulationManager {
         return propertyUserInputString;
     }
 
+    public OptionSelector<String> getSavedSimSelector() {
+        return savedSimSelector;
+    }
+
     public String getNewSimNameUserInputString() {
         return newSimNameUserInputString;
+    }
+
+    public String getSelectedSavedSimAction() {
+        return savedSimActionSelector.getSelectedObject();
     }
 
     // MODIFIES: this
@@ -267,7 +299,7 @@ public class SimulationManager {
     // MODIFIES: this
     // EFFECTS: runs the appropriate handler function based on the simulation state
     private void handleSimulationState() throws Exception {
-        if (editingSelectedPlanet) {
+        if (editingSelectedPlanet || editingSelectedProperty || editingSavedSimName) {
             simulationIsRunning = false;
         }
         if (simulationIsRunning) {
@@ -393,35 +425,108 @@ public class SimulationManager {
     // EFFECTS: handles inputs when editor is viewing load/saved simulation list
     private void handleSavedSimViewUserInput() {
         updateSavedSimList();
-        if (savedSimSelector.noSelectedObject()) {
-            return;
-        }
 
-        if (editingSavedSimName) {
-            handleEditSimNameUserInput();
+        if (editingSavedSim) {
+            handleSavedSimActionUserInput();
         } else {
+            handleSavedSimAddRemove();
             savedSimSelector.cycleObjectSelection(lastUserKey);
             if (lastUserKey.getKeyType() == KeyType.Enter) {
-                // if pressed enter on newsave option, add new
-                if (savedSimSelector.getSelectedObject() == NEW_SAVE_STRING) {
-                    handleSaveCurrentSim();
-                    return;
-                }
-                // else, rename currently selected object
-                editingSavedSimName = true;
+                editingSavedSim = true;
             }
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: handles the user input for performing actions on saved sim
+    private void handleSavedSimActionUserInput() {
+        if (editingSavedSimName) {
+            handleRenameSavedSim();
+        } else {
+            savedSimActionSelector.cycleObjectSelection(lastUserKey);
+
+            if (lastUserKey.getKeyType() == KeyType.Escape) {
+                editingSavedSim = false;
+                return;
+            }
+
+            if (lastUserKey.getKeyType() != KeyType.Enter) {
+                return;
+            }
+
+            switch (savedSimActionSelector.getSelectedObject()) {
+                case SAVEDSIM_ACTION_LOAD:
+                    handleLoadSavedSim(savedSimSelector.getSelectedObject());
+                    break;
+                case SAVEDSIM_ACTION_RENAME:
+                    editingSavedSim = true;
+                    break;
+                case SAVEDSIM_ACTION_SAVE:
+                    handleSaveCurrentSim(savedSimSelector.getSelectedObject());
+                    break;
+                default:
+                    assert false; // this should NEVER happen
+                    break;
+            }
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: handles the user input for creating or removing a simulation
+    private void handleSavedSimAddRemove() {
+        Character lastChar = lastUserKey.getCharacter();
+        if (lastChar != null && (lastChar == '+' || lastChar == '=')) {
+            DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd-HHmmssSSS");
+            String newSimName = "Simulation-" + dateFormat.format(new Date());
+            handleSaveCurrentSim(newSimName);
+        }
+
+        // none of these other operations can be performed if the list is empty
+        if (savedSimSelector.getSelectedObject() == null) {
+            return;
+        }
+        if (lastChar == null) {
+            return;
+        }
+        if (lastChar == '-' || lastChar == '_') {
+            handleRemoveSelectedSave();
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: replaces the current simulation with a new simulation, and resets
+    // all settings accordingly
+    public void handleLoadSavedSim(String simName) {
+        try {
+            simulation = SimulationReadWriter.readSimulation(simName);
+            initEditorSimulationVariables();
+            // stay on save/load viewing page
+            editorSelector.setSelectedObject(EDITOR_OPTION_SAVELOAD);
+        } catch (FileNotFoundException e) {
+            System.out.print(e.getMessage());
         }
     }
 
     // EFFECTS:
     // creates new save file from current simulation
-    private void handleSaveCurrentSim() {
-        String simFileTitle = "Simulation-" + Instant.now().toString() + "-" + System.nanoTime();
+    private void handleSaveCurrentSim(String fileSaveName) {
         try {
-            SimulationReadWriter.writeSimulation(simulation, simFileTitle);
+            SimulationReadWriter.writeSimulation(simulation, fileSaveName);
+            updateSavedSimList(); // force update
+            // set newest selected object to that with the title
+            savedSimSelector.setSelectedObject(fileSaveName);
         } catch (Exception e) {
-            System.out.print("Failed to save simulation!");
+            System.out.print(e.getMessage());
         }
+    }
+
+    // EFFECTS:
+    // removes the currently selected save
+    private void handleRemoveSelectedSave() {
+        File toRemove = SimulationReadWriter.fileFromFileTitle(savedSimSelector.getSelectedObject());
+        toRemove.delete();
+        // force update saved sim list
+        updateSavedSimList();
     }
 
     // MODIFIES: this
@@ -429,6 +534,12 @@ public class SimulationManager {
     private void handleEditSimNameUserInput() {
         if (lastUserKey.getKeyType() == KeyType.Character) {
             newSimNameUserInputString += lastUserKey.getCharacter();
+        }
+        if (lastUserKey.getKeyType() == KeyType.Backspace) {
+            if (newSimNameUserInputString.length() < 1) {
+                return;
+            }
+            newSimNameUserInputString = newSimNameUserInputString.substring(0, newSimNameUserInputString.length() - 1);
         }
         if (lastUserKey.getKeyType() == KeyType.Enter) {
             if (newSimNameUserInputString.length() < 1) {
@@ -455,27 +566,53 @@ public class SimulationManager {
         File toRename = SimulationReadWriter.fileFromFileTitle(savedSimSelector.getSelectedObject());
         File newName = SimulationReadWriter.fileFromFileTitle(newSimNameUserInputString);
         toRename.renameTo(newName);
+
+        // force update saved sim list
+        updateSavedSimList();
     }
 
     // MODIFIES: this
     // EFFECTS: updates the list in savedSimSelector to accurately represent the
     // files that can be loaded and saved
     private void updateSavedSimList() {
-        savedSimSelector.getOptions().clear();
-
         File saveDir = new File(SimulationReadWriter.SAVE_PATH);
         File[] subFiles = saveDir.listFiles();
+
+        // NOTE:
+        // this is a simply horrible way of doing this but oh well
+        List<String> newFileNames = new ArrayList<String>(subFiles.length);
         for (File subFile : subFiles) {
-            if (!subFile.isFile()) {
+            if (subFile.isDirectory() || !subFile.getName().endsWith(SimulationReadWriter.FILE_SUFFIX)) {
                 continue;
             }
+
             String subFileName = subFile.getName();
-            String displayName = subFileName.substring(0, subFileName.lastIndexOf("."));
-            savedSimSelector.getOptions().add(displayName);
+            subFileName = subFileName.substring(0, subFileName.lastIndexOf("."));
+            newFileNames.add(subFileName);
         }
 
-        // ensure to always have the option to add a new save at the end
-        savedSimSelector.getOptions().add(NEW_SAVE_STRING);
+        List<String> savedSimOptions = savedSimSelector.getOptions();
+
+        // remove everything thats gone
+        // NOTE: this must be done in two passes as you cant remove element while
+        // iterating over the colection
+        List<String> toRemove = new ArrayList<String>(savedSimOptions.size());
+        for (String oldFileName : savedSimOptions) {
+            if (!newFileNames.contains(oldFileName)) {
+                toRemove.add(oldFileName);
+            }
+        }
+        for (String toRemoveName : toRemove) {
+            savedSimOptions.remove(toRemoveName);
+        }
+
+        // add everything not already there
+        for (String newFileName : newFileNames) {
+            if (!savedSimOptions.contains(newFileName)) {
+                savedSimOptions.add(newFileName);
+            }
+        }
+
     }
 
     // MODIFIES: this

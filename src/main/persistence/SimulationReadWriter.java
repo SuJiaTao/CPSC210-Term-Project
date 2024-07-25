@@ -8,9 +8,10 @@ import java.util.*;
 public class SimulationReadWriter {
     public static final String SAVE_PATH = "./data/";
     public static final int TAB_SPACES = 4;
+    public static final String FILE_SUFFIX = ".json";
 
     public static File fileFromFileTitle(String fileTitle) {
-        File file = new File(SAVE_PATH + fileTitle + ".json");
+        File file = new File(SAVE_PATH + fileTitle + FILE_SUFFIX);
         file.getParentFile().mkdirs();
         return file;
     }
