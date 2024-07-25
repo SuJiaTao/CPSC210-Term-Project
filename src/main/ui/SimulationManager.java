@@ -399,6 +399,7 @@ public class SimulationManager {
         }
 
         handleShouldQuit();
+        handleShouldResetSimulation();
         handleSimulationPauseAndUnpause();
         editorSelector.cycleObjectSelection(lastUserKey);
 
@@ -417,6 +418,21 @@ public class SimulationManager {
 
             default:
                 throw new IllegalStateException(); // THIS SHOULD NEVER HAPPEN
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: handles the user input as to whether it should reset the current
+    // simulation completely
+    private void handleShouldResetSimulation() {
+        Character lastChar = lastUserKey.getCharacter();
+        if (lastChar == null) {
+            return;
+        }
+
+        if (Character.toUpperCase(lastChar) == 'R') {
+            simulation = new Simulation();
+            initEditorSimulationVariables();
         }
     }
 

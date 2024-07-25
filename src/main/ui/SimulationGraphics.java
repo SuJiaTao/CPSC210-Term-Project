@@ -17,7 +17,7 @@ public class SimulationGraphics {
     public static final int TITLE_SCREEN_CENTER_X = TERMINAL_WIDTH / 2;
     public static final int TITLE_SCREEN_CENTER_Y = TERMINAL_HEIGHT / 2;
     public static final int TITLE_SCREEN_WIDTH = 70;
-    public static final int TITLE_SCREEN_HEIGHT = 16;
+    public static final int TITLE_SCREEN_HEIGHT = 17;
     public static final int TITLE_SCREEN_LEFT = TITLE_SCREEN_CENTER_X - (TITLE_SCREEN_WIDTH / 2);
     public static final int TITLE_SCREEN_TOP = TITLE_SCREEN_CENTER_Y - (TITLE_SCREEN_HEIGHT / 2);
 
@@ -133,7 +133,8 @@ public class SimulationGraphics {
         drawTitleScreenleftText(gfx, "  - Enter to select item", 7);
         drawTitleScreenleftText(gfx, "  - Escape to unselect item", 8);
         drawTitleScreenleftText(gfx, "  - Space to pause/unpause simulation", 9);
-        drawTitleScreenleftText(gfx, "  - Q or close window to quit", 10);
+        drawTitleScreenleftText(gfx, "  - R to completely reset the simulation", 10);
+        drawTitleScreenleftText(gfx, "  - Q or close window to quit", 11);
         drawTitleScreenCenteredText(gfx, " Press Space to continue", TITLE_SCREEN_HEIGHT - 3);
     }
 
