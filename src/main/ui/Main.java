@@ -13,5 +13,6 @@ public class Main {
             return;
         }
         System.err.println("Please run this program with javaw.exe!");
+        System.exit(1);
     }
 }
