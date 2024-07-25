@@ -299,7 +299,7 @@ public class SimulationManager {
     // MODIFIES: this
     // EFFECTS: runs the appropriate handler function based on the simulation state
     private void handleSimulationState() throws Exception {
-        if (editingSelectedPlanet || editingSelectedProperty || editingSavedSimName) {
+        if (editingSelectedPlanet || editingSelectedProperty || editingSavedSim) {
             simulationIsRunning = false;
         }
         if (simulationIsRunning) {
