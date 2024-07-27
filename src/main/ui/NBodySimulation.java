@@ -1,12 +1,14 @@
 package ui;
 
+import model.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import java.util.*;
 
 // Contains all the rendering related data for the SWING based GUI
-public class NewSimulationGraphics {
+public class NBodySimulation {
     private static final String WINDOW_TITLE = "N-Body Simulator";
 
     private static final Dimension WINDOW_DIMENSION = new Dimension(1000, 700);
@@ -16,11 +18,11 @@ public class NewSimulationGraphics {
             WINDOW_DIMENSION.height);
 
     private static final Dimension LISTVIEW_LIST_DIMENSION = new Dimension(LISTVIEW_DIMENSION.width,
-            (int) (LISTVIEW_DIMENSION.height * 0.75f));
+            (int) (LISTVIEW_DIMENSION.height * 0.6f));
     private static final Dimension LISTVIEW_EDITOR_DIMENSION = new Dimension(LISTVIEW_DIMENSION.width,
-            (int) (LISTVIEW_DIMENSION.height * 0.25f));
+            (int) (LISTVIEW_DIMENSION.height * 0.4f));
 
-    private SimulationManager manager;
+    private Simulation simulation;
 
     // Abstract List panel which is used to view and edit elements in a list
     private abstract class ListEditorPanel<T> extends JPanel {
@@ -42,8 +44,6 @@ public class NewSimulationGraphics {
             editorPanel = initEditorPanel();
             editorPanel.setPreferredSize(LISTVIEW_EDITOR_DIMENSION);
 
-            list.setListData(convertListToStrings());
-
             add(listScroller, BorderLayout.NORTH);
             add(editorPanel, BorderLayout.SOUTH);
         }
@@ -58,12 +58,16 @@ public class NewSimulationGraphics {
 
         // EFFECTS: expected that the user defines a means to initialize the editor
         // panel in this method, and returns it
-        public abstract JComponent initEditorPanel();
+        protected abstract JComponent initEditorPanel();
 
         // EFFECTS: expected that the user defines a means to conver their objectList
         // into an array of string
-        public abstract String[] convertListToStrings();
+        protected abstract String[] convertListToStrings();
 
+        // EFFECTS: updates the current JList list data
+        public void updateListData() {
+            list.setListData(convertListToStrings());
+        }
     }
 
     // Tab panel which is used to cycle through different lists of objects
@@ -72,13 +76,38 @@ public class NewSimulationGraphics {
         private static final String COLLISION_LIST_NAME = "Collision List";
         private static final String SAVE_LIST_NAME = "Saved Simulations";
 
-        public EditorTabPanel(JPanel planeList, JPanel colList, JPanel saveList) {
+        public EditorTabPanel(JPanel planetList, JPanel colList, JPanel saveList) {
             setPreferredSize(LISTVIEW_DIMENSION);
-            addTab(PLANET_LIST_NAME, planeList);
+            addTab(PLANET_LIST_NAME, planetList);
             addTab(COLLISION_LIST_NAME, colList);
             addTab(SAVE_LIST_NAME, saveList);
             setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
         }
+    }
+
+    // Planet list view panel which is used to view and edit planets
+    private class PlanetListPanel extends ListEditorPanel<Planet> {
+        // EFFECTS: constructs the list editor with the SimulationManager's planet list
+        public PlanetListPanel() {
+            super(simulation.getPlanets());
+        }
+
+        @Override
+        protected JComponent initEditorPanel() {
+            return new JComponent() {
+
+            };
+        }
+
+        @Override
+        protected String[] convertListToStrings() {
+            String[] names = new String[objList.size()];
+            for (int i = 0; i < names.length; i++) {
+                names[i] = objList.get(i).getName();
+            }
+            return names;
+        }
+
     }
 
     // Viewport panel which is used to host the 3D view of the simulation
@@ -109,8 +138,8 @@ public class NewSimulationGraphics {
     EditorTabPanel editorTabSelector;
     ViewportPanel viewport;
 
-    public NewSimulationGraphics(SimulationManager simManager) {
-        manager = simManager;
+    public NBodySimulation() {
+        simulation = new Simulation();
         editorTabSelector = new EditorTabPanel(null, null, null);
         viewport = new ViewportPanel();
         window = new MainWindow(editorTabSelector, viewport);

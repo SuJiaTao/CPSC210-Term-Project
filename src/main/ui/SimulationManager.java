@@ -17,8 +17,8 @@ import com.googlecode.lanterna.input.*;
 // Represents the current state of user-interface to managing simulations
 public class SimulationManager {
     public static final int REFRESH_DELAY_MSEC = 10;
-    private static final int EDIT_PROP_MAX_INPUT_LEN = OldSimulationGraphics.EDITOR_RIGHT
-            - OldSimulationGraphics.EDITOR_LEFT
+    private static final int EDIT_PROP_MAX_INPUT_LEN = SimulationGraphics.EDITOR_RIGHT
+            - SimulationGraphics.EDITOR_LEFT
             - 3;
     private static final String[] NEW_PLANET_NAMES = { "Kepler", "Earth", "Solaris", "Tatoonie", "Furball", "X",
             "Atlas", "Gemini", "Spongey", "Arrakis", "Trapist", "Proxima", "Mundley", "Bongcloud", "Euclid", "Hades",
@@ -75,7 +75,7 @@ public class SimulationManager {
 
     private boolean onTitleScreen;
 
-    private OldSimulationGraphics simGraphics;
+    private SimulationGraphics simGraphics;
 
     private OptionSelector<Planet> planetSelector;
     private OptionSelector<String> propertySelector;
@@ -89,7 +89,7 @@ public class SimulationManager {
     public SimulationManager() throws Exception {
         initOutputStreams();
 
-        simGraphics = new OldSimulationGraphics(this);
+        simGraphics = new SimulationGraphics(this);
         simulation = new Simulation();
         lastDeltaTimeSeconds = 0.0f;
 
@@ -272,7 +272,7 @@ public class SimulationManager {
         if (elem.getClassName().equals(SimulationManager.class.getName())) {
             return true;
         }
-        if (elem.getClassName().equals(OldSimulationGraphics.class.getName())) {
+        if (elem.getClassName().equals(SimulationGraphics.class.getName())) {
             return true;
         }
         if (elem.getClassName().equals(OptionSelector.class.getName())) {
