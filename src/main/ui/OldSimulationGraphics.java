@@ -10,7 +10,8 @@ import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.swing.SwingTerminalFrame;
 
-public class SimulationGraphics {
+// Contains all the rendering-related data to display the terminal GUI for the simulation
+public class OldSimulationGraphics {
     public static final int TERMINAL_WIDTH = 100;
     public static final int TERMINAL_HEIGHT = 35;
 
@@ -47,7 +48,7 @@ public class SimulationGraphics {
     private int colListViewOffset;
     private int saveListViewOffset;
 
-    public SimulationGraphics(SimulationManager manager) throws IOException {
+    public OldSimulationGraphics(SimulationManager manager) throws IOException {
         this.manager = manager;
 
         DefaultTerminalFactory termFactory = new DefaultTerminalFactory();
