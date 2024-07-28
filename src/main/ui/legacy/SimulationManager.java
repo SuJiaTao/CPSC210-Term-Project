@@ -1,7 +1,8 @@
-package ui;
+package ui.legacy;
 
 import model.*;
 import persistence.*;
+
 import java.util.*;
 
 import javax.management.RuntimeErrorException;

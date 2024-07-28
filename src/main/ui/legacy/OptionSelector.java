@@ -1,4 +1,4 @@
-package ui;
+package ui.legacy;
 
 import java.util.*;
 import com.googlecode.lanterna.input.*;

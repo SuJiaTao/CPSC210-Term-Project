@@ -1,6 +1,7 @@
-package ui;
+package ui.legacy;
 
 import model.*;
+
 import java.util.*;
 import javax.swing.JFrame;
 import java.io.IOException;

@@ -12,15 +12,21 @@ public class NBodySimulation {
     private static final String WINDOW_TITLE = "N-Body Simulator";
 
     private static final Dimension WINDOW_DIMENSION = new Dimension(1000, 700);
+    private static final float LISTVIEW_WIDTH_FACTOR = 0.4f;
+    private static final float VIEWPORT_WIDTH_FACTOR = 0.6f;
+    private static final float LISTVIEW_LIST_HEIGHT_FACTOR = 0.6f;
+    private static final float LISTVIEW_EDITOR_HEIGHT_FACTOR = 0.4f;
     private static final Dimension LISTVIEW_DIMENSION = new Dimension((int) (WINDOW_DIMENSION.width * 0.4f),
             WINDOW_DIMENSION.height);
     private static final Dimension VIEWPORT_DIMENSION = new Dimension((int) (WINDOW_DIMENSION.width * 0.6f),
             WINDOW_DIMENSION.height);
 
     private static final Dimension LISTVIEW_LIST_DIMENSION = new Dimension(LISTVIEW_DIMENSION.width,
-            (int) (LISTVIEW_DIMENSION.height * 0.6f));
+            (int) (LISTVIEW_DIMENSION.height * 0.65f));
     private static final Dimension LISTVIEW_EDITOR_DIMENSION = new Dimension(LISTVIEW_DIMENSION.width,
-            (int) (LISTVIEW_DIMENSION.height * 0.4f));
+            (int) (LISTVIEW_DIMENSION.height * 0.25f));
+
+    private static int EDIT_FIELD_COLUMNS = 20;
 
     private Simulation simulation;
 
@@ -46,6 +52,8 @@ public class NBodySimulation {
 
             add(listScroller, BorderLayout.NORTH);
             add(editorPanel, BorderLayout.SOUTH);
+
+            updateListData();
         }
 
         protected JList<String> getList() {
@@ -92,11 +100,57 @@ public class NBodySimulation {
             super(simulation.getPlanets());
         }
 
+        // Planet editor panel used to edit plant properties
+        // NOTE: woaw!!! 2-levels of class nesting?? probably bad design
+        private class PlanetEditorPanel extends JPanel {
+            private JTextField nameEditField;
+            private JTextField posEditField;
+            private JTextField velEditField;
+            private JTextField radEditField;
+
+            public PlanetEditorPanel() {
+                super(new GridBagLayout());
+
+                JLabel editorTitleLabel = new JLabel("Edit Planet");
+                editorTitleLabel.setHorizontalAlignment(JLabel.CENTER);
+                editorTitleLabel.setFont(new Font(editorTitleLabel.getFont().getName(),
+                        Font.BOLD, 15));
+
+                add(editorTitleLabel, createConstraints(0, 0, 3));
+
+                add(new JLabel("Name: ", JLabel.RIGHT), createConstraints(0, 1, 1));
+                nameEditField = new JTextField(EDIT_FIELD_COLUMNS);
+                add(nameEditField, createConstraints(1, 1, 2));
+
+                add(new JLabel("Position: ", JLabel.RIGHT), createConstraints(0, 2, 1));
+                posEditField = new JTextField(EDIT_FIELD_COLUMNS);
+                add(posEditField, createConstraints(1, 2, 2));
+
+                add(new JLabel("Velocity: ", JLabel.RIGHT), createConstraints(0, 3, 1));
+                velEditField = new JTextField(EDIT_FIELD_COLUMNS);
+                add(velEditField, createConstraints(1, 3, 2));
+
+                add(new JLabel("Radius: ", JLabel.RIGHT), createConstraints(0, 4, 1));
+                radEditField = new JTextField(EDIT_FIELD_COLUMNS);
+                add(radEditField, createConstraints(1, 4, 2));
+
+            }
+
+            private GridBagConstraints createConstraints(int gx, int gy, int width) {
+                GridBagConstraints gbConst = new GridBagConstraints();
+                gbConst.fill = GridBagConstraints.BOTH;
+                gbConst.gridx = gx;
+                gbConst.gridy = gy;
+                gbConst.gridwidth = width;
+                gbConst.weightx = 0.5;
+                gbConst.insets = new Insets(5, 0, 5, 20);
+                return gbConst;
+            }
+        }
+
         @Override
         protected JComponent initEditorPanel() {
-            return new JComponent() {
-
-            };
+            return new PlanetEditorPanel();
         }
 
         @Override
@@ -140,8 +194,13 @@ public class NBodySimulation {
 
     public NBodySimulation() {
         simulation = new Simulation();
-        editorTabSelector = new EditorTabPanel(null, null, null);
+        for (int i = 0; i < 5; i++) {
+            simulation.addPlanet(new Planet("h", 1.0f));
+        }
+
+        editorTabSelector = new EditorTabPanel(new PlanetListPanel(), new JPanel(), new JPanel());
         viewport = new ViewportPanel();
         window = new MainWindow(editorTabSelector, viewport);
+
     }
 }
