@@ -15,15 +15,15 @@ public class EditorTabPanel extends JTabbedPane implements Tickable {
     private static final String SAVE_LIST_NAME = "Saved Simulations";
 
     private PlanetListPanel planetListPanel;
-    private JPanel colListPanel;
+    private CollisionListPanel collisionListPanel;
     private JPanel saveListPanel;
 
     public EditorTabPanel() {
         planetListPanel = new PlanetListPanel();
-
+        collisionListPanel = new CollisionListPanel();
         // TODO: implement colListPanel and saveListPanel
         addTab(PLANET_LIST_NAME, planetListPanel);
-        addTab(COLLISION_LIST_NAME, new JPanel());
+        addTab(COLLISION_LIST_NAME, collisionListPanel);
         addTab(SAVE_LIST_NAME, new JPanel());
 
         setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);

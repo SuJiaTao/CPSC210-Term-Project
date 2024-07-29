@@ -37,6 +37,21 @@ public class SimulatorUtils {
         return new Planet(name + "-" + numberSuffix, newPos, newVel, scale);
     }
 
+    // MODIFIES: simDestination
+    // EFFECTS: copies all values of simSource to simDestination
+    public static void transferSimData(Simulation simDestination, Simulation simSource) {
+        simDestination.setTimeElapsed(simSource.getTimeElapsed());
+
+        simDestination.getPlanets().clear();
+        simDestination.getPlanets().addAll(simSource.getPlanets());
+
+        simDestination.getHistoricPlanets().clear();
+        simDestination.getHistoricPlanets().addAll(simSource.getHistoricPlanets());
+
+        simDestination.getCollisions().clear();
+        simDestination.getCollisions().addAll(simSource.getCollisions());
+    }
+
     // EFFECTS: checks whether string is valid planet name
     public static boolean checkIfValidPlanetName(String str) {
         return (str.length() > 0 && str.charAt(0) != ' ');

@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.concurrent.Flow;
 
 // Abstract List panel which is used to view and edit elements in a list
-public abstract class ListEditorPanel<T> extends JPanel implements Tickable {
+public abstract class AbstractListPanel<T> extends JPanel implements Tickable {
     public static final double SPLIT_WEIGHT = 0.9;
 
     private InternalListModel listModel;
@@ -21,7 +21,7 @@ public abstract class ListEditorPanel<T> extends JPanel implements Tickable {
     // This is simply Swing awfulness. I never intended to write such voodo for this
     // course, but Java has forced my hand. Thanks Swing.
     // To decipher this awfulness, please refer to JList and AbstractListModel
-    // documentation. 
+    // documentation.
     private class InternalListModel extends AbstractListModel<T> implements Tickable {
         private volatile java.util.List<T> targetListData;
 
@@ -51,7 +51,7 @@ public abstract class ListEditorPanel<T> extends JPanel implements Tickable {
 
     // EFFECTS: initializes list to be empty and listScroller to contain list, calls
     // on user defined initialization of editorpanel, and then packs the components
-    public ListEditorPanel(java.util.List<T> listData) {
+    public AbstractListPanel(java.util.List<T> listData) {
         setLayout(new BorderLayout());
 
         listModel = new InternalListModel(listData);

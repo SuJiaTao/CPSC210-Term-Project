@@ -9,7 +9,7 @@ import javax.swing.*;
 import java.util.*;
 
 // Planet list view panel which is used to view and edit planets
-public class PlanetListPanel extends ListEditorPanel<Planet> {
+public class PlanetListPanel extends AbstractListPanel<Planet> {
     private PlanetEditorPanel planetEditorPanel;
 
     // EFFECTS: constructs the list editor with the SimulationManager's planet list

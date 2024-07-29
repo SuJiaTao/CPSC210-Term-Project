@@ -10,7 +10,7 @@ import java.util.*;
 
 // Main window JFrame which is used to house all the graphics
 public class MainWindow extends JFrame implements Tickable {
-    public static final double SPLIT_WEIGHT = 0.0f;
+    public static final double SPLIT_WEIGHT = 0.07f;
 
     private EditorTabPanel editorTabPanel;
     private ViewportPanel viewportPanel;
