@@ -10,7 +10,7 @@ import java.awt.event.*;
 import javax.swing.*;
 import java.util.*;
 
-public class CollisionEditorPanel extends JPanel {
+public class CollisionEditorPanel extends JPanel implements Tickable {
     private static final int TEXT_FIELD_COLUMNS = 20;
 
     private CollisionListPanel parent;
@@ -45,7 +45,21 @@ public class CollisionEditorPanel extends JPanel {
         gbConst.gridy = gy;
         gbConst.weightx = width;
         gbConst.weightx = 0.5;
-        gbConst.insets = new Insets(1, 0, 1, 0);
+        gbConst.insets = new Insets(1, 10, 1, 10);
         return gbConst;
+    }
+
+    @Override
+    public void tick() {
+        Collision selectedCol = parent.getSwingList().getSelectedValue();
+        if (selectedCol == null) {
+            planetsInvolvedLabel.setText("");
+            collisionTimeLabel.setText("");
+        } else {
+            Planet planet1 = selectedCol.getPlanetsInvolved().get(0);
+            Planet planet2 = selectedCol.getPlanetsInvolved().get(1);
+            planetsInvolvedLabel.setText(planet1.getName() + ", " + planet2.getName());
+            collisionTimeLabel.setText("" + selectedCol.getCollisionTime() + "s");
+        }
     }
 }

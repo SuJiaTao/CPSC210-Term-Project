@@ -2,6 +2,7 @@ package ui.panels;
 
 import model.*;
 import ui.SimulatorState;
+import ui.Tickable;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -20,5 +21,11 @@ public class CollisionListPanel extends AbstractListPanel<Collision> {
     protected JPanel initEditorPanel() {
         collisionEditorPanel = new CollisionEditorPanel(this);
         return collisionEditorPanel;
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        collisionEditorPanel.tick();
     }
 }
