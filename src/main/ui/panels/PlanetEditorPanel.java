@@ -39,12 +39,10 @@ public class PlanetEditorPanel extends JPanel implements ActionListener, Tickabl
         radEditField = initAndAddPropertyEditField("Radius: ", 4);
 
         addPlanetButton = new JButton("Add New");
-        addPlanetButton.setMnemonic(KeyEvent.VK_MINUS);
         addPlanetButton.addActionListener(this);
         add(addPlanetButton, createConstraints(1, 5, 1));
 
         removePlaneButton = new JButton("Remove");
-        removePlaneButton.setMnemonic(KeyEvent.VK_EQUALS);
         removePlaneButton.addActionListener(this);
         add(removePlaneButton, createConstraints(2, 5, 1));
     }
@@ -79,53 +77,57 @@ public class PlanetEditorPanel extends JPanel implements ActionListener, Tickabl
     // MODIFIES: this
     // EFFECTS: handles all actionevents
     public void actionPerformed(ActionEvent actionEvent) {
-        // NOTE: ignore if nothing selected
-        Planet selectedPlanet = parent.getSwingList().getSelectedValue();
-        if (selectedPlanet == null) {
-            return;
-        }
-
         if (actionEvent.getSource() instanceof JTextField) {
-            handleTextFieldSubmit((JTextField) actionEvent.getSource(), actionEvent);
+            handleTextFieldSubmit((JTextField) actionEvent.getSource());
         }
 
         if (actionEvent.getSource() instanceof JButton) {
-            handleButtonPressed((JButton) actionEvent.getSource(), actionEvent);
+            handleButtonPressed((JButton) actionEvent.getSource());
         }
     }
 
     // MODIFIES: this
     // EFFECTS: handles if something is submitted to a text field
-    public void handleTextFieldSubmit(JTextField fieldSrc, ActionEvent action) {
+    public void handleTextFieldSubmit(JTextField fieldSrc) {
         if (fieldSrc == nameEditField) {
             if (SimulatorUtils.checkIfValidPlanetName(fieldSrc.getText())) {
-                parent.getSwingList().getSelectedValue().setName(fieldSrc.getText());
+                getSelectedPlanet().setName(fieldSrc.getText());
             }
         }
         if (fieldSrc == posEditField) {
             Vector3 newPos = SimulatorUtils.tryParseVector3(fieldSrc.getText());
             if (newPos != null) {
-                parent.getSwingList().getSelectedValue().setPosition(newPos);
+                getSelectedPlanet().setPosition(newPos);
             }
         }
         if (fieldSrc == velEditField) {
             Vector3 newVel = SimulatorUtils.tryParseVector3(fieldSrc.getText());
             if (newVel != null) {
-                parent.getSwingList().getSelectedValue().setVelocity(newVel);
+                getSelectedPlanet().setVelocity(newVel);
             }
         }
         if (fieldSrc == radEditField) {
             Float newRad = SimulatorUtils.tryParseFloat(fieldSrc.getText());
             if (newRad != null) {
-                parent.getSwingList().getSelectedValue().setRadius(newRad);
+                getSelectedPlanet().setRadius(newRad);
             }
         }
     }
 
     // MODIFIES: this
     // EFFECTS: handles if a button was clicked
-    public void handleButtonPressed(JButton buttonSrc, ActionEvent action) {
-
+    public void handleButtonPressed(JButton buttonSrc) {
+        if (buttonSrc == addPlanetButton) {
+            Planet newPlanet = SimulatorUtils.createNewPlanet();
+            SimulatorState.getInstance().getSimulation().addPlanet(newPlanet);
+            parent.getSwingList().setSelectedValue(newPlanet, true);
+        }
+        if (buttonSrc == removePlaneButton && getSelectedPlanet() != null) {
+            SimulatorState.getInstance().getSimulation().removePlanet(getSelectedPlanet());
+            if (getSelectedPlanet() == null) {
+                parent.getSwingList().setSelectedIndex(parent.getSwingList().getModel().getSize() - 1);
+            }
+        }
     }
 
     // EFFECTS: creates GridBagConstraints at the specific row and column, with the
@@ -154,6 +156,10 @@ public class PlanetEditorPanel extends JPanel implements ActionListener, Tickabl
     // EFFECTS: sets the text of each editing field
     private void handleEditFieldText(SimulatorState simState, Planet selPlanet) {
         if (selPlanet == null) {
+            nameEditField.setText("");
+            posEditField.setText("");
+            velEditField.setText("");
+            radEditField.setText("");
             return;
         }
         if (!nameEditField.isFocusOwner()) {
@@ -164,7 +170,7 @@ public class PlanetEditorPanel extends JPanel implements ActionListener, Tickabl
             posEditField.setText(SimulatorUtils.convertVectorStringToParseable(posString));
         }
         if (!velEditField.isFocusOwner()) {
-            String velString = selPlanet.getPosition().toString();
+            String velString = selPlanet.getVelocity().toString();
             velEditField.setText(SimulatorUtils.convertVectorStringToParseable(velString));
         }
         if (!radEditField.isFocusOwner()) {
@@ -184,6 +190,12 @@ public class PlanetEditorPanel extends JPanel implements ActionListener, Tickabl
         posEditField.setEditable(canEdit);
         velEditField.setEditable(canEdit);
         radEditField.setEditable(canEdit);
+    }
+
+    // MODIFIES: this
+    // EFFECTS: gets the currently selected planet
+    private Planet getSelectedPlanet() {
+        return parent.getSwingList().getSelectedValue();
     }
 
 }

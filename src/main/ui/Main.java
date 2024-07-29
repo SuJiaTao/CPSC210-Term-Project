@@ -18,7 +18,7 @@ public class Main {
     // TODO: remove
     public static void debugInit() {
         for (int i = 0; i < 5; i++) {
-            SimulatorState.getInstance().getSimulation().addPlanet(new Planet("" + i, 1.0f));
+            SimulatorState.getInstance().getSimulation().addPlanet(SimulatorUtils.createNewPlanet());
         }
     }
 }
