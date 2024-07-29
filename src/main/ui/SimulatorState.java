@@ -56,6 +56,7 @@ public class SimulatorState implements Tickable {
     // MODIFIES: this
     // EFFECTS: handles the collision behavior between planets after each tick
     private void handleCollisionBehavior() {
+        // TODO: make more interesting... perhaps ejecting debris and stuff!
         for (Collision collision : simulation.getCollisions()) {
             try {
                 simulation.removePlanet(collision.getPlanetsInvolved().get(0));

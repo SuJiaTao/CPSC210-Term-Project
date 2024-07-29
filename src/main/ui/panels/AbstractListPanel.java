@@ -19,9 +19,8 @@ public abstract class AbstractListPanel<T> extends JPanel implements Tickable {
     protected JPanel editorPanel;
 
     // This is simply Swing awfulness. I never intended to write such voodo for this
-    // course, but Java has forced my hand. Thanks Swing.
-    // To decipher this awfulness, please refer to JList and AbstractListModel
-    // documentation.
+    // course, but Java has forced my hand. Thanks Swing. To decipher this
+    // awfulness, please refer to JList and AbstractListModel documentation.
     private class InternalListModel extends AbstractListModel<T> implements Tickable {
         private volatile java.util.List<T> targetListData;
 

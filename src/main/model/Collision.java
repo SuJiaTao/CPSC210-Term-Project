@@ -54,4 +54,12 @@ public class Collision {
         }
         return other.wasPlanetInvolved(planet1) && other.wasPlanetInvolved(planet2);
     }
+
+    // EFFECTS: returns a simple string that involves the first letters of each
+    // planet involved, and the time in which the collision occoured
+    @Override
+    public String toString() {
+        return String.format("Collison %c/%c-%.3f", planet1.getName().charAt(0), planet2.getName().charAt(0),
+                collisionTime);
+    }
 }

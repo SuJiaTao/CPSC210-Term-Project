@@ -18,7 +18,7 @@ public class CollisionListPanel extends AbstractListPanel<Collision> {
     // EFFECTS: returns the PlanetEditorPanel class
     @Override
     protected JPanel initEditorPanel() {
-        collisionEditorPanel = new CollisionEditorPanel();
+        collisionEditorPanel = new CollisionEditorPanel(this);
         return collisionEditorPanel;
     }
 }

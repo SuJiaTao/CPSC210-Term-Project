@@ -1,7 +1,5 @@
 package ui;
 
-import model.Planet;
-
 public class Main {
     public static void main(String[] args) throws Exception {
         SimulatorState simState = SimulatorState.getInstance();
