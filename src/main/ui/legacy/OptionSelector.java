@@ -2,8 +2,9 @@ package ui.legacy;
 
 import java.util.*;
 import com.googlecode.lanterna.input.*;
-import ui.exceptions.OptionAlreadyExistsException;
-import ui.exceptions.OptionDoesntExistException;
+
+import ui.legacy.exceptions.OptionAlreadyExistsException;
+import ui.legacy.exceptions.OptionDoesntExistException;
 
 public class OptionSelector<T> {
     private List<T> optionList;

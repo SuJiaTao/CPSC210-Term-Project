@@ -1,4 +1,4 @@
-package ui.exceptions;
+package ui.legacy.exceptions;
 
 public class OptionDoesntExistException extends OptionSelectorException {
 
