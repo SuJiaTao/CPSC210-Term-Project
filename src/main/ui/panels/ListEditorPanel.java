@@ -7,7 +7,7 @@ import java.util.*;
 
 // Abstract List panel which is used to view and edit elements in a list
 public abstract class ListEditorPanel<T> extends JPanel {
-    public static final float VERTICAL_CUT_FACTOR = 0.3f;
+    public static final double VERTICAL_SPLIT_FACTOR = 0.7;
     protected java.util.List<T> objList;
     private JList<String> list;
     private JScrollPane listScroller;
@@ -15,19 +15,19 @@ public abstract class ListEditorPanel<T> extends JPanel {
 
     // EFFECTS: initializes list to be empty and listScroller to contain list, calls
     // on user defined initialization of editorpanel, and then packs the components
-    public ListEditorPanel(java.util.List<T> listData, Dimension size) {
-        setLayout(new BorderLayout());
+    public ListEditorPanel(java.util.List<T> listData) {
+        // setLayout(new BorderLayout());
 
         this.objList = listData;
         list = new JList<>();
         listScroller = new JScrollPane(list);
-        listScroller.setPreferredSize(new Dimension(size.width, (int) (size.height * (1 - VERTICAL_CUT_FACTOR))));
-
         editorPanel = initEditorPanel();
-        editorPanel.setPreferredSize(new Dimension(size.width, (int) (size.height * VERTICAL_CUT_FACTOR)));
 
-        add(listScroller, BorderLayout.NORTH);
-        add(editorPanel, BorderLayout.SOUTH);
+        JSplitPane splitter = new JSplitPane(JSplitPane.VERTICAL_SPLIT, listScroller, editorPanel);
+        splitter.setDividerLocation(VERTICAL_SPLIT_FACTOR);
+        splitter.setEnabled(false);
+
+        add(splitter);
 
         updateListData();
     }

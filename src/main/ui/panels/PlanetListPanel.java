@@ -1,6 +1,7 @@
 package ui.panels;
 
 import model.*;
+import ui.SimulatorState;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -9,9 +10,11 @@ import java.util.*;
 
 // Planet list view panel which is used to view and edit planets
 public class PlanetListPanel extends ListEditorPanel<Planet> {
+    public static final int EDIT_FIELD_COLUMNS = 20;
+
     // EFFECTS: constructs the list editor with the SimulationManager's planet list
     public PlanetListPanel() {
-        super(simState.getSimulation().getPlanets());
+        super(SimulatorState.getInstance().getSimulation().getPlanets());
     }
 
     // Planet editor panel used to edit plant properties
