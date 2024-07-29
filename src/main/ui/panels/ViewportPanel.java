@@ -11,8 +11,8 @@ import java.util.*;
 
 // Viewport panel which is used to host the 3D view of the simulation
 public class ViewportPanel extends JPanel implements ActionListener, Tickable {
-    private static final String TOGGLE_BUTTON_TEXT_RUNNING = "Pause Simulation";
-    private static final String TOGGLE_BUTTON_TEXT_PAUSED = "Unpause Simulation";
+    private static final String TOGGLE_BUTTON_TEXT_RUNNING = "Stop Simulation";
+    private static final String TOGGLE_BUTTON_TEXT_PAUSED = "Start Simulation";
 
     private JButton toggleRunButton;
 

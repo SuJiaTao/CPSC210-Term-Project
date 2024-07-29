@@ -25,23 +25,23 @@ public class Simulation {
         collisions = new ArrayList<Collision>();
     }
 
-    public float getTimeElapsed() {
+    public synchronized float getTimeElapsed() {
         return timeElapsed;
     }
 
-    public List<Collision> getCollisions() {
+    public synchronized List<Collision> getCollisions() {
         return collisions;
     }
 
-    public List<Planet> getPlanets() {
+    public synchronized List<Planet> getPlanets() {
         return planets;
     }
 
-    public List<Planet> getHistoricPlanets() {
+    public synchronized List<Planet> getHistoricPlanets() {
         return historicPlanets;
     }
 
-    public void setTimeElapsed(float newTimeElapsed) {
+    public synchronized void setTimeElapsed(float newTimeElapsed) {
         timeElapsed = newTimeElapsed;
     }
 
@@ -50,7 +50,7 @@ public class Simulation {
     // adds a planet to the simulation which will be updated with
     // subsequent calls to update. throws PlanetAlreadyExistsException if planet is
     // already in the simulation
-    public void addPlanet(Planet planet) {
+    public synchronized void addPlanet(Planet planet) {
         if (planets.contains(planet)) {
             throw new PlanetAlreadyExistsException();
         }
@@ -63,7 +63,7 @@ public class Simulation {
     // updated with subsequent calls but is expected to be referenced by a collision
     // in the simulation collision list. throws PlanetAlreadyExistsException if the
     // planet is already in the simulation
-    public void addHistoricPlanet(Planet historicPlanet) {
+    public synchronized void addHistoricPlanet(Planet historicPlanet) {
         if (historicPlanets.contains(historicPlanet)) {
             throw new PlanetAlreadyExistsException();
         }
@@ -74,7 +74,7 @@ public class Simulation {
     // EFFECTS: adds a collision to the list of collisions in the simulation. throws
     // a PlanetDoesntExistException if the collision references planet objects which
     // aren't in the simulation
-    public void addCollision(Collision collision) {
+    public synchronized void addCollision(Collision collision) {
         Planet planet1 = collision.getPlanetsInvolved().get(0);
         Planet planet2 = collision.getPlanetsInvolved().get(1);
         if (!(planets.contains(planet1) || historicPlanets.contains(planet1))) {
@@ -90,7 +90,7 @@ public class Simulation {
     // MODIFIES: this
     // EFFECTS: removes a specific planet from the simulation, throws
     // PlanetDoesntExistException if the planet doesn't exist in the simulation
-    public void removePlanet(Planet planet) {
+    public synchronized void removePlanet(Planet planet) {
         if (!planets.contains(planet)) {
             throw new PlanetDoesntExistException();
         }
@@ -111,7 +111,7 @@ public class Simulation {
     // EFFECTS:
     // progresses the simulation forward by deltaTime, including increasing
     // timeElapsed
-    public void progressBySeconds(float deltaTime) {
+    public synchronized void progressBySeconds(float deltaTime) {
         for (Planet currentPlanet : planets) {
             for (Planet targetPlanet : planets) {
                 if (currentPlanet == targetPlanet) {

@@ -40,5 +40,6 @@ public class EditorTabPanel extends JTabbedPane implements Tickable {
     @Override
     public void tick() {
         planetListPanel.tick();
+        collisionListPanel.tick();
     }
 }

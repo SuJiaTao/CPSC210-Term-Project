@@ -47,7 +47,26 @@ public class SimulatorState implements Tickable {
             long deltaTimeNanoseconds = System.nanoTime() - lastTickNanoseconds;
             float deltaTimeSeconds = (float) deltaTimeNanoseconds / 1000000000.0f;
             simulation.progressBySeconds(deltaTimeSeconds);
+            handleCollisionBehavior();
+
         }
         lastTickNanoseconds = System.nanoTime();
+    }
+
+    // MODIFIES: this
+    // EFFECTS: handles the collision behavior between planets after each tick
+    private void handleCollisionBehavior() {
+        for (Collision collision : simulation.getCollisions()) {
+            try {
+                simulation.removePlanet(collision.getPlanetsInvolved().get(0));
+            } catch (Exception e) {
+
+            }
+            try {
+                simulation.removePlanet(collision.getPlanetsInvolved().get(1));
+            } catch (Exception e) {
+
+            }
+        }
     }
 }
