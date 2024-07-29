@@ -3,54 +3,85 @@ package ui.panels;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+
+import ui.Tickable;
+
 import java.util.*;
+import java.util.concurrent.Flow;
 
 // Abstract List panel which is used to view and edit elements in a list
-public abstract class ListEditorPanel<T> extends JPanel {
-    public static final double VERTICAL_SPLIT_FACTOR = 0.9;
+public abstract class ListEditorPanel<T> extends JPanel implements Tickable {
+    public static final double SPLIT_WEIGHT = 0.9;
 
-    protected java.util.List<T> objList;
-    protected JList<String> list;
+    private InternalListModel listModel;
+    protected JList<T> swingList;
     protected JScrollPane listScroller;
-    protected JComponent editorPanel;
+    protected JPanel editorPanel;
+
+    // This is simply Swing awfulness. I never intended to write such voodo for this
+    // course, but Java has forced my hand. Thanks Swing.
+    // To decipher this awfulness, please refer to JList and AbstractListModel
+    // documentation. 
+    private class InternalListModel extends AbstractListModel<T> implements Tickable {
+        private volatile java.util.List<T> targetListData;
+
+        // EFFECTS: sets the internal target list to point at listData
+        public InternalListModel(java.util.List<T> listData) {
+            targetListData = listData;
+        }
+
+        // EFFECTS: returns internal list size
+        @Override
+        public int getSize() {
+            return targetListData.size();
+        }
+
+        // EFFECTS: fetches item from internal list
+        @Override
+        public T getElementAt(int index) {
+            return targetListData.get(index);
+        }
+
+        // EFFECTS: forces an update to the list
+        @Override
+        public void tick() {
+            fireContentsChanged(this, 0, targetListData.size() - 1);
+        }
+    }
 
     // EFFECTS: initializes list to be empty and listScroller to contain list, calls
     // on user defined initialization of editorpanel, and then packs the components
     public ListEditorPanel(java.util.List<T> listData) {
-        // setLayout(new BorderLayout());
+        setLayout(new BorderLayout());
 
-        this.objList = listData;
-        list = new JList<>();
-        listScroller = new JScrollPane(list);
+        listModel = new InternalListModel(listData);
+        swingList = new JList<>(listModel);
+        listScroller = new JScrollPane(swingList);
         editorPanel = initEditorPanel();
 
         JSplitPane splitter = new JSplitPane(JSplitPane.VERTICAL_SPLIT, listScroller, editorPanel);
-        splitter.setDividerLocation(VERTICAL_SPLIT_FACTOR);
-        splitter.setEnabled(true);
+        splitter.setResizeWeight(SPLIT_WEIGHT);
+        splitter.setEnabled(false);
 
         add(splitter);
-
-        updateListData();
     }
 
-    protected JList<String> getList() {
-        return list;
+    public JList<T> getSwingList() {
+        return swingList;
     }
 
-    protected JComponent getEditorPanel() {
+    public JPanel getEditorPanel() {
         return editorPanel;
     }
 
     // EFFECTS: expected that the user defines a means to initialize the editor
     // panel in this method, and returns it
-    protected abstract JComponent initEditorPanel();
+    protected abstract JPanel initEditorPanel();
 
-    // EFFECTS: expected that the user defines a means to conver their objectList
-    // into an array of string
-    protected abstract String[] convertListToStrings();
-
-    // EFFECTS: updates the current JList list data
-    public void updateListData() {
-        list.setListData(convertListToStrings());
+    // MODIFIES: this
+    // EFFECTS: updates the current object
+    @Override
+    public void tick() {
+        listModel.tick();
     }
 }

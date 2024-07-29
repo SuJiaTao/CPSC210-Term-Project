@@ -9,7 +9,7 @@ import javax.swing.*;
 import java.util.*;
 
 // Contains all the rendering related data for the SWING based GUI
-public class SimulatorGUI {
+public class SimulatorGUI implements Tickable {
     private static SimulatorGUI instance;
 
     private static final String WINDOW_TITLE = "N-Body Simulator";
@@ -35,6 +35,13 @@ public class SimulatorGUI {
             instance = new SimulatorGUI();
         }
         return instance;
+    }
+
+    // MODIFIES: this
+    // EFFECTS: updates self and all relevant sub-components
+    @Override
+    public void tick() {
+        mainWindow.tick();
     }
 
 }

@@ -3,7 +3,7 @@ package ui;
 import model.*;
 
 // Contains all the simulation state related data
-public class SimulatorState {
+public class SimulatorState implements Tickable {
     private static SimulatorState instance;
     private Simulation simulation;
     private Boolean isRunning;
@@ -31,5 +31,12 @@ public class SimulatorState {
 
     public Boolean getIsRunning() {
         return isRunning;
+    }
+
+    // MODIFIES: this
+    // EFFECTS: updates the simulation state
+    @Override
+    public void tick() {
+        // stub
     }
 }

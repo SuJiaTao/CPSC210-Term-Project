@@ -1,6 +1,7 @@
 package ui.panels;
 
 import model.*;
+import ui.Tickable;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -8,7 +9,7 @@ import javax.swing.*;
 import java.util.*;
 
 // Tab panel which is used to cycle through different lists of objects
-public class EditorTabPanel extends JTabbedPane {
+public class EditorTabPanel extends JTabbedPane implements Tickable {
     private static final String PLANET_LIST_NAME = "Planet List";
     private static final String COLLISION_LIST_NAME = "Collision List";
     private static final String SAVE_LIST_NAME = "Saved Simulations";
@@ -32,5 +33,12 @@ public class EditorTabPanel extends JTabbedPane {
         return planetListPanel;
     }
 
-    // TODO: write other gettrs
+    // TODO: write other getters
+
+    // MODIFIES: this
+    // EFFECTS: updates this and relevant sub-components
+    @Override
+    public void tick() {
+        planetListPanel.tick();
+    }
 }

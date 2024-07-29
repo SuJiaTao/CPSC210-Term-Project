@@ -97,4 +97,10 @@ public class Planet {
         Vector3 displaceMent = Vector3.sub(position, other.getPosition());
         return displaceMent.magnitude() <= (radius + other.getRadius() + EPSILON);
     }
+
+    // EFFECTS: returns the planets name
+    @Override
+    public String toString() {
+        return getName();
+    }
 }
