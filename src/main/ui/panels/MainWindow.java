@@ -9,7 +9,7 @@ import java.util.*;
 
 // Main window JFrame which is used to house all the graphics
 public class MainWindow extends JFrame {
-    public static final float SPLIT_FACTOR = 0.7f;
+    public static final double HORIZONTAL_SPLIT_FACTOR = 0.65f;
 
     private EditorTabPanel editorTabPanel;
     private ViewportPanel viewportPanel;
@@ -20,8 +20,10 @@ public class MainWindow extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         editorTabPanel = new EditorTabPanel();
-        JSplitPane splitter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        splitter.setDividerLocation(SPLIT_FACTOR);
+        viewportPanel = new ViewportPanel();
+
+        JSplitPane splitter = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, editorTabPanel, viewportPanel);
+        splitter.setDividerLocation(HORIZONTAL_SPLIT_FACTOR);
         splitter.setEnabled(false);
 
         add(splitter);

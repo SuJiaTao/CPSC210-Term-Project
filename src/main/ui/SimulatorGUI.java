@@ -23,7 +23,8 @@ public class SimulatorGUI {
         }
 
         for (int i = 0; i < 5; i++) {
-            SimulatorState.getInstance().getSimulation().addPlanet(new Planet("h", 1.0f));
+            // SimulatorState.getInstance().getSimulation().addPlanet(new Planet("h",
+            // 1.0f));
         }
 
         mainWindow = new MainWindow(WINDOW_TITLE, WINDOW_DIMENSION);
