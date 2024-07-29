@@ -1,16 +1,12 @@
 package ui.panels;
 
-import model.*;
 import ui.Tickable;
-
 import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
-import java.util.*;
 
 // Main window JFrame which is used to house all the graphics
 public class MainWindow extends JFrame implements Tickable {
-    public static final double SPLIT_WEIGHT = 0.07f;
+    public static final double SPLIT_WEIGHT = 0.01f;
 
     private EditorTabPanel editorTabPanel;
     private ViewportPanel viewportPanel;

@@ -2,11 +2,7 @@ package ui.panels;
 
 import model.*;
 import ui.SimulatorState;
-
-import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
-import java.util.*;
 
 // Planet list view panel which is used to view and edit planets
 public class PlanetListPanel extends AbstractListPanel<Planet> {

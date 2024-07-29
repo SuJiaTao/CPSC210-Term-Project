@@ -7,9 +7,9 @@ import java.util.*;
 // otherwise bloat UI or simple logic code, which is kept here instead
 public class SimulatorUtils {
     private static final String[] NEW_PLANET_NAMES = { "Kepler", "Earth", "Solaris", "Tatoonie", "Furball", "X",
-            "Atlas", "Gemini", "Spongey", "Arrakis", "Trapist", "Proxima", "Mundley", "Bongcloud", "Euclid", "Hades",
-            "Jupiter", "Draper", "Draconis", "Cancri", "Awohali", "Vytis", "Igsael", "Chura", "Maskita", "Nanron",
-            "Ugaris", "Yvaga", "Lebnitz", "Doodski", "Phobos", "WASP" };
+            "Atlas", "Gemini", "Spongey", "Arrakis", "Paul", "Trapist", "Proxima", "Mundley", "Bongcloud", "Euclid",
+            "Hades", "Jupiter", "Draper", "Randy", "Draconis", "Cancri", "Awohali", "Vytis", "Igsael", "Chura",
+            "Maskita", "Nanron", "Ugaris", "Yvaga", "Youssef", "Lebnitz", "Doodski", "Phobos", "WASP", "Mitski" };
     private static final int NEW_PLANET_SUFFIX_MAX = 1000;
     private static final float NEW_PLANET_INITIAL_POS_BOUND = 30.0f;
     private static final float NEW_PLANET_INITIAL_VEL_BOUND = 2.0f;

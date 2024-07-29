@@ -1,13 +1,8 @@
 package ui.panels;
 
 import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
-
 import ui.Tickable;
-
-import java.util.*;
-import java.util.concurrent.Flow;
 
 // Abstract List panel which is used to view and edit elements in a list
 public abstract class AbstractListPanel<T> extends JPanel implements Tickable {

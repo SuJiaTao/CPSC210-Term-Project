@@ -1,12 +1,7 @@
 package ui.panels;
 
-import model.*;
 import ui.Tickable;
-
-import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
-import java.util.*;
 
 // Tab panel which is used to cycle through different lists of objects
 public class EditorTabPanel extends JTabbedPane implements Tickable {

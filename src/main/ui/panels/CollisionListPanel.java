@@ -2,12 +2,7 @@ package ui.panels;
 
 import model.*;
 import ui.SimulatorState;
-import ui.Tickable;
-
-import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
-import java.util.*;
 
 public class CollisionListPanel extends AbstractListPanel<Collision> {
     private CollisionEditorPanel collisionEditorPanel;

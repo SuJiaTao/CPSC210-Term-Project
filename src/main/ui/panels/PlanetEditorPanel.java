@@ -8,7 +8,6 @@ import ui.Tickable;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-import java.util.*;
 
 // Planet editor panel used to edit plant properties
 public class PlanetEditorPanel extends JPanel implements ActionListener, Tickable {
