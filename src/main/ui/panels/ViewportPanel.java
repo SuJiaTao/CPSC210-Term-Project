@@ -4,6 +4,7 @@ import model.*;
 import ui.SimulatorState;
 import ui.SimulatorUtils;
 import ui.Tickable;
+import ui.engine.RenderEngine;
 
 import java.awt.*;
 import java.awt.event.*;

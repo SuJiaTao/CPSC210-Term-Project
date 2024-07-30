@@ -1,4 +1,4 @@
-package ui.panels;
+package ui.engine;
 
 import model.*;
 import ui.SimulatorState;
@@ -33,7 +33,7 @@ public class RenderEngine implements Tickable {
 
     public RenderEngine(int size) {
         readWriteLock = new ReentrantLock();
-        simState = simState.getInstance();
+        simState = SimulatorState.getInstance();
 
         bufferSize = size;
         depthBuffer = new float[size * size];
