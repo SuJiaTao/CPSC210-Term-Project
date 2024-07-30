@@ -10,7 +10,7 @@ import ui.engine.RenderEngine;
 // Viewport panel which is used to host the 3D view of the simulation
 public class ViewportPanel extends JPanel implements ActionListener, Tickable {
     private static final float SPLIT_WEIGHT = 0.0f;
-    private static final int VIEWPORT_RESOLUTION = 200;
+    private static final int VIEWPORT_RESOLUTION = 512;
 
     private JButton startButton;
     private JButton stopButton;

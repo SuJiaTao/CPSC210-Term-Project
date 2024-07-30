@@ -1,16 +1,7 @@
 package ui.engine;
 
 import model.*;
-import ui.SimulatorGUI;
-import ui.SimulatorState;
-import ui.Tickable;
-
-import java.awt.*;
-import java.util.*;
-import javax.swing.*;
 import java.awt.image.*;
-import java.awt.event.*;
-import java.util.concurrent.locks.*;
 
 public abstract class AbstractShader {
     public static final int CULL_FRAGMENT = 0x00000000;

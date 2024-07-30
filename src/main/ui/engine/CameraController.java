@@ -9,11 +9,11 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
     private static final Vector3 INITIAL_POSTION = new Vector3(0, 0, 30.0f);
 
     private static final float MAX_VELOCITY = 15.0f;
-    private static final float ACCELERATION = 0.35f;
+    private static final float ACCELERATION = 75.0f;
     private static final float DRAG = 0.97f;
 
     private static final float MAX_ANGULAR_VELOCITY = 90.0f;
-    private static final float ANGULAR_ACCELERATION = 1.0f;
+    private static final float ANGULAR_ACCELERATION = 700.0f;
     private static final float ANGULAR_DRAG = 0.98f;
 
     private static final float PITCH_RANGE = 85.0f;
@@ -82,7 +82,7 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
         long deltaTimeNanoseconds = System.nanoTime() - lastTickNanoseconds;
         float deltaTimeSeconds = (float) deltaTimeNanoseconds / 1000000000.0f;
 
-        handleInputs();
+        handleInputs(deltaTimeSeconds);
 
         Transform velRotation = Transform.multiply(Transform.rotationX(pitch), Transform.rotationY(yaw));
         velocity = clampVector(velocity, MAX_VELOCITY);
@@ -107,33 +107,33 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
         lastTickNanoseconds = System.nanoTime();
     }
 
-    private void handleInputs() {
+    private void handleInputs(float deltaTime) {
         synchronized (keysDown) {
             if (keysDown.contains(KeyEvent.VK_W)) {
-                velocity = Vector3.add(velocity, new Vector3(0, 0, -ACCELERATION));
+                velocity = Vector3.add(velocity, new Vector3(0, 0, -ACCELERATION * deltaTime));
             }
             if (keysDown.contains(KeyEvent.VK_S)) {
-                velocity = Vector3.add(velocity, new Vector3(0, 0, ACCELERATION));
+                velocity = Vector3.add(velocity, new Vector3(0, 0, ACCELERATION * deltaTime));
             }
             if (keysDown.contains(KeyEvent.VK_A)) {
-                velocity = Vector3.add(velocity, new Vector3(-ACCELERATION, 0, 0));
+                velocity = Vector3.add(velocity, new Vector3(-ACCELERATION * deltaTime, 0, 0));
             }
             if (keysDown.contains(KeyEvent.VK_D)) {
-                velocity = Vector3.add(velocity, new Vector3(ACCELERATION, 0, 0));
+                velocity = Vector3.add(velocity, new Vector3(ACCELERATION * deltaTime, 0, 0));
             }
 
             if (keysDown.contains(KeyEvent.VK_LEFT)) {
-                yawVelocity -= ANGULAR_ACCELERATION;
+                yawVelocity -= ANGULAR_ACCELERATION * deltaTime;
             }
             if (keysDown.contains(KeyEvent.VK_RIGHT)) {
-                yawVelocity += ANGULAR_ACCELERATION;
+                yawVelocity += ANGULAR_ACCELERATION * deltaTime;
             }
 
             if (keysDown.contains(KeyEvent.VK_UP)) {
-                pitchVelocity += ANGULAR_ACCELERATION;
+                pitchVelocity += ANGULAR_ACCELERATION * deltaTime;
             }
             if (keysDown.contains(KeyEvent.VK_DOWN)) {
-                pitchVelocity -= ANGULAR_ACCELERATION;
+                pitchVelocity -= ANGULAR_ACCELERATION * deltaTime;
             }
         }
     }
