@@ -123,7 +123,6 @@ public class RenderEngine implements Tickable {
         Transform planetTransform = Transform.transform(planet.getPosition(), new Vector3(), planetScale);
         Transform meshTransform = Transform.multiply(planetTransform, viewTransform);
 
-        drawWireMesh(planetMesh, meshTransform, getPlanetColor(planet));
         shadeMesh(planetMesh, meshTransform);
     }
 
@@ -180,6 +179,7 @@ public class RenderEngine implements Tickable {
         Triangle[] cutTris = cutSortedTriangle(sortedTri);
 
         shadeTriangleFlatBottom(cutTris[0]);
+        shadeTriangleFlatTop(cutTris[1]);
     }
 
     // MODIFIES: this
@@ -220,6 +220,46 @@ public class RenderEngine implements Tickable {
                 drawFragment(new Vector3(drawX, drawY, 0.0f), 0xFFFFFFFF);
             }
         }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: renders a triangle with a flat top
+    private void shadeTriangleFlatTop(Triangle flatBotTri) {
+        // NOTE: the verticies of the tri are as follows:
+        // verts[0] -> top left
+        // verts[1] -> top right
+        // verts[2] -> bottom pointy
+
+        float dyBottomToTop = flatBotTri.verts[0].getY() - flatBotTri.verts[2].getY();
+        if (dyBottomToTop <= 0.0f) {
+            return;
+        }
+
+        float dxBottomToLeft = flatBotTri.verts[0].getX() - flatBotTri.verts[2].getX();
+        float dxBottomToRight = flatBotTri.verts[1].getX() - flatBotTri.verts[2].getX();
+
+        float invSlopeBottomToLeft = dxBottomToLeft / dyBottomToTop;
+        float invSlopeBottomToRight = dxBottomToRight / dyBottomToTop;
+
+        float startY = flatBotTri.verts[2].getY();
+        startY = Math.max(0, startY);
+
+        float endY = flatBotTri.verts[0].getY();
+        endY = Math.min(endY, (float) bufferSize - 1);
+
+        for (float drawY = startY; drawY <= endY; drawY += 1.0f) {
+            float travelledY = drawY - flatBotTri.verts[2].getY();
+
+            float startX = flatBotTri.verts[2].getX() + (travelledY * invSlopeBottomToLeft);
+            startX = Math.max(0, startX);
+
+            float endX = flatBotTri.verts[2].getX() + (travelledY * invSlopeBottomToRight);
+            endX = Math.min(endX, (float) bufferSize - 1);
+
+            for (float drawX = startX; drawX <= endX; drawX += 1.0f) {
+                drawFragment(new Vector3(drawX, drawY, 0.0f), 0xFFFFFFFF);
+            }
+        }
 
     }
 
@@ -248,12 +288,16 @@ public class RenderEngine implements Tickable {
             topTriFlatBottom.verts[2] = tempVert;
         }
 
+        // NOTE: constructs a triangle such that
+        // verts[0] -> top left
+        // verts[1] -> top right
+        // verts[2] -> bottom pointy
         Triangle bottomTriFlatTop = new Triangle(sortedTri);
         bottomTriFlatTop.verts[0] = new Vector3(middleVert);
-        if (bottomTriFlatTop.verts[1].getX() > bottomTriFlatTop.verts[2].getX()) {
-            Vector3 tempVert = bottomTriFlatTop.verts[1];
-            bottomTriFlatTop.verts[1] = bottomTriFlatTop.verts[2];
-            bottomTriFlatTop.verts[2] = tempVert;
+        if (bottomTriFlatTop.verts[0].getX() > bottomTriFlatTop.verts[1].getX()) {
+            Vector3 tempVert = bottomTriFlatTop.verts[0];
+            bottomTriFlatTop.verts[0] = bottomTriFlatTop.verts[1];
+            bottomTriFlatTop.verts[1] = tempVert;
         }
 
         return new Triangle[] { topTriFlatBottom, bottomTriFlatTop };
