@@ -124,6 +124,7 @@ public class RenderEngine implements Tickable {
         Transform meshTransform = Transform.multiply(planetTransform, viewTransform);
 
         drawWireMesh(planetMesh, meshTransform, getPlanetColor(planet));
+        shadeMesh(planetMesh, meshTransform);
     }
 
     private int getPlanetColor(Planet planet) {
@@ -151,6 +152,146 @@ public class RenderEngine implements Tickable {
             drawLine(tri.verts[1], tri.verts[2], color);
             drawLine(tri.verts[2], tri.verts[0], color);
         }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: renders a given mesh
+    private void shadeMesh(Mesh mesh, Transform transform) {
+        for (int triIndex = 0; triIndex < mesh.getTriangleCount(); triIndex++) {
+            Triangle tri = mesh.getTriangle(triIndex);
+            tri.verts[0] = Transform.multiply(transform, tri.verts[0]);
+            tri.verts[1] = Transform.multiply(transform, tri.verts[1]);
+            tri.verts[2] = Transform.multiply(transform, tri.verts[2]);
+
+            tri = projectTriangleToScreenSpace(tri);
+
+            shadeTriangle(tri);
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: renders a given triangle
+    private void shadeTriangle(Triangle tri) {
+        // NOTE:
+        // the standard procedure for rendering an arbitrary triangle is to split it in
+        // the middle, and render the flattop/flatbottom parts of it each
+
+        Triangle sortedTri = sortTriangleByHeight(tri);
+        Triangle[] cutTris = cutSortedTriangle(sortedTri);
+
+        shadeTriangleFlatBottom(cutTris[0]);
+    }
+
+    // MODIFIES: this
+    // EFFECTS: renders a triangle with a flat bottom
+    private void shadeTriangleFlatBottom(Triangle flatBotTri) {
+        // NOTE: the verticies of the tri are as follows:
+        // verts[0] -> top pointy
+        // verts[1] -> left bottom vertex
+        // verts[2] -> right bottom vertex
+
+        float dyBottomToTop = flatBotTri.verts[0].getY() - flatBotTri.verts[1].getY();
+        if (dyBottomToTop <= 0.0f) {
+            return;
+        }
+
+        float dxLeftToTop = flatBotTri.verts[0].getX() - flatBotTri.verts[1].getX();
+        float dxRightToTop = flatBotTri.verts[0].getX() - flatBotTri.verts[2].getX();
+
+        float invSlopeLeftToTop = dxLeftToTop / dyBottomToTop;
+        float invSlopeRightToTop = dxRightToTop / dyBottomToTop;
+
+        float startY = flatBotTri.verts[1].getY();
+        startY = Math.max(0, startY);
+
+        float endY = flatBotTri.verts[0].getY();
+        endY = Math.min(endY, (float) bufferSize - 1);
+
+        for (float drawY = startY; drawY <= endY; drawY += 1.0f) {
+            float travelledY = drawY - flatBotTri.verts[2].getY();
+
+            float startX = flatBotTri.verts[1].getX() + (travelledY * invSlopeLeftToTop);
+            startX = Math.max(0, startX);
+
+            float endX = flatBotTri.verts[2].getX() + (travelledY * invSlopeRightToTop);
+            endX = Math.min(endX, (float) bufferSize - 1);
+
+            for (float drawX = startX; drawX <= endX; drawX += 1.0f) {
+                drawFragment(new Vector3(drawX, drawY, 0.0f), 0xFFFFFFFF);
+            }
+        }
+
+    }
+
+    // EFFECTS: cuts a sorted triangle in half along the middle vertex and returns
+    // each piece, where the top verticies are sorted from left to right
+    private Triangle[] cutSortedTriangle(Triangle sortedTri) {
+        float dxLowToHigh = sortedTri.verts[0].getX() - sortedTri.verts[2].getX();
+        float dyLowToHigh = sortedTri.verts[0].getY() - sortedTri.verts[2].getY();
+        float invSlopeLowToHigh = dxLowToHigh / dyLowToHigh;
+        float distLowToMid = (sortedTri.verts[1].getY() - sortedTri.verts[2].getY());
+        float middleX = sortedTri.verts[2].getX() + distLowToMid * invSlopeLowToHigh;
+
+        // NOTE: depth interpolation will be done with respect to the original sorted
+        // tri, so the depth values of each cut tri doesn't actually matter
+        Vector3 middleVert = new Vector3(middleX, sortedTri.verts[1].getY(), 0.0f);
+
+        // NOTE: construct triangle such that
+        // verts[0] -> top pointy
+        // verts[1] -> bottom left
+        // verts[2] -> bottom right
+        Triangle topTriFlatBottom = new Triangle(sortedTri);
+        topTriFlatBottom.verts[2] = new Vector3(middleVert);
+        if (topTriFlatBottom.verts[1].getX() > topTriFlatBottom.verts[2].getX()) {
+            Vector3 tempVert = topTriFlatBottom.verts[1];
+            topTriFlatBottom.verts[1] = topTriFlatBottom.verts[2];
+            topTriFlatBottom.verts[2] = tempVert;
+        }
+
+        Triangle bottomTriFlatTop = new Triangle(sortedTri);
+        bottomTriFlatTop.verts[0] = new Vector3(middleVert);
+        if (bottomTriFlatTop.verts[1].getX() > bottomTriFlatTop.verts[2].getX()) {
+            Vector3 tempVert = bottomTriFlatTop.verts[1];
+            bottomTriFlatTop.verts[1] = bottomTriFlatTop.verts[2];
+            bottomTriFlatTop.verts[2] = tempVert;
+        }
+
+        return new Triangle[] { topTriFlatBottom, bottomTriFlatTop };
+    }
+
+    // EFFECTS: returns a new triangle which is the original triangle with the
+    // verticies sorted by height, such that 0 is the highest and 2 is the lowest
+    private Triangle sortTriangleByHeight(Triangle toSort) {
+        Triangle sorted = new Triangle(toSort);
+        Vector3 tempVert = null;
+        Vector3 tempUV = null;
+
+        if (sorted.verts[0].getY() < sorted.verts[1].getY()) {
+            tempVert = sorted.verts[0];
+            tempUV = sorted.uvs[0];
+            sorted.verts[0] = sorted.verts[1];
+            sorted.verts[1] = tempVert;
+            sorted.uvs[0] = sorted.uvs[1];
+            sorted.uvs[1] = tempUV;
+        }
+        if (sorted.verts[1].getY() < sorted.verts[2].getY()) {
+            tempVert = sorted.verts[1];
+            tempUV = sorted.uvs[1];
+            sorted.verts[1] = sorted.verts[2];
+            sorted.verts[2] = tempVert;
+            sorted.uvs[1] = sorted.uvs[2];
+            sorted.uvs[2] = tempUV;
+        }
+        if (sorted.verts[0].getY() < sorted.verts[1].getY()) {
+            tempVert = sorted.verts[0];
+            tempUV = sorted.uvs[0];
+            sorted.verts[0] = sorted.verts[1];
+            sorted.verts[1] = tempVert;
+            sorted.uvs[0] = sorted.uvs[1];
+            sorted.uvs[1] = tempUV;
+        }
+
+        return sorted;
     }
 
     // EFFECTS: creates a new triangle which has been projected into screenspace

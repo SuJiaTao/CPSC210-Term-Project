@@ -17,11 +17,11 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
 
     private static final float MAX_VELOCITY = 15.0f;
     private static final float ACCELERATION = 0.35f;
-    private static final float DRAG = 0.005f;
+    private static final float DRAG = 0.9f;
 
     private static final float MAX_ANGULAR_VELOCITY = 75.0f;
     private static final float ANGULAR_ACCELERATION = 15.0f;
-    private static final float ANGULAR_DRAG = 0.006f;
+    private static final float ANGULAR_DRAG = 0.98f;
 
     private static final float PITCH_RANGE = 85.0f;
 
@@ -93,18 +93,18 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
 
         Transform velRotation = Transform.multiply(Transform.rotationX(pitch), Transform.rotationY(yaw));
         velocity = clampVector(velocity, MAX_VELOCITY);
-        velocity = Vector3.multiply(velocity, 1.0f - DRAG);
+        velocity = Vector3.multiply(velocity, (float) Math.pow((1.0f - DRAG), deltaTimeSeconds));
         Vector3 velActual = Transform.multiply(velRotation, velocity);
         position = Vector3.add(position, Vector3.multiply(velActual, deltaTimeSeconds));
 
         yawVelocity = Math.max(Math.min(yawVelocity, MAX_ANGULAR_VELOCITY), -MAX_ANGULAR_VELOCITY);
         yaw += yawVelocity * deltaTimeSeconds;
-        yawVelocity *= (1.0f - ANGULAR_DRAG);
+        yawVelocity *= Math.pow((1.0f - ANGULAR_DRAG), deltaTimeSeconds);
 
         pitchVelocity = Math.max(Math.min(pitchVelocity, MAX_ANGULAR_VELOCITY), -MAX_ANGULAR_VELOCITY);
         pitch += pitchVelocity * deltaTimeSeconds;
         pitch = Math.max(Math.min(pitch, PITCH_RANGE), -PITCH_RANGE);
-        pitchVelocity *= (1.0f - ANGULAR_DRAG);
+        pitchVelocity *= Math.pow((1.0f - ANGULAR_DRAG), deltaTimeSeconds);
 
         viewTransform = Transform.translation(Vector3.multiply(position, -1.0f));
         viewTransform = Transform.multiply(viewTransform, Transform.rotationY(-yaw));

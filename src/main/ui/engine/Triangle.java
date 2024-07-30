@@ -15,7 +15,13 @@ public class Triangle {
     }
 
     public Triangle(Triangle original) {
-        verts = Arrays.copyOf(original.verts, 3);
-        uvs = Arrays.copyOf(original.uvs, 3);
+        verts = new Vector3[3];
+        uvs = new Vector3[3];
+        verts[0] = new Vector3(original.verts[0]);
+        verts[1] = new Vector3(original.verts[1]);
+        verts[2] = new Vector3(original.verts[2]);
+        uvs[0] = new Vector3(original.uvs[0]);
+        uvs[1] = new Vector3(original.uvs[1]);
+        uvs[2] = new Vector3(original.uvs[2]);
     }
 }
