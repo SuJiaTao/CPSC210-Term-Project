@@ -82,11 +82,15 @@ public class RenderEngine implements Tickable {
 
     public void drawCurrentFrame(Graphics gfx) {
         lockEngine();
-        Rectangle bounds = gfx.getClipBounds();
-        int imageSize = (int) ((float) Math.min(bounds.width, bounds.height) * VIEWPORT_SCALE_FACTOR);
-        int offsetX = (int) ((double) (bounds.width - imageSize) * 0.5);
-        int offsetY = (int) ((double) (bounds.height - imageSize) * 0.5);
-        gfx.drawImage(image, offsetX, offsetY, imageSize, imageSize, null);
+        try {
+            Rectangle bounds = gfx.getClipBounds();
+            int imageSize = (int) ((float) Math.min(bounds.width, bounds.height) * VIEWPORT_SCALE_FACTOR);
+            int offsetX = (int) ((double) (bounds.width - imageSize) * 0.5);
+            int offsetY = (int) ((double) (bounds.height - imageSize) * 0.5);
+            gfx.drawImage(image, offsetX, offsetY, imageSize, imageSize, null);
+        } catch (Exception e) {
+            // ignore
+        }
         unlockEngine();
     }
 
@@ -96,17 +100,21 @@ public class RenderEngine implements Tickable {
 
         lockEngine();
 
-        clearBuffers();
-        // NOTE:
-        // because swing is multithreaded, I cant simply iterate over planets, so I have
-        // to do this hacky nonsense
-        for (int i = 0; i < simState.getSimulation().getPlanets().size(); i++) {
-            try {
-                Planet planet = simState.getSimulation().getPlanets().get(i);
-                drawPlanet(planet);
-            } catch (Exception exc) {
-                // ignore
+        try {
+            clearBuffers();
+            // NOTE:
+            // because swing is multithreaded, I cant simply iterate over planets, so I have
+            // to do this hacky nonsense
+            for (int i = 0; i < simState.getSimulation().getPlanets().size(); i++) {
+                try {
+                    Planet planet = simState.getSimulation().getPlanets().get(i);
+                    drawPlanet(planet);
+                } catch (Exception exc) {
+                    // ignore
+                }
             }
+        } catch (Exception e) {
+            // ignore
         }
 
         unlockEngine();
@@ -123,7 +131,9 @@ public class RenderEngine implements Tickable {
         Transform planetTransform = Transform.transform(planet.getPosition(), new Vector3(), planetScale);
         Transform meshTransform = Transform.multiply(planetTransform, viewTransform);
 
+        drawWireMesh(planetMesh, meshTransform, 0xFFFFFFFF);
         shadeMesh(planetMesh, meshTransform);
+
     }
 
     private int getPlanetColor(Planet planet) {
@@ -178,13 +188,13 @@ public class RenderEngine implements Tickable {
         Triangle sortedTri = sortTriangleByHeight(tri);
         Triangle[] cutTris = cutSortedTriangle(sortedTri);
 
-        shadeTriangleFlatBottom(cutTris[0]);
-        shadeTriangleFlatTop(cutTris[1]);
+        shadeTriangleFlatBottom(cutTris[0], sortedTri);
+        shadeTriangleFlatTop(cutTris[1], sortedTri);
     }
 
     // MODIFIES: this
     // EFFECTS: renders a triangle with a flat bottom
-    private void shadeTriangleFlatBottom(Triangle flatBotTri) {
+    private void shadeTriangleFlatBottom(Triangle flatBotTri, Triangle target) {
         // NOTE: the verticies of the tri are as follows:
         // verts[0] -> top pointy
         // verts[1] -> left bottom vertex
@@ -205,7 +215,7 @@ public class RenderEngine implements Tickable {
         startY = Math.max(0, startY);
 
         float endY = flatBotTri.verts[0].getY();
-        endY = Math.min(endY, (float) bufferSize - 1);
+        endY = Math.min(endY, (float) bufferSize);
 
         for (float drawY = startY; drawY <= endY; drawY += 1.0f) {
             float travelledY = drawY - flatBotTri.verts[2].getY();
@@ -214,17 +224,57 @@ public class RenderEngine implements Tickable {
             startX = Math.max(0, startX);
 
             float endX = flatBotTri.verts[2].getX() + (travelledY * invSlopeRightToTop);
-            endX = Math.min(endX, (float) bufferSize - 1);
+            endX = Math.min(endX, (float) bufferSize);
 
             for (float drawX = startX; drawX <= endX; drawX += 1.0f) {
-                drawFragment(new Vector3(drawX, drawY, 0.0f), 0xFFFFFFFF);
+                prepareAndDrawFragment(new Vector3(drawX, drawY, 0.0f), target);
             }
         }
     }
 
     // MODIFIES: this
+    // EFFECTS: interpolates the input values for the given fragment based on the
+    // current fragment's position with respect to the original triangle, and the
+    // draws the fragment
+    private void prepareAndDrawFragment(Vector3 fragPos, Triangle target) {
+        Vector3 attribWeights = generateAttribWeightings(fragPos, target);
+        // debug
+
+        float interpDepth = target.verts[0].getZ() * attribWeights.getX() +
+                target.verts[1].getZ() * attribWeights.getY() +
+                target.verts[2].getZ() * attribWeights.getZ();
+        int r = (int) (attribWeights.getX() * 255);
+        int g = (int) (attribWeights.getY() * 255);
+        int b = (int) (attribWeights.getZ() * 255);
+
+        fragPos = new Vector3(fragPos.getX(), fragPos.getY(), interpDepth);
+        drawFragment(fragPos, 0xFF000000 | (r << 16) | (g << 8) | b);
+    }
+
+    // Refer to:
+    // https://gamedev.stackexchange.com/questions/23743/whats-the-most-efficient-way-to-find-barycentric-coordinates
+    // EFFECTS: generates a non-depth corrected (sorry! beyond the scope of my
+    // patience for this class) weighting for the vertex attributes of the target
+    // triangle for this fragment
+    private Vector3 generateAttribWeightings(Vector3 fragPos, Triangle target) {
+        Vector3 vert0 = target.verts[0];
+        Vector3 vert1 = target.verts[1];
+        Vector3 vert2 = target.verts[2];
+        float det = (vert1.getY() - vert2.getY()) * (vert0.getX() - vert2.getX())
+                + (vert2.getX() - vert1.getX()) * (vert0.getY() - vert2.getY());
+        float weight1 = (vert1.getY() - vert2.getY()) * (fragPos.getX() - vert2.getX())
+                + (vert2.getX() - vert1.getX()) * (fragPos.getY() - vert2.getY());
+        weight1 /= det;
+        float weight2 = (vert2.getY() - vert0.getY()) * (fragPos.getX() - vert2.getX())
+                + (vert0.getX() - vert2.getX()) * (fragPos.getY() - vert2.getY());
+        weight2 /= det;
+        float weight3 = 1.0f - weight2 - weight1;
+        return new Vector3(weight1, weight2, weight3);
+    }
+
+    // MODIFIES: this
     // EFFECTS: renders a triangle with a flat top
-    private void shadeTriangleFlatTop(Triangle flatBotTri) {
+    private void shadeTriangleFlatTop(Triangle flatBotTri, Triangle target) {
         // NOTE: the verticies of the tri are as follows:
         // verts[0] -> top left
         // verts[1] -> top right
@@ -245,7 +295,7 @@ public class RenderEngine implements Tickable {
         startY = Math.max(0, startY);
 
         float endY = flatBotTri.verts[0].getY();
-        endY = Math.min(endY, (float) bufferSize - 1);
+        endY = Math.min(endY, (float) bufferSize);
 
         for (float drawY = startY; drawY <= endY; drawY += 1.0f) {
             float travelledY = drawY - flatBotTri.verts[2].getY();
@@ -254,10 +304,10 @@ public class RenderEngine implements Tickable {
             startX = Math.max(0, startX);
 
             float endX = flatBotTri.verts[2].getX() + (travelledY * invSlopeBottomToRight);
-            endX = Math.min(endX, (float) bufferSize - 1);
+            endX = Math.min(endX, (float) bufferSize);
 
             for (float drawX = startX; drawX <= endX; drawX += 1.0f) {
-                drawFragment(new Vector3(drawX, drawY, 0.0f), 0xFFFFFFFF);
+                prepareAndDrawFragment(new Vector3(drawX, drawY, 0.0f), target);
             }
         }
 

@@ -1,26 +1,19 @@
 package ui.engine;
 
 import model.*;
-import ui.SimulatorGUI;
-import ui.SimulatorState;
-import ui.Tickable;
-
-import java.awt.*;
 import java.util.*;
-import javax.swing.*;
-import java.awt.image.*;
+import ui.Tickable;
 import java.awt.event.*;
-import java.util.concurrent.locks.*;
 
 public class CameraController implements Tickable, KeyListener, MouseListener {
     private static final Vector3 INITIAL_POSTION = new Vector3(0, 0, 30.0f);
 
     private static final float MAX_VELOCITY = 15.0f;
     private static final float ACCELERATION = 0.35f;
-    private static final float DRAG = 0.9f;
+    private static final float DRAG = 0.97f;
 
-    private static final float MAX_ANGULAR_VELOCITY = 75.0f;
-    private static final float ANGULAR_ACCELERATION = 15.0f;
+    private static final float MAX_ANGULAR_VELOCITY = 90.0f;
+    private static final float ANGULAR_ACCELERATION = 1.0f;
     private static final float ANGULAR_DRAG = 0.98f;
 
     private static final float PITCH_RANGE = 85.0f;

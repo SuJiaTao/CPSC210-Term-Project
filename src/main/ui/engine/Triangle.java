@@ -1,7 +1,5 @@
 package ui.engine;
 
-import java.util.Arrays;
-
 import model.*;
 
 // Represents a single triangle with vertex and uv data
