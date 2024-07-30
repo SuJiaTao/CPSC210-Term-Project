@@ -1,7 +1,7 @@
 package ui.panels;
 
-import ui.Tickable;
 import java.awt.*;
+import ui.Tickable;
 import javax.swing.*;
 
 // Main window JFrame which is used to house all the graphics

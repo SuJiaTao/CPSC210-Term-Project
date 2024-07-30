@@ -1,8 +1,8 @@
 package ui.panels;
 
 import model.*;
-import ui.SimulatorState;
 import javax.swing.*;
+import ui.SimulatorState;
 
 // Planet list view panel which is used to view and edit planets
 public class PlanetListPanel extends AbstractListPanel<Planet> {

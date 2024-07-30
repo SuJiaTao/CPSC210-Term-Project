@@ -1,18 +1,9 @@
 package ui.panels;
 
-import model.*;
-import persistence.SimulationReadWriter;
-import ui.SimulatorState;
-import ui.SimulatorUtils;
-import ui.Tickable;
-
-import java.awt.*;
-import java.awt.event.*;
-import java.io.File;
-
-import javax.swing.*;
 import java.util.*;
+import java.io.File;
 import java.util.List;
+import persistence.SimulationReadWriter;
 
 public class SavedListPanel extends AbstractListPanel<String> {
     private SavedEditorPanel savedEditorPanel;

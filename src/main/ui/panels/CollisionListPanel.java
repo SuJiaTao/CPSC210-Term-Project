@@ -1,8 +1,8 @@
 package ui.panels;
 
 import model.*;
-import ui.SimulatorState;
 import javax.swing.*;
+import ui.SimulatorState;
 
 public class CollisionListPanel extends AbstractListPanel<Collision> {
     private CollisionEditorPanel collisionEditorPanel;

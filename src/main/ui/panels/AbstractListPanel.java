@@ -1,8 +1,8 @@
 package ui.panels;
 
 import java.awt.*;
-import javax.swing.*;
 import ui.Tickable;
+import javax.swing.*;
 
 // Abstract List panel which is used to view and edit elements in a list
 public abstract class AbstractListPanel<T> extends JPanel implements Tickable {
@@ -47,8 +47,8 @@ public abstract class AbstractListPanel<T> extends JPanel implements Tickable {
         }
     }
 
-    // EFFECTS: initializes list to be empty and listScroller to contain list, calls
-    // on user defined initialization of editorpanel, and then packs the components
+    // EFFECTS: initializes list to be empty and listScroller to contain list and
+    // calls on user defined initialization of editorpanel
     public AbstractListPanel(java.util.List<T> listData) {
         setLayout(new BorderLayout());
 

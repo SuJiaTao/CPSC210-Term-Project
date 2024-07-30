@@ -1,22 +1,19 @@
 package ui;
 
 import model.*;
-
 import java.awt.*;
-import java.awt.event.ActionListener;
 import java.util.*;
+import javax.swing.*;
+import java.awt.event.*;
 
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-
-// There are a handful of miscellanious parsing and calculating methods that would 
-// otherwise bloat UI or simple logic code, which is kept here instead
+// There are a handful of miscellanious parsing, calculating, and UI methods that would 
+// bloat otherwise unrelated code, so it is kept here instead
 public class SimulatorUtils {
     private static final String[] NEW_PLANET_NAMES = { "Kepler", "Earth", "Solaris", "Tatoonie", "Furball", "X",
             "Atlas", "Gemini", "Spongey", "Arrakis", "Paul", "Trapist", "Proxima", "Mundley", "Bongcloud", "Euclid",
-            "Hades", "Jupiter", "Draper", "Randy", "Draconis", "Cancri", "Awohali", "Vytis", "Igsael", "Chura",
-            "Maskita", "Nanron", "Ugaris", "Yvaga", "Youssef", "Lebnitz", "Doodski", "Phobos", "WASP", "Mitski" };
+            "Hades", "Jupiter", "Nguyen", "Draper", "Randy", "Draconis", "Cancri", "Awohali", "Vytis", "Igsael",
+            "Chura", "Maskita", "Nanron", "Ugaris", "Yvaga", "Youssef", "Lebnitz", "Doodski", "Phobos", "WASP",
+            "Mitski" };
     private static final int NEW_PLANET_SUFFIX_MAX = 1000;
     private static final float NEW_PLANET_INITIAL_POS_BOUND = 30.0f;
     private static final float NEW_PLANET_INITIAL_VEL_BOUND = 2.0f;

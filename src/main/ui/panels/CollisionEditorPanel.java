@@ -1,11 +1,10 @@
 package ui.panels;
 
 import model.*;
-import ui.Tickable;
-import ui.SimulatorUtils;
-
 import java.awt.*;
+import ui.Tickable;
 import javax.swing.*;
+import ui.SimulatorUtils;
 
 public class CollisionEditorPanel extends JPanel implements Tickable {
     private CollisionListPanel parent;

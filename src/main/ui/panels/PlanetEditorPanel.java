@@ -1,13 +1,10 @@
 package ui.panels;
 
+import ui.*;
 import model.*;
-import ui.SimulatorState;
-import ui.SimulatorUtils;
-import ui.Tickable;
-
 import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
+import java.awt.event.*;
 
 // Planet editor panel used to edit plant properties
 public class PlanetEditorPanel extends JPanel implements ActionListener, Tickable {
