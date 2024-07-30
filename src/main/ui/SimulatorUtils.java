@@ -16,7 +16,7 @@ public class SimulatorUtils {
             "Mitski" };
     private static final int NEW_PLANET_SUFFIX_MAX = 1000;
     private static final float NEW_PLANET_INITIAL_POS_BOUND = 30.0f;
-    private static final float NEW_PLANET_INITIAL_VEL_BOUND = 2.0f;
+    private static final float NEW_PLANET_INITIAL_VEL_BOUND = 0.5f;
     private static final float NEW_PLANET_MIN_RAD = 0.5f;
     private static final float NEW_PLANET_MAX_RAD = 1.5f;
 

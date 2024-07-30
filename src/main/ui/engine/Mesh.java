@@ -15,15 +15,15 @@ public class Mesh {
     private Vector3[] uvs;
     private int[] indicies;
 
-    public static Mesh getSphereMesh() {
-        return loadMeshFromObjFile("debugcube.obj");
+    public static Mesh getPlanetMesh() {
+        return loadMeshFromObjFile("planet.obj");
     }
 
     // EFFECTS: initializes a mesh based on the given objects
     private Mesh(Vector3[] verts, Vector3[] uvs, int[] indicies) {
         this.verts = Arrays.copyOf(verts, verts.length);
-        this.uvs = Arrays.copyOf(uvs, verts.length);
-        this.indicies = Arrays.copyOf(indicies, verts.length);
+        this.uvs = Arrays.copyOf(uvs, uvs.length);
+        this.indicies = Arrays.copyOf(indicies, indicies.length);
     }
 
     public int getTriangleCount() {
@@ -70,7 +70,7 @@ public class Mesh {
                 continue;
             }
 
-            switch (lines[0]) {
+            switch (lines[0].trim()) {
                 case "v":
                     float vertX = Float.parseFloat(lines[1]);
                     float vertY = Float.parseFloat(lines[2]);
@@ -88,6 +88,7 @@ public class Mesh {
                 case "f":
                     // NOTE:
                     // it is assumed that the obj file is exported WITHOUT normals.
+                    // it is also assumed that the obj file has faces with only 3 verts each
                     String[] faceVertexAttribs0 = lines[1].split("/");
                     indexList.add(Integer.parseInt(faceVertexAttribs0[0]));
                     indexList.add(Integer.parseInt(faceVertexAttribs0[1]));
@@ -114,10 +115,12 @@ public class Mesh {
             // obj files are 1-indexed, so we have to make a conversion here
             indicieArray[i] = indexList.get(i) - 1;
         }
+
         Vector3[] vertexArray = new Vector3[vertList.size()];
         for (int i = 0; i < vertexArray.length; i++) {
             vertexArray[i] = vertList.get(i);
         }
+
         Vector3[] uvArray = new Vector3[uvList.size()];
         for (int i = 0; i < uvArray.length; i++) {
             uvArray[i] = uvList.get(i);

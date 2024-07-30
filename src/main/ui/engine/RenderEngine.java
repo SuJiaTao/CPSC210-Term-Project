@@ -52,7 +52,7 @@ public class RenderEngine implements Tickable {
         furthestPlanetDistance = CAMERA_PULLBACK_MIN;
         viewTransform = new Transform();
 
-        planetMesh = Mesh.getSphereMesh();
+        planetMesh = Mesh.getPlanetMesh();
     }
 
     public void lockEngine() {
@@ -83,8 +83,16 @@ public class RenderEngine implements Tickable {
         lockEngine();
 
         clearBuffers();
-        for (Planet planet : simState.getSimulation().getPlanets()) {
-            drawPlanet(planet);
+        // NOTE:
+        // because swing is multithreaded, I cant simply iterate over planets, so I have
+        // to do this hacky nonsense
+        for (int i = 0; i < simState.getSimulation().getPlanets().size(); i++) {
+            try {
+                Planet planet = simState.getSimulation().getPlanets().get(i);
+                drawPlanet(planet);
+            } catch (ConcurrentModificationException cme) {
+                // ignore
+            }
         }
 
         unlockEngine();
@@ -135,7 +143,11 @@ public class RenderEngine implements Tickable {
         if (planetWorldPos.getZ() >= CLIPPING_PLANE_DEPTH) {
             return;
         }
-        Transform meshTransform = Transform.multiply(Transform.translation(planet.getPosition()), viewTransform);
+
+        Vector3 planetScale = new Vector3(planet.getRadius(), planet.getRadius(), planet.getRadius());
+        Transform planetTransform = Transform.transform(planet.getPosition(), new Vector3(), planetScale);
+        Transform meshTransform = Transform.multiply(planetTransform, viewTransform);
+
         drawWireMesh(planetMesh, meshTransform, 0xFFFF8040);
     }
 
@@ -177,8 +189,8 @@ public class RenderEngine implements Tickable {
     }
 
     private void drawLine(Vector3 from, Vector3 to, int color) {
-        float deltaX = from.getX() - to.getX();
-        float deltaY = from.getY() - to.getY();
+        float deltaX = to.getX() - from.getX();
+        float deltaY = to.getY() - from.getY();
         float dist = (float) Math.sqrt(deltaX * deltaX + deltaY * deltaY);
         float drawX = from.getX();
         float drawY = from.getY();
