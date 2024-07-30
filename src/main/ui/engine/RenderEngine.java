@@ -18,6 +18,7 @@ public class RenderEngine implements Tickable {
     private static final float DEPTH_CLEAR_VALUE = Float.NEGATIVE_INFINITY;
     private static final float CAMERA_PULLBACK_FACTOR = 1.05f;
     private static final float CAMERA_PULLBACK_MIN = 5.0f;
+    private static final float CLIPPING_PLANE_DEPTH = -1.0f;
 
     private Lock readWriteLock;
 
@@ -30,6 +31,8 @@ public class RenderEngine implements Tickable {
     private float furthestPlanetDistance;
     private Transform viewTransform;
     private SimulatorState simState;
+
+    private Mesh planetMesh;
 
     public RenderEngine(int size) {
         readWriteLock = new ReentrantLock();
@@ -48,6 +51,8 @@ public class RenderEngine implements Tickable {
         averagePlanetPos = new Vector3();
         furthestPlanetDistance = CAMERA_PULLBACK_MIN;
         viewTransform = new Transform();
+
+        planetMesh = Mesh.getSphereMesh();
     }
 
     public void lockEngine() {
@@ -78,6 +83,9 @@ public class RenderEngine implements Tickable {
         lockEngine();
 
         clearBuffers();
+        for (Planet planet : simState.getSimulation().getPlanets()) {
+            drawPlanet(planet);
+        }
 
         unlockEngine();
     }
@@ -119,6 +127,85 @@ public class RenderEngine implements Tickable {
         float pullBack = Math.max(CAMERA_PULLBACK_MIN, furthestPlanetDistance * CAMERA_PULLBACK_FACTOR);
         Vector3 pullBackVector = new Vector3(0.0f, 0.0f, -pullBack);
         viewTransform = Transform.multiply(viewTransform, Transform.translation(pullBackVector));
+    }
+
+    private void drawPlanet(Planet planet) {
+        // TODO: make look good
+        Vector3 planetWorldPos = Transform.multiply(viewTransform, planet.getPosition());
+        if (planetWorldPos.getZ() >= CLIPPING_PLANE_DEPTH) {
+            return;
+        }
+        Transform meshTransform = Transform.multiply(Transform.translation(planet.getPosition()), viewTransform);
+        drawWireMesh(planetMesh, meshTransform, 0xFFFF8040);
+    }
+
+    private void drawWireMesh(Mesh mesh, Transform transform, int color) {
+        for (int triIndex = 0; triIndex < mesh.getTriangleCount(); triIndex++) {
+            Triangle tri = mesh.getTriangle(triIndex);
+            tri.verts[0] = Transform.multiply(transform, tri.verts[0]);
+            tri.verts[1] = Transform.multiply(transform, tri.verts[1]);
+            tri.verts[2] = Transform.multiply(transform, tri.verts[2]);
+
+            tri = projectTriangleToScreenSpace(tri);
+
+            drawLine(tri.verts[0], tri.verts[1], color);
+            drawLine(tri.verts[1], tri.verts[2], color);
+            drawLine(tri.verts[2], tri.verts[0], color);
+        }
+    }
+
+    // EFFECTS: creates a new triangle which has been projected into screenspace
+    // coordinates
+    private Triangle projectTriangleToScreenSpace(Triangle triangle) {
+        Triangle projTri = new Triangle(triangle);
+        projTri.verts[0] = projectVectorToScreenSpace(projTri.verts[0]);
+        projTri.verts[1] = projectVectorToScreenSpace(projTri.verts[1]);
+        projTri.verts[2] = projectVectorToScreenSpace(projTri.verts[2]);
+        return projTri;
+    }
+
+    // EFFECTS: projects a "worldspace" Vector3 into screenspace coordinates
+    private Vector3 projectVectorToScreenSpace(Vector3 point) {
+        // NOTE: despite facing down the -Z axis, we dont want X and Y axis to be
+        // inverted, so we take the Abs of the Z
+        float posX = point.getX() / Math.abs(point.getZ());
+        float posY = point.getY() / Math.abs(point.getZ());
+        // NOTE: this transforms a point from [-1, 1] to [0, bufferSize]
+        posX = ((posX + 1.0f) * 0.5f) * (float) bufferSize;
+        posY = ((posY + 1.0f) * 0.5f) * (float) bufferSize;
+        return new Vector3(posX, posY, point.getZ());
+    }
+
+    private void drawLine(Vector3 from, Vector3 to, int color) {
+        float deltaX = from.getX() - to.getX();
+        float deltaY = from.getY() - to.getY();
+        float dist = (float) Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        float drawX = from.getX();
+        float drawY = from.getY();
+        for (float step = 0; step <= dist; step++) {
+            float depth = from.getZ() + (to.getZ() - from.getZ()) * (1.0f - step / dist);
+            drawFragment(new Vector3(drawX, drawY, depth), color);
+            drawX += deltaX / dist;
+            drawY += deltaY / dist;
+        }
+    }
+
+    private void drawFragment(Vector3 position, int color) {
+        int posX = (int) (position.getX() + 0.5f);
+        int posY = (int) (position.getY() + 0.5f);
+
+        if (posX < 0 || posX >= bufferSize || posY < 0 || posY >= bufferSize) {
+            return;
+        }
+
+        // depth test
+        float depth = depthBuffer[getBufferIndex(posX, posY)];
+        if (depth >= position.getZ()) {
+            return;
+        }
+
+        colorBuffer[getBufferIndex(posX, posY)] = color;
+        depthBuffer[getBufferIndex(posX, posY)] = position.getZ();
     }
 
     private void clearBuffers() {
