@@ -102,7 +102,7 @@ public class SimulatorUtils {
     // EFFECTS: attempts to parse a string that reperesents a Vector3, returns null
     // if it fails
     public static Vector3 tryParseVector3(String str) {
-        String[] strComponents = str.split(" ");
+        String[] strComponents = str.trim().split(" ");
 
         try {
             float valX = Float.parseFloat(strComponents[0]);

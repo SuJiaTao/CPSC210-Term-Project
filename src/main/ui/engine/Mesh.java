@@ -16,7 +16,7 @@ public class Mesh {
     private int[] indicies;
 
     public static Mesh getSphereMesh() {
-        return loadMeshFromObjFile("sphere.obj");
+        return loadMeshFromObjFile("debugcube.obj");
     }
 
     // EFFECTS: initializes a mesh based on the given objects
@@ -27,7 +27,7 @@ public class Mesh {
     }
 
     public int getTriangleCount() {
-        return indicies.length / 3;
+        return indicies.length / INDICIE_ELEMENTS_PER_TRI;
     }
 
     public Triangle getTriangle(int triangle) {
@@ -41,7 +41,7 @@ public class Mesh {
         tri.uvs[1] = uvs[indicies[(triangle * INDICIE_ELEMENTS_PER_TRI) + 3]];
         tri.uvs[2] = uvs[indicies[(triangle * INDICIE_ELEMENTS_PER_TRI) + 5]];
 
-        return tri;
+        return new Triangle(tri); // make copy so that references aren't to internal objects
     }
 
     private static Mesh loadMeshFromObjFile(String fileName) {
@@ -72,11 +72,17 @@ public class Mesh {
 
             switch (lines[0]) {
                 case "v":
-                    vertList.add(SimulatorUtils.tryParseVector3(line.substring(lines[0].length())));
+                    float vertX = Float.parseFloat(lines[1]);
+                    float vertY = Float.parseFloat(lines[2]);
+                    float vertZ = Float.parseFloat(lines[3]);
+                    vertList.add(new Vector3(vertX, vertY, vertZ));
                     break;
 
                 case "vt":
-                    uvList.add(SimulatorUtils.tryParseVector3(line.substring(lines[0].length()) + " 0.0"));
+                    float uvU = Float.parseFloat(lines[1]);
+                    float uvV = Float.parseFloat(lines[2]);
+                    float dummy = 0.0f;
+                    uvList.add(new Vector3(uvU, uvV, dummy));
                     break;
 
                 case "f":
@@ -104,14 +110,16 @@ public class Mesh {
 
         int[] indicieArray = new int[indexList.size()];
         for (int i = 0; i < indicieArray.length; i++) {
-            indicieArray[i] = indexList.get(i);
+            // NOTE:
+            // obj files are 1-indexed, so we have to make a conversion here
+            indicieArray[i] = indexList.get(i) - 1;
         }
         Vector3[] vertexArray = new Vector3[vertList.size()];
         for (int i = 0; i < vertexArray.length; i++) {
             vertexArray[i] = vertList.get(i);
         }
-        Vector3[] uvArray = new Vector3[vertList.size()];
-        for (int i = 0; i < vertexArray.length; i++) {
+        Vector3[] uvArray = new Vector3[uvList.size()];
+        for (int i = 0; i < uvArray.length; i++) {
             uvArray[i] = uvList.get(i);
         }
         return new Mesh(vertexArray, uvArray, indicieArray);
