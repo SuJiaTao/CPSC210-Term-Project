@@ -3,7 +3,6 @@ package ui.engine;
 import model.*;
 import java.io.*;
 import java.util.*;
-import java.awt.*;
 import java.awt.image.*;
 import javax.imageio.ImageIO;
 

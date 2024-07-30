@@ -67,10 +67,13 @@ public class SavedEditorPanel extends JPanel implements ActionListener, Tickable
     }
 
     // MODIFIES: this
-    // EFFECTS: handles all button combinations
+    // EFFECTS: handles all button combinations, locks the simulation state as it
+    // directly modifies it
     private void handleButtonPressed(JButton source) {
         SimulatorState simState = SimulatorState.getInstance();
         String selectedSaveName = parent.swingList.getSelectedValue();
+
+        simState.lock();
 
         if (source == loadButton) {
             simState.setIsRunning(false);
@@ -96,6 +99,8 @@ public class SavedEditorPanel extends JPanel implements ActionListener, Tickable
             String newSimName = "Sim_" + dateFormat.format(new Date());
             handleSaveSimulation(simState, newSimName);
         }
+
+        simState.unlock();
     }
 
     // EFFECTS: ensure the simulation is paused while writing it to the specified

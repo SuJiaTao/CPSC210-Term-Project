@@ -1,14 +1,11 @@
 package ui.panels;
 
+import ui.*;
 import model.*;
-import ui.SimulatorState;
-import ui.SimulatorUtils;
-import ui.Tickable;
-import ui.engine.RenderEngine;
-
 import java.awt.*;
 import javax.swing.*;
 import java.awt.event.*;
+import ui.engine.RenderEngine;
 
 // Viewport panel which is used to host the 3D view of the simulation
 public class ViewportPanel extends JPanel implements ActionListener, Tickable {
@@ -74,9 +71,12 @@ public class ViewportPanel extends JPanel implements ActionListener, Tickable {
     }
 
     // MODIFIES: this
-    // EFFECTS: handles actionevents
+    // EFFECTS: handles actionevents, locks simulation state as it directly modifies
+    // it
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
+        SimulatorState.getInstance().lock();
+
         if (actionEvent.getSource() == startButton) {
             SimulatorState.getInstance().setIsRunning(true);
         }
@@ -91,6 +91,8 @@ public class ViewportPanel extends JPanel implements ActionListener, Tickable {
         if (actionEvent.getSource() == resetCameraButton) {
             renderEngine.getCameraController().resetCamera();
         }
+
+        SimulatorState.getInstance().unlock();
     }
 
     // MODIFIES: this
