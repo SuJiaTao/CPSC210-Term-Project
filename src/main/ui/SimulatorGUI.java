@@ -1,5 +1,6 @@
 package ui;
 
+import model.*;
 import ui.panels.*;
 import java.awt.*;
 
@@ -36,6 +37,10 @@ public class SimulatorGUI implements Tickable {
     @Override
     public void tick() {
         mainWindow.tick();
+    }
+
+    public Planet getSelectedPlanet() {
+        return mainWindow.getEditorTabPanel().getPlanetListPanel().getSelectedPlanet();
     }
 
     // EFFECTS: attempts to set the GUI to dark mode

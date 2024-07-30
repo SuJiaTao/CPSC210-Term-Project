@@ -26,6 +26,8 @@ public class ViewportPanel extends JPanel implements ActionListener, Tickable {
 
         public ActualViewport(ViewportPanel parent) {
             this.parent = parent;
+            setFocusable(true);
+            setRequestFocusEnabled(true);
         }
 
         @Override
@@ -38,7 +40,7 @@ public class ViewportPanel extends JPanel implements ActionListener, Tickable {
     ActualViewport viewport;
 
     public ViewportPanel() {
-        renderEngine = new RenderEngine(VIEWPORT_RESOLUTION);
+        renderEngine = new RenderEngine(viewport, VIEWPORT_RESOLUTION);
 
         setLayout(new BorderLayout());
 
@@ -95,5 +97,6 @@ public class ViewportPanel extends JPanel implements ActionListener, Tickable {
 
         // FORCE viewport to update
         viewport.repaint();
+        System.out.println(viewport.isFocusOwner());
     }
 }

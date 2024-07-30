@@ -1,15 +1,15 @@
 package ui.engine;
 
 import model.*;
+import ui.SimulatorGUI;
 import ui.SimulatorState;
 import ui.Tickable;
 
 import java.awt.*;
 import java.util.*;
 import javax.swing.*;
+import java.awt.image.*;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
 import java.util.concurrent.locks.*;
 
 // Hosts the rendering logic code for ViewportPanel, functions similarly to ui.legacy's ViewportEngine class
@@ -29,14 +29,17 @@ public class RenderEngine implements Tickable {
     private int[] colorBuffer;
     private BufferedImage image;
 
-    private Vector3 averagePlanetPos;
-    private float furthestPlanetDistance;
-    private Transform viewTransform;
     private SimulatorState simState;
+    private JPanel parent;
 
+    private Transform viewTransform;
+
+    // TODO: improve
     private Mesh planetMesh;
 
-    public RenderEngine(int size) {
+    public RenderEngine(JPanel parent, int size) {
+        this.parent = parent;
+
         readWriteLock = new ReentrantLock();
         simState = SimulatorState.getInstance();
 
@@ -49,10 +52,6 @@ public class RenderEngine implements Tickable {
         // data of a buffered image object. the alternative would be to create a new
         // buffered image every frame which would be horribly slow
         colorBuffer = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
-
-        averagePlanetPos = new Vector3();
-        furthestPlanetDistance = CAMERA_PULLBACK_MIN;
-        viewTransform = new Transform();
 
         planetMesh = Mesh.getPlanetMesh();
     }
@@ -77,9 +76,6 @@ public class RenderEngine implements Tickable {
 
     @Override
     public void tick() {
-
-        updateAveragePlanetPos();
-        updateFurthestPlanetDistance();
         updateViewportMatrix();
 
         lockEngine();
@@ -101,42 +97,9 @@ public class RenderEngine implements Tickable {
     }
 
     // MODIFIES: this
-    // EFFECTS: updates average planet position
-    private void updateAveragePlanetPos() {
-        averagePlanetPos = new Vector3();
-        if (simState.getSimulation().getPlanets().size() == 0) {
-            return;
-        }
-
-        for (Planet planet : simState.getSimulation().getPlanets()) {
-            Vector3 posWeighted = Vector3.multiply(planet.getPosition(),
-                    1.0f / simState.getSimulation().getPlanets().size());
-            averagePlanetPos = Vector3.add(averagePlanetPos, posWeighted);
-        }
-    }
-
-    // MODIFIES: this
-    // EFFECTS: updates the distance of the furthest planet away from the center
-    private void updateFurthestPlanetDistance() {
-        furthestPlanetDistance = 0.0f;
-        for (Planet planet : simState.getSimulation().getPlanets()) {
-            float dispFromCenter = Vector3.sub(averagePlanetPos, planet.getPosition()).magnitude();
-            furthestPlanetDistance = Math.max(dispFromCenter + planet.getRadius() * 2.0f, furthestPlanetDistance);
-        }
-    }
-
-    // MODIFIES: this
     // EFFECTS: sets up view matrix for viewing planets
     private void updateViewportMatrix() {
-        viewTransform = new Transform();
-
-        Vector3 trl = Vector3.multiply(averagePlanetPos, -1.0f);
-        Vector3 rot = new Vector3();
-        Vector3 scl = new Vector3(1.0f, 1.0f, 1.0f);
-        viewTransform = Transform.multiply(viewTransform, Transform.transform(trl, rot, scl));
-        float pullBack = Math.max(CAMERA_PULLBACK_MIN, furthestPlanetDistance * CAMERA_PULLBACK_FACTOR);
-        Vector3 pullBackVector = new Vector3(0.0f, 0.0f, -pullBack);
-        viewTransform = Transform.multiply(viewTransform, Transform.translation(pullBackVector));
+        viewTransform = Transform.translation(new Vector3(0, 0, -30.0f));
     }
 
     private void drawPlanet(Planet planet) {
@@ -154,6 +117,10 @@ public class RenderEngine implements Tickable {
     }
 
     private int getPlanetColor(Planet planet) {
+        if (planet == SimulatorGUI.getInstance().getSelectedPlanet()) {
+            return 0xFFFFFFFF;
+        }
+
         int randIndex = planet.getName().hashCode() % PLANET_COLORS.length;
         if (randIndex < 0) {
             randIndex += PLANET_COLORS.length;

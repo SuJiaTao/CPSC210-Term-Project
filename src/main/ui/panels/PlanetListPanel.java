@@ -28,4 +28,9 @@ public class PlanetListPanel extends AbstractListPanel<Planet> {
         planetEditorPanel.tick();
     }
 
+    // EFFECTS: returns the currently selected planet
+    public Planet getSelectedPlanet() {
+        return super.swingList.getSelectedValue();
+    }
+
 }

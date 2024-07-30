@@ -8,6 +8,7 @@ public class SimulatorState implements Tickable {
     private Simulation simulation;
     private boolean isRunning;
     private long lastTickNanoseconds;
+    private float lastDeltaTime;
 
     // EFFECTS: creates a new simulation that is paused
     private SimulatorState() {
@@ -17,6 +18,7 @@ public class SimulatorState implements Tickable {
         simulation = new Simulation();
         isRunning = false;
         lastTickNanoseconds = System.nanoTime();
+        lastDeltaTime = 0.0f;
     }
 
     // EFFECTS: returns the simulation state instance
@@ -39,6 +41,10 @@ public class SimulatorState implements Tickable {
         isRunning = val;
     }
 
+    public float getLastDeltaTime() {
+        return lastDeltaTime;
+    }
+
     // MODIFIES: this
     // EFFECTS: updates the simulation state
     @Override
@@ -47,6 +53,7 @@ public class SimulatorState implements Tickable {
             long deltaTimeNanoseconds = System.nanoTime() - lastTickNanoseconds;
             float deltaTimeSeconds = (float) deltaTimeNanoseconds / 1000000000.0f;
             simulation.progressBySeconds(deltaTimeSeconds);
+            lastDeltaTime = deltaTimeSeconds;
             handleCollisionBehavior();
 
         }
