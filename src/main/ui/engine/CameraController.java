@@ -15,7 +15,7 @@ import java.util.concurrent.locks.*;
 public class CameraController implements Tickable, KeyListener, MouseListener {
     private static final Vector3 INITIAL_POSTION = new Vector3(0, 0, 30.0f);
 
-    private static final float MAX_VELOCITY = 10.0f;
+    private static final float MAX_VELOCITY = 15.0f;
     private static final float ACCELERATION = 0.35f;
     private static final float DRAG = 0.005f;
 
@@ -36,6 +36,8 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
     private float pitch;
     private float pitchVelocity;
 
+    private Transform viewTransform;
+
     public CameraController(RenderEngine parent) {
         this.parent = parent;
         this.parent.getPanel().addKeyListener(this);
@@ -50,6 +52,7 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
         pitch = 0.0f;
         pitchVelocity = 0.0f;
 
+        viewTransform = new Transform();
         lastTickNanoseconds = System.nanoTime();
     }
 
@@ -71,7 +74,7 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
     public void keyReleased(KeyEvent e) {
         synchronized (keysDown) {
             if (keysDown.contains(e.getKeyCode())) {
-                keysDown.remove(new Integer(e.getKeyCode()));
+                keysDown.remove(Integer.valueOf(e.getKeyCode()));
             }
         }
     }
@@ -97,14 +100,17 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
         pitch += pitchVelocity * deltaTimeSeconds;
         pitchVelocity *= (1.0f - ANGULAR_DRAG);
 
-        parent.setCamera(new Vector3(pitch, yaw, 0.0f), position);
+        viewTransform = Transform.translation(Vector3.multiply(position, -1.0f));
+        viewTransform = Transform.multiply(viewTransform, Transform.rotationY(-yaw));
+        viewTransform = Transform.multiply(viewTransform, Transform.rotationX(-pitch));
+        parent.setViewTransform(viewTransform);
         lastTickNanoseconds = System.nanoTime();
     }
 
     private Transform generateRotationTransform() {
         // NOTE:
         // did you know that rotations in 3D are evil?
-        return Transform.multiply(Transform.rotationY(yaw), Transform.rotationX(pitch));
+        return Transform.multiply(Transform.rotationX(pitch), Transform.rotationY(yaw));
     }
 
     private void handleInputs() {
@@ -121,25 +127,19 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
             if (keysDown.contains(KeyEvent.VK_D)) {
                 velocity = Vector3.add(velocity, new Vector3(ACCELERATION, 0, 0));
             }
-            if (keysDown.contains(KeyEvent.VK_SPACE)) {
-                velocity = Vector3.add(velocity, new Vector3(0, -ACCELERATION, 0));
-            }
-            if (keysDown.contains(KeyEvent.VK_SHIFT)) {
-                velocity = Vector3.add(velocity, new Vector3(0, ACCELERATION, 0));
-            }
 
             if (keysDown.contains(KeyEvent.VK_LEFT)) {
-                yawVelocity += ANGULAR_ACCELERATION;
+                yawVelocity -= ANGULAR_ACCELERATION;
             }
             if (keysDown.contains(KeyEvent.VK_RIGHT)) {
-                yawVelocity -= ANGULAR_ACCELERATION;
+                yawVelocity += ANGULAR_ACCELERATION;
             }
 
             if (keysDown.contains(KeyEvent.VK_UP)) {
-                pitchVelocity -= ANGULAR_ACCELERATION;
+                pitchVelocity += ANGULAR_ACCELERATION;
             }
             if (keysDown.contains(KeyEvent.VK_DOWN)) {
-                pitchVelocity += ANGULAR_ACCELERATION;
+                pitchVelocity -= ANGULAR_ACCELERATION;
             }
         }
     }

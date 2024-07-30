@@ -33,8 +33,6 @@ public class RenderEngine implements Tickable {
 
     private Transform viewTransform;
     private CameraController cameraController;
-    private Vector3 cameraLookVector;
-    private Vector3 cameraPosition;
 
     // TODO: improve
     private Mesh planetMesh;
@@ -59,14 +57,11 @@ public class RenderEngine implements Tickable {
         planetMesh = Mesh.getPlanetMesh();
 
         viewTransform = new Transform();
-        cameraLookVector = new Vector3();
-        cameraPosition = new Vector3();
         cameraController = new CameraController(this);
     }
 
-    public void setCamera(Vector3 lookVector, Vector3 position) {
-        cameraLookVector = lookVector;
-        cameraPosition = position;
+    public void setViewTransform(Transform viewTransform) {
+        this.viewTransform = viewTransform;
     }
 
     public JPanel getPanel() {
@@ -94,7 +89,6 @@ public class RenderEngine implements Tickable {
     @Override
     public void tick() {
         cameraController.tick();
-        updateViewportMatrix();
 
         lockEngine();
 
@@ -112,13 +106,6 @@ public class RenderEngine implements Tickable {
         }
 
         unlockEngine();
-    }
-
-    // MODIFIES: this
-    // EFFECTS: sets up view matrix for viewing planets
-    private void updateViewportMatrix() {
-        viewTransform = Transform.multiply(Transform.translation(Vector3.multiply(cameraPosition, -1.0f)),
-                Transform.rotation(cameraLookVector));
     }
 
     private void drawPlanet(Planet planet) {
