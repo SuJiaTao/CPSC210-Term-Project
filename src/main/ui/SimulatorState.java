@@ -1,6 +1,7 @@
 package ui;
 
 import model.*;
+import java.util.concurrent.locks.*;
 
 // Contains all the simulation state related data
 public class SimulatorState implements Tickable {
@@ -8,6 +9,7 @@ public class SimulatorState implements Tickable {
     private Simulation simulation;
     private boolean isRunning;
     private long lastTickNanoseconds;
+    private Lock lock;
 
     // EFFECTS: creates a new simulation that is paused
     private SimulatorState() {
@@ -17,6 +19,7 @@ public class SimulatorState implements Tickable {
         simulation = new Simulation();
         isRunning = false;
         lastTickNanoseconds = System.nanoTime();
+        lock = new ReentrantLock();
     }
 
     // EFFECTS: returns the simulation state instance
@@ -39,6 +42,14 @@ public class SimulatorState implements Tickable {
         isRunning = val;
     }
 
+    public void lock() {
+        lock.lock();
+    }
+
+    public void unlock() {
+        lock.unlock();
+    }
+
     // MODIFIES: this
     // EFFECTS: updates the simulation state
     @Override
@@ -46,8 +57,11 @@ public class SimulatorState implements Tickable {
         if (isRunning) {
             long deltaTimeNanoseconds = System.nanoTime() - lastTickNanoseconds;
             float deltaTimeSeconds = (float) deltaTimeNanoseconds / 1000000000.0f;
+
+            lock();
             simulation.progressBySeconds(deltaTimeSeconds);
             handleCollisionBehavior();
+            unlock();
 
             if (simulation.getPlanets().size() == 0) {
                 isRunning = false;

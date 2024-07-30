@@ -10,7 +10,6 @@ import java.util.*;
 import javax.swing.*;
 import java.awt.image.*;
 import java.awt.event.*;
-import java.util.concurrent.locks.*;
 
 // Hosts the rendering logic code for ViewportPanel, functions similarly to ui.legacy's ViewportEngine class
 public class RenderEngine implements Tickable {
@@ -20,8 +19,6 @@ public class RenderEngine implements Tickable {
     private static final float CLIPPING_PLANE_DEPTH = -1.0f;
     private static final Color[] PLANET_COLORS = { new Color(0xF6995C), new Color(0x51829B), new Color(0x9BB0C1),
             new Color(0xEADFB4) };
-
-    private Lock readWriteLock;
 
     private int bufferSize;
     private float[] depthBuffer;
@@ -34,6 +31,8 @@ public class RenderEngine implements Tickable {
     private Transform viewTransform;
     private CameraController cameraController;
 
+    private BufferedImage textureDebug;
+
     // TODO: improve
     private Mesh planetMesh;
 
@@ -41,7 +40,6 @@ public class RenderEngine implements Tickable {
         this.parent = parent;
         parent.setFocusable(true);
 
-        readWriteLock = new ReentrantLock();
         simState = SimulatorState.getInstance();
 
         bufferSize = size;
@@ -58,6 +56,8 @@ public class RenderEngine implements Tickable {
 
         viewTransform = new Transform();
         cameraController = new CameraController(this);
+
+        textureDebug = TextureShader.loadImage("debug.jpg");
     }
 
     public void setViewTransform(Transform viewTransform) {
@@ -72,52 +72,24 @@ public class RenderEngine implements Tickable {
         return cameraController;
     }
 
-    public void lockEngine() {
-        readWriteLock.lock();
-    }
-
-    public void unlockEngine() {
-        readWriteLock.unlock();
-    }
-
     public void drawCurrentFrame(Graphics gfx) {
-        lockEngine();
-        try {
-            Rectangle bounds = gfx.getClipBounds();
-            int imageSize = (int) ((float) Math.min(bounds.width, bounds.height) * VIEWPORT_SCALE_FACTOR);
-            int offsetX = (int) ((double) (bounds.width - imageSize) * 0.5);
-            int offsetY = (int) ((double) (bounds.height - imageSize) * 0.5);
-            gfx.drawImage(image, offsetX, offsetY, imageSize, imageSize, null);
-        } catch (Exception e) {
-            // ignore
-        }
-        unlockEngine();
+        Rectangle bounds = gfx.getClipBounds();
+        int imageSize = (int) ((float) Math.min(bounds.width, bounds.height) * VIEWPORT_SCALE_FACTOR);
+        int offsetX = (int) ((double) (bounds.width - imageSize) * 0.5);
+        int offsetY = (int) ((double) (bounds.height - imageSize) * 0.5);
+        gfx.drawImage(image, offsetX, offsetY, imageSize, imageSize, null);
     }
 
     @Override
     public void tick() {
         cameraController.tick();
 
-        lockEngine();
-
-        try {
-            clearBuffers();
-            // NOTE:
-            // because swing is multithreaded, I cant simply iterate over planets, so I have
-            // to do this hacky nonsense
-            for (int i = 0; i < simState.getSimulation().getPlanets().size(); i++) {
-                try {
-                    Planet planet = simState.getSimulation().getPlanets().get(i);
-                    drawPlanet(planet);
-                } catch (Exception exc) {
-                    // ignore
-                }
-            }
-        } catch (Exception e) {
-            // ignore
+        clearBuffers();
+        simState.lock();
+        for (Planet planet : simState.getSimulation().getPlanets()) {
+            drawPlanet(planet);
         }
-
-        unlockEngine();
+        simState.unlock();
     }
 
     private void drawPlanet(Planet planet) {
@@ -132,7 +104,9 @@ public class RenderEngine implements Tickable {
         Transform meshTransform = Transform.multiply(planetTransform, viewTransform);
 
         drawWireMesh(planetMesh, meshTransform, 0xFFFFFFFF);
-        shadeMesh(planetMesh, meshTransform);
+
+        TextureShader shader = new TextureShader(textureDebug, 0.5f);
+        shadeMesh(shader, planetMesh, meshTransform);
 
     }
 
@@ -165,7 +139,7 @@ public class RenderEngine implements Tickable {
 
     // MODIFIES: this
     // EFFECTS: renders a given mesh
-    private void shadeMesh(Mesh mesh, Transform transform) {
+    private void shadeMesh(AbstractShader shader, Mesh mesh, Transform transform) {
         for (int triIndex = 0; triIndex < mesh.getTriangleCount(); triIndex++) {
             Triangle tri = mesh.getTriangle(triIndex);
             tri.verts[0] = Transform.multiply(transform, tri.verts[0]);
@@ -174,13 +148,13 @@ public class RenderEngine implements Tickable {
 
             tri = projectTriangleToScreenSpace(tri);
 
-            shadeTriangle(tri);
+            shadeTriangle(shader, tri);
         }
     }
 
     // MODIFIES: this
     // EFFECTS: renders a given triangle
-    private void shadeTriangle(Triangle tri) {
+    private void shadeTriangle(AbstractShader shader, Triangle tri) {
         // NOTE:
         // the standard procedure for rendering an arbitrary triangle is to split it in
         // the middle, and render the flattop/flatbottom parts of it each
@@ -188,13 +162,13 @@ public class RenderEngine implements Tickable {
         Triangle sortedTri = sortTriangleByHeight(tri);
         Triangle[] cutTris = cutSortedTriangle(sortedTri);
 
-        shadeTriangleFlatBottom(cutTris[0], sortedTri);
-        shadeTriangleFlatTop(cutTris[1], sortedTri);
+        shadeTriangleFlatBottom(shader, cutTris[0], sortedTri);
+        shadeTriangleFlatTop(shader, cutTris[1], sortedTri);
     }
 
     // MODIFIES: this
     // EFFECTS: renders a triangle with a flat bottom
-    private void shadeTriangleFlatBottom(Triangle flatBotTri, Triangle target) {
+    private void shadeTriangleFlatBottom(AbstractShader shader, Triangle flatBotTri, Triangle target) {
         // NOTE: the verticies of the tri are as follows:
         // verts[0] -> top pointy
         // verts[1] -> left bottom vertex
@@ -227,7 +201,7 @@ public class RenderEngine implements Tickable {
             endX = Math.min(endX, (float) bufferSize);
 
             for (float drawX = startX; drawX <= endX; drawX += 1.0f) {
-                prepareAndDrawFragment(new Vector3(drawX, drawY, 0.0f), target);
+                prepareAndDrawFragment(shader, new Vector3(drawX, drawY, 0.0f), target);
             }
         }
     }
@@ -236,19 +210,21 @@ public class RenderEngine implements Tickable {
     // EFFECTS: interpolates the input values for the given fragment based on the
     // current fragment's position with respect to the original triangle, and the
     // draws the fragment
-    private void prepareAndDrawFragment(Vector3 fragPos, Triangle target) {
+    private void prepareAndDrawFragment(AbstractShader shader, Vector3 fragPos, Triangle target) {
         Vector3 attribWeights = generateAttribWeightings(fragPos, target);
-        // debug
 
         float interpDepth = target.verts[0].getZ() * attribWeights.getX() +
                 target.verts[1].getZ() * attribWeights.getY() +
                 target.verts[2].getZ() * attribWeights.getZ();
-        int r = (int) (attribWeights.getX() * 255);
-        int g = (int) (attribWeights.getY() * 255);
-        int b = (int) (attribWeights.getZ() * 255);
-
         fragPos = new Vector3(fragPos.getX(), fragPos.getY(), interpDepth);
-        drawFragment(fragPos, 0xFF000000 | (r << 16) | (g << 8) | b);
+
+        float texU = target.uvs[0].getX() * attribWeights.getX() +
+                target.uvs[1].getX() * attribWeights.getY() +
+                target.uvs[2].getX() * attribWeights.getZ();
+        float texV = target.uvs[0].getY() * attribWeights.getX() +
+                target.uvs[1].getY() * attribWeights.getY() +
+                target.uvs[2].getY() * attribWeights.getZ();
+        drawFragment(fragPos, 0xFF000000 | shader.shade(attribWeights, new Vector3(texU, texV, 0.0f)));
     }
 
     // Refer to:
@@ -274,7 +250,7 @@ public class RenderEngine implements Tickable {
 
     // MODIFIES: this
     // EFFECTS: renders a triangle with a flat top
-    private void shadeTriangleFlatTop(Triangle flatBotTri, Triangle target) {
+    private void shadeTriangleFlatTop(AbstractShader shader, Triangle flatBotTri, Triangle target) {
         // NOTE: the verticies of the tri are as follows:
         // verts[0] -> top left
         // verts[1] -> top right
@@ -307,7 +283,7 @@ public class RenderEngine implements Tickable {
             endX = Math.min(endX, (float) bufferSize);
 
             for (float drawX = startX; drawX <= endX; drawX += 1.0f) {
-                prepareAndDrawFragment(new Vector3(drawX, drawY, 0.0f), target);
+                prepareAndDrawFragment(shader, new Vector3(drawX, drawY, 0.0f), target);
             }
         }
 
