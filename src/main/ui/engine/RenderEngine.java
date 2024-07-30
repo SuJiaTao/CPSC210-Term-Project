@@ -19,6 +19,8 @@ public class RenderEngine implements Tickable {
     private static final float CAMERA_PULLBACK_FACTOR = 1.05f;
     private static final float CAMERA_PULLBACK_MIN = 5.0f;
     private static final float CLIPPING_PLANE_DEPTH = -1.0f;
+    private static final Color[] PLANET_COLORS = { new Color(0xF6995C), new Color(0x51829B), new Color(0x9BB0C1),
+            new Color(0xEADFB4) };
 
     private Lock readWriteLock;
 
@@ -148,7 +150,15 @@ public class RenderEngine implements Tickable {
         Transform planetTransform = Transform.transform(planet.getPosition(), new Vector3(), planetScale);
         Transform meshTransform = Transform.multiply(planetTransform, viewTransform);
 
-        drawWireMesh(planetMesh, meshTransform, 0xFFFF8040);
+        drawWireMesh(planetMesh, meshTransform, getPlanetColor(planet));
+    }
+
+    private int getPlanetColor(Planet planet) {
+        int randIndex = planet.getName().hashCode() % PLANET_COLORS.length;
+        if (randIndex < 0) {
+            randIndex += PLANET_COLORS.length;
+        }
+        return PLANET_COLORS[randIndex].getRGB();
     }
 
     private void drawWireMesh(Mesh mesh, Transform transform, int color) {
