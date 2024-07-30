@@ -54,7 +54,6 @@ public class SavedListPanel extends AbstractListPanel<String> {
             newFileNames.add(subFileName);
         }
 
-        System.out.println(newFileNames.size());
         List<String> savedSimOptions = super.getListData();
 
         // remove everything thats gone

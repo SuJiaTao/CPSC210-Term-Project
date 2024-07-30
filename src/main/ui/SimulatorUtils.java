@@ -99,7 +99,7 @@ public class SimulatorUtils {
 
     // EFFECTS: checks whether string is valid name
     public static boolean checkIfValidName(String str) {
-        return (str.length() > 0 && str.charAt(0) != ' ');
+        return (str != null && str.length() > 0 && str.charAt(0) != ' ');
     }
 
     // EFFECTS: attempts to parse a string that reperesents a Vector3, returns null
