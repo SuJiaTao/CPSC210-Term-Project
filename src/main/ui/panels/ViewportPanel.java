@@ -97,8 +97,19 @@ public class ViewportPanel extends JPanel implements ActionListener, Tickable {
         renderEngine.tick();
 
         // FORCE viewport to update
+        handleActualViewportBorderVisuals();
         viewport.repaint();
-        System.out.println(viewport.isFocusOwner());
+    }
+
+    // MODIFIES: this
+    // EFFECTS: handles the visual border behavior of the actual viewport based on
+    // whether its focused or not
+    private void handleActualViewportBorderVisuals() {
+        if (viewport.isFocusOwner()) {
+            viewport.setBorder(BorderFactory.createLoweredBevelBorder());
+        } else {
+            viewport.setBorder(BorderFactory.createRaisedBevelBorder());
+        }
     }
 
     // MODIFIES: this

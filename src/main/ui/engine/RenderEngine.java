@@ -16,8 +16,7 @@ import java.util.concurrent.locks.*;
 public class RenderEngine implements Tickable {
     private static final int COLOR_CLEAR_VALUE = 0xFF000000;
     private static final float DEPTH_CLEAR_VALUE = Float.NEGATIVE_INFINITY;
-    private static final float CAMERA_PULLBACK_FACTOR = 1.05f;
-    private static final float CAMERA_PULLBACK_MIN = 5.0f;
+    private static final float VIEWPORT_SCALE_FACTOR = 0.97f;
     private static final float CLIPPING_PLANE_DEPTH = -1.0f;
     private static final Color[] PLANET_COLORS = { new Color(0xF6995C), new Color(0x51829B), new Color(0x9BB0C1),
             new Color(0xEADFB4) };
@@ -85,7 +84,7 @@ public class RenderEngine implements Tickable {
     public void drawCurrentFrame(Graphics gfx) {
         lockEngine();
         Rectangle bounds = gfx.getClipBounds();
-        int imageSize = Math.min(bounds.width, bounds.height);
+        int imageSize = (int) ((float) Math.min(bounds.width, bounds.height) * VIEWPORT_SCALE_FACTOR);
         int offsetX = (int) ((double) (bounds.width - imageSize) * 0.5);
         int offsetY = (int) ((double) (bounds.height - imageSize) * 0.5);
         gfx.drawImage(image, offsetX, offsetY, imageSize, imageSize, null);

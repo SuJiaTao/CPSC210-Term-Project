@@ -12,84 +12,168 @@ import java.awt.image.*;
 import java.awt.event.*;
 import java.util.concurrent.locks.*;
 
-public class CameraController implements Tickable, MouseListener, KeyListener {
+public class CameraController implements Tickable, KeyListener, MouseListener {
     private static final Vector3 INITIAL_POSTION = new Vector3(0, 0, 30.0f);
+
+    private static final float MAX_VELOCITY = 10.0f;
+    private static final float ACCELERATION = 0.35f;
+    private static final float DRAG = 0.005f;
+
+    private static final float MAX_ANGULAR_VELOCITY = 75.0f;
+    private static final float ANGULAR_ACCELERATION = 15.0f;
+    private static final float ANGULAR_DRAG = 0.006f;
 
     private RenderEngine parent;
 
     private java.util.List<Integer> keysDown;
 
+    private long lastTickNanoseconds;
     private Vector3 position;
     private Vector3 velocity;
-    private Vector3 rotation;
-    private Vector3 angularVelocity;
+
+    private float yaw;
+    private float yawVelocity;
+    private float pitch;
+    private float pitchVelocity;
 
     public CameraController(RenderEngine parent) {
         this.parent = parent;
-        this.parent.getPanel().addMouseListener(this);
         this.parent.getPanel().addKeyListener(this);
+        this.parent.getPanel().addMouseListener(this);
 
         keysDown = new ArrayList<>();
 
         position = new Vector3(INITIAL_POSTION);
         velocity = new Vector3();
-        rotation = new Vector3();
-        angularVelocity = new Vector3();
+        yaw = 0.0f;
+        yawVelocity = 0.0f;
+        pitch = 0.0f;
+        pitchVelocity = 0.0f;
+
+        lastTickNanoseconds = System.nanoTime();
     }
 
     @Override
     public void keyTyped(KeyEvent e) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'keyTyped'");
+        // do nothing
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if (!keysDown.contains(e.getKeyCode())) {
-            keysDown.add(e.getKeyCode());
+        synchronized (keysDown) {
+            if (!keysDown.contains(e.getKeyCode())) {
+                keysDown.add(e.getKeyCode());
+            }
         }
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-        if (keysDown.contains(e.getKeyCode())) {
-            keysDown.remove(e.getKeyCode());
+        synchronized (keysDown) {
+            if (keysDown.contains(e.getKeyCode())) {
+                keysDown.remove(new Integer(e.getKeyCode()));
+            }
         }
     }
 
     @Override
+    public void tick() {
+        long deltaTimeNanoseconds = System.nanoTime() - lastTickNanoseconds;
+        float deltaTimeSeconds = (float) deltaTimeNanoseconds / 1000000000.0f;
+
+        handleInputs();
+        Transform rotationTransform = generateRotationTransform();
+
+        velocity = clampVector(velocity, MAX_VELOCITY);
+        velocity = Vector3.multiply(velocity, 1.0f - DRAG);
+        Vector3 velActual = Transform.multiply(rotationTransform, velocity);
+        position = Vector3.add(position, Vector3.multiply(velActual, deltaTimeSeconds));
+
+        yawVelocity = Math.max(Math.min(yawVelocity, MAX_ANGULAR_VELOCITY), -MAX_ANGULAR_VELOCITY);
+        yaw += yawVelocity * deltaTimeSeconds;
+        yawVelocity *= (1.0f - ANGULAR_DRAG);
+
+        pitchVelocity = Math.max(Math.min(pitchVelocity, MAX_ANGULAR_VELOCITY), -MAX_ANGULAR_VELOCITY);
+        pitch += pitchVelocity * deltaTimeSeconds;
+        pitchVelocity *= (1.0f - ANGULAR_DRAG);
+
+        parent.setCamera(new Vector3(pitch, yaw, 0.0f), position);
+        lastTickNanoseconds = System.nanoTime();
+    }
+
+    private Transform generateRotationTransform() {
+        // NOTE:
+        // did you know that rotations in 3D are evil?
+        return Transform.multiply(Transform.rotationY(yaw), Transform.rotationX(pitch));
+    }
+
+    private void handleInputs() {
+        synchronized (keysDown) {
+            if (keysDown.contains(KeyEvent.VK_W)) {
+                velocity = Vector3.add(velocity, new Vector3(0, 0, -ACCELERATION));
+            }
+            if (keysDown.contains(KeyEvent.VK_S)) {
+                velocity = Vector3.add(velocity, new Vector3(0, 0, ACCELERATION));
+            }
+            if (keysDown.contains(KeyEvent.VK_A)) {
+                velocity = Vector3.add(velocity, new Vector3(-ACCELERATION, 0, 0));
+            }
+            if (keysDown.contains(KeyEvent.VK_D)) {
+                velocity = Vector3.add(velocity, new Vector3(ACCELERATION, 0, 0));
+            }
+            if (keysDown.contains(KeyEvent.VK_SPACE)) {
+                velocity = Vector3.add(velocity, new Vector3(0, -ACCELERATION, 0));
+            }
+            if (keysDown.contains(KeyEvent.VK_SHIFT)) {
+                velocity = Vector3.add(velocity, new Vector3(0, ACCELERATION, 0));
+            }
+
+            if (keysDown.contains(KeyEvent.VK_LEFT)) {
+                yawVelocity += ANGULAR_ACCELERATION;
+            }
+            if (keysDown.contains(KeyEvent.VK_RIGHT)) {
+                yawVelocity -= ANGULAR_ACCELERATION;
+            }
+
+            if (keysDown.contains(KeyEvent.VK_UP)) {
+                pitchVelocity -= ANGULAR_ACCELERATION;
+            }
+            if (keysDown.contains(KeyEvent.VK_DOWN)) {
+                pitchVelocity += ANGULAR_ACCELERATION;
+            }
+        }
+    }
+
+    private static Vector3 clampVector(Vector3 original, float bound) {
+        if (original.magnitude() < bound) {
+            return original;
+        }
+        return Vector3.multiply(Vector3.normalize(original), bound);
+    }
+
+    @Override
     public void mouseClicked(MouseEvent e) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'mouseClicked'");
+        parent.getPanel().requestFocusInWindow();
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'mousePressed'");
+        // ignore
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'mouseReleased'");
+        // ignore
     }
 
     @Override
     public void mouseEntered(MouseEvent e) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'mouseEntered'");
+        // ignore
     }
 
     @Override
     public void mouseExited(MouseEvent e) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'mouseExited'");
-    }
-
-    @Override
-    public void tick() {
-
+        // ignore
     }
 
 }
