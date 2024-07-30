@@ -40,8 +40,6 @@ public class ViewportPanel extends JPanel implements ActionListener, Tickable {
     ActualViewport viewport;
 
     public ViewportPanel() {
-        renderEngine = new RenderEngine(viewport, VIEWPORT_RESOLUTION);
-
         setLayout(new BorderLayout());
 
         JPanel controlPanel = new JPanel(new FlowLayout());
@@ -61,6 +59,7 @@ public class ViewportPanel extends JPanel implements ActionListener, Tickable {
         controlPanel.add(timeElapsedLabel);
 
         viewport = new ActualViewport(this);
+        renderEngine = new RenderEngine(viewport, VIEWPORT_RESOLUTION);
 
         JSplitPane splitter = new JSplitPane(JSplitPane.VERTICAL_SPLIT, controlPanel, viewport);
         splitter.setResizeWeight(SPLIT_WEIGHT);
@@ -90,6 +89,8 @@ public class ViewportPanel extends JPanel implements ActionListener, Tickable {
     // EFFECTS: updates this and relevant sub-components
     @Override
     public void tick() {
+        handleButtonsUsability();
+
         float timeElapsed = SimulatorState.getInstance().getSimulation().getTimeElapsed();
         timeElapsedLabel.setText(String.format("Time Elapsed: %03.3fs", timeElapsed));
 
@@ -98,5 +99,13 @@ public class ViewportPanel extends JPanel implements ActionListener, Tickable {
         // FORCE viewport to update
         viewport.repaint();
         System.out.println(viewport.isFocusOwner());
+    }
+
+    // MODIFIES: this
+    // EFFECTS: handles whether the start, stop and reset buttons can be used
+    private void handleButtonsUsability() {
+        boolean hasPlanets = (SimulatorState.getInstance().getSimulation().getPlanets().size() > 0);
+        startButton.setEnabled(hasPlanets);
+        stopButton.setEnabled(hasPlanets);
     }
 }

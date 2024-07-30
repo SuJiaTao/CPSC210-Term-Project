@@ -56,6 +56,9 @@ public class SimulatorState implements Tickable {
             lastDeltaTime = deltaTimeSeconds;
             handleCollisionBehavior();
 
+            if (simulation.getPlanets().size() == 0) {
+                isRunning = false;
+            }
         }
         lastTickNanoseconds = System.nanoTime();
     }

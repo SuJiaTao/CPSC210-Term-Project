@@ -33,12 +33,16 @@ public class RenderEngine implements Tickable {
     private JPanel parent;
 
     private Transform viewTransform;
+    private CameraController cameraController;
+    private Vector3 cameraLookVector;
+    private Vector3 cameraPosition;
 
     // TODO: improve
     private Mesh planetMesh;
 
     public RenderEngine(JPanel parent, int size) {
         this.parent = parent;
+        parent.setFocusable(true);
 
         readWriteLock = new ReentrantLock();
         simState = SimulatorState.getInstance();
@@ -54,6 +58,20 @@ public class RenderEngine implements Tickable {
         colorBuffer = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
 
         planetMesh = Mesh.getPlanetMesh();
+
+        viewTransform = new Transform();
+        cameraLookVector = new Vector3();
+        cameraPosition = new Vector3();
+        cameraController = new CameraController(this);
+    }
+
+    public void setCamera(Vector3 lookVector, Vector3 position) {
+        cameraLookVector = lookVector;
+        cameraPosition = position;
+    }
+
+    public JPanel getPanel() {
+        return parent;
     }
 
     public void lockEngine() {
@@ -76,6 +94,7 @@ public class RenderEngine implements Tickable {
 
     @Override
     public void tick() {
+        cameraController.tick();
         updateViewportMatrix();
 
         lockEngine();
@@ -88,7 +107,7 @@ public class RenderEngine implements Tickable {
             try {
                 Planet planet = simState.getSimulation().getPlanets().get(i);
                 drawPlanet(planet);
-            } catch (ConcurrentModificationException cme) {
+            } catch (Exception exc) {
                 // ignore
             }
         }
@@ -99,7 +118,8 @@ public class RenderEngine implements Tickable {
     // MODIFIES: this
     // EFFECTS: sets up view matrix for viewing planets
     private void updateViewportMatrix() {
-        viewTransform = Transform.translation(new Vector3(0, 0, -30.0f));
+        viewTransform = Transform.multiply(Transform.translation(Vector3.multiply(cameraPosition, -1.0f)),
+                Transform.rotation(cameraLookVector));
     }
 
     private void drawPlanet(Planet planet) {

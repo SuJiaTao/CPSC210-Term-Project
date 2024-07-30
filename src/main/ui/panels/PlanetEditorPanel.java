@@ -142,7 +142,7 @@ public class PlanetEditorPanel extends JPanel implements ActionListener, Tickabl
 
         boolean canEdit = (isNotRunning && isPlanetSelected);
 
-        removePlaneButton.setEnabled(canEdit);
+        removePlaneButton.setEnabled(isPlanetSelected);
         nameEditField.setEditable(canEdit);
         posEditField.setEditable(canEdit);
         velEditField.setEditable(canEdit);

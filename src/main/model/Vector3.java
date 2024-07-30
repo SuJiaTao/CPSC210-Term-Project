@@ -17,6 +17,12 @@ public class Vector3 {
     }
 
     // EFFECTS:
+    // creates a copy of the target vector
+    public Vector3(Vector3 target) {
+        this(target.compX, target.compY, target.compZ);
+    }
+
+    // EFFECTS:
     // creates a vector with the same xyz components as specified in the parameters
     public Vector3(float compX, float compY, float compZ) {
         this.compX = compX;
