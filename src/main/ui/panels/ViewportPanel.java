@@ -18,6 +18,7 @@ public class ViewportPanel extends JPanel implements ActionListener, Tickable {
     private JButton startButton;
     private JButton stopButton;
     private JButton resetButton;
+    private JButton resetCameraButton;
     private JLabel timeElapsedLabel;
     private RenderEngine renderEngine;
 
@@ -42,26 +43,30 @@ public class ViewportPanel extends JPanel implements ActionListener, Tickable {
     public ViewportPanel() {
         setLayout(new BorderLayout());
 
-        JPanel controlPanel = new JPanel(new FlowLayout());
+        JPanel simControlPanel = new JPanel(new FlowLayout());
         startButton = new JButton("Start");
         startButton.addActionListener(this);
-        controlPanel.add(startButton);
+        simControlPanel.add(startButton);
 
         stopButton = new JButton("Stop");
         stopButton.addActionListener(this);
-        controlPanel.add(stopButton);
+        simControlPanel.add(stopButton);
 
         resetButton = new JButton("Reset");
         resetButton.addActionListener(this);
-        controlPanel.add(resetButton);
+        simControlPanel.add(resetButton);
+
+        resetCameraButton = new JButton("Reset Camera");
+        resetCameraButton.addActionListener(this);
+        simControlPanel.add(resetCameraButton);
 
         timeElapsedLabel = new JLabel();
-        controlPanel.add(timeElapsedLabel);
+        simControlPanel.add(timeElapsedLabel);
 
         viewport = new ActualViewport(this);
         renderEngine = new RenderEngine(viewport, VIEWPORT_RESOLUTION);
 
-        JSplitPane splitter = new JSplitPane(JSplitPane.VERTICAL_SPLIT, controlPanel, viewport);
+        JSplitPane splitter = new JSplitPane(JSplitPane.VERTICAL_SPLIT, simControlPanel, viewport);
         splitter.setResizeWeight(SPLIT_WEIGHT);
         splitter.setEnabled(false);
 
@@ -82,6 +87,9 @@ public class ViewportPanel extends JPanel implements ActionListener, Tickable {
             SimulatorState.getInstance().setIsRunning(false);
             Simulation newSim = new Simulation();
             SimulatorUtils.transferSimData(SimulatorState.getInstance().getSimulation(), newSim);
+        }
+        if (actionEvent.getSource() == resetCameraButton) {
+            renderEngine.getCameraController().resetCamera();
         }
     }
 

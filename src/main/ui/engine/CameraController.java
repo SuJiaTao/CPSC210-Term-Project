@@ -23,6 +23,8 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
     private static final float ANGULAR_ACCELERATION = 15.0f;
     private static final float ANGULAR_DRAG = 0.006f;
 
+    private static final float PITCH_RANGE = 85.0f;
+
     private RenderEngine parent;
 
     private java.util.List<Integer> keysDown;
@@ -44,16 +46,19 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
         this.parent.getPanel().addMouseListener(this);
 
         keysDown = new ArrayList<>();
+        resetCamera();
 
+        lastTickNanoseconds = System.nanoTime();
+    }
+
+    public void resetCamera() {
         position = new Vector3(INITIAL_POSTION);
         velocity = new Vector3();
         yaw = 0.0f;
         yawVelocity = 0.0f;
         pitch = 0.0f;
         pitchVelocity = 0.0f;
-
         viewTransform = new Transform();
-        lastTickNanoseconds = System.nanoTime();
     }
 
     @Override
@@ -85,11 +90,11 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
         float deltaTimeSeconds = (float) deltaTimeNanoseconds / 1000000000.0f;
 
         handleInputs();
-        Transform rotationTransform = generateRotationTransform();
 
+        Transform velRotation = Transform.multiply(Transform.rotationX(pitch), Transform.rotationY(yaw));
         velocity = clampVector(velocity, MAX_VELOCITY);
         velocity = Vector3.multiply(velocity, 1.0f - DRAG);
-        Vector3 velActual = Transform.multiply(rotationTransform, velocity);
+        Vector3 velActual = Transform.multiply(velRotation, velocity);
         position = Vector3.add(position, Vector3.multiply(velActual, deltaTimeSeconds));
 
         yawVelocity = Math.max(Math.min(yawVelocity, MAX_ANGULAR_VELOCITY), -MAX_ANGULAR_VELOCITY);
@@ -98,19 +103,15 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
 
         pitchVelocity = Math.max(Math.min(pitchVelocity, MAX_ANGULAR_VELOCITY), -MAX_ANGULAR_VELOCITY);
         pitch += pitchVelocity * deltaTimeSeconds;
+        pitch = Math.max(Math.min(pitch, PITCH_RANGE), -PITCH_RANGE);
         pitchVelocity *= (1.0f - ANGULAR_DRAG);
 
         viewTransform = Transform.translation(Vector3.multiply(position, -1.0f));
         viewTransform = Transform.multiply(viewTransform, Transform.rotationY(-yaw));
         viewTransform = Transform.multiply(viewTransform, Transform.rotationX(-pitch));
         parent.setViewTransform(viewTransform);
-        lastTickNanoseconds = System.nanoTime();
-    }
 
-    private Transform generateRotationTransform() {
-        // NOTE:
-        // did you know that rotations in 3D are evil?
-        return Transform.multiply(Transform.rotationX(pitch), Transform.rotationY(yaw));
+        lastTickNanoseconds = System.nanoTime();
     }
 
     private void handleInputs() {

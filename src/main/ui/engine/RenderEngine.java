@@ -68,6 +68,10 @@ public class RenderEngine implements Tickable {
         return parent;
     }
 
+    public CameraController getCameraController() {
+        return cameraController;
+    }
+
     public void lockEngine() {
         readWriteLock.lock();
     }
