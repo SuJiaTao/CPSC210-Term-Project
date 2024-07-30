@@ -17,11 +17,15 @@ public abstract class AbstractListPanel<T> extends JPanel implements Tickable {
     // course, but Java has forced my hand. Thanks Swing. To decipher this
     // awfulness, please refer to JList and AbstractListModel documentation.
     private class InternalListModel extends AbstractListModel<T> implements Tickable {
-        private volatile java.util.List<T> targetListData;
+        private java.util.List<T> targetListData;
 
         // EFFECTS: sets the internal target list to point at listData
         public InternalListModel(java.util.List<T> listData) {
             targetListData = listData;
+        }
+
+        public java.util.List<T> getListData() {
+            return targetListData;
         }
 
         // EFFECTS: returns internal list size
@@ -66,6 +70,10 @@ public abstract class AbstractListPanel<T> extends JPanel implements Tickable {
 
     public JPanel getEditorPanel() {
         return editorPanel;
+    }
+
+    public java.util.List<T> getListData() {
+        return listModel.getListData();
     }
 
     // EFFECTS: expected that the user defines a means to initialize the editor

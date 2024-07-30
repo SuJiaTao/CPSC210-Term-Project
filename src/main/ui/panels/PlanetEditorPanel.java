@@ -11,8 +11,6 @@ import javax.swing.*;
 
 // Planet editor panel used to edit plant properties
 public class PlanetEditorPanel extends JPanel implements ActionListener, Tickable {
-    private static final int EDIT_FIELD_COLUMNS = 20;
-
     private PlanetListPanel parent;
     private JTextField nameEditField;
     private JTextField posEditField;
@@ -22,55 +20,30 @@ public class PlanetEditorPanel extends JPanel implements ActionListener, Tickabl
     private JButton removePlaneButton;
 
     public PlanetEditorPanel(PlanetListPanel parent) {
-        super(new GridBagLayout());
+        super(new BorderLayout());
 
         this.parent = parent;
-        JLabel editorTitleLabel = new JLabel("Edit Planet");
-        editorTitleLabel.setHorizontalAlignment(JLabel.CENTER);
-        editorTitleLabel.setFont(new Font(editorTitleLabel.getFont().getName(),
-                Font.BOLD, 15));
 
-        add(editorTitleLabel, createConstraints(0, 0, 3));
+        JLabel editorTitleLabel = SimulatorUtils.makeTitleLabel("Edit Planet");
+        add(editorTitleLabel, BorderLayout.NORTH);
 
-        nameEditField = initAndAddPropertyEditField("Name: ", 1);
-        posEditField = initAndAddPropertyEditField("Position: ", 2);
-        velEditField = initAndAddPropertyEditField("Velocity: ", 3);
-        radEditField = initAndAddPropertyEditField("Radius: ", 4);
+        JPanel infoPanel = new JPanel();
+        infoPanel.setLayout(new GridBagLayout());
+
+        nameEditField = SimulatorUtils.initAndAddPropertyEditField(infoPanel, this, "Name: ", 0);
+        posEditField = SimulatorUtils.initAndAddPropertyEditField(infoPanel, this, "Position: ", 1);
+        velEditField = SimulatorUtils.initAndAddPropertyEditField(infoPanel, this, "Velocity: ", 2);
+        radEditField = SimulatorUtils.initAndAddPropertyEditField(infoPanel, this, "Radius: ", 3);
 
         addPlanetButton = new JButton("Add New");
         addPlanetButton.addActionListener(this);
-        add(addPlanetButton, createConstraints(1, 5, 1));
+        infoPanel.add(addPlanetButton, SimulatorUtils.makeGbConstraints(1, 5, 1));
 
         removePlaneButton = new JButton("Remove");
         removePlaneButton.addActionListener(this);
-        add(removePlaneButton, createConstraints(2, 5, 1));
-    }
+        infoPanel.add(removePlaneButton, SimulatorUtils.makeGbConstraints(2, 5, 1));
 
-    // MODIFIES: this
-    // EFFECTS: adds a label and textfield, returns the textfield
-    public JTextField initAndAddPropertyEditField(String title, int height) {
-        add(new JLabel(title, JLabel.RIGHT), createConstraints(0, height, 1));
-        JTextField textField = new JTextField(EDIT_FIELD_COLUMNS);
-        textField.addActionListener(this);
-        add(textField, createConstraints(1, height, 2));
-        return textField;
-
-    }
-
-    public JTextField getNameEditField() {
-        return nameEditField;
-    }
-
-    public JTextField getPosEditField() {
-        return posEditField;
-    }
-
-    public JTextField getVelEditField() {
-        return velEditField;
-    }
-
-    public JTextField getRadEditField() {
-        return radEditField;
+        add(infoPanel, BorderLayout.CENTER);
     }
 
     // MODIFIES: this
@@ -89,7 +62,7 @@ public class PlanetEditorPanel extends JPanel implements ActionListener, Tickabl
     // EFFECTS: handles if something is submitted to a text field
     public void handleTextFieldSubmit(JTextField fieldSrc) {
         if (fieldSrc == nameEditField) {
-            if (SimulatorUtils.checkIfValidPlanetName(fieldSrc.getText())) {
+            if (SimulatorUtils.checkIfValidName(fieldSrc.getText())) {
                 getSelectedPlanet().setName(fieldSrc.getText());
             }
         }
@@ -129,25 +102,12 @@ public class PlanetEditorPanel extends JPanel implements ActionListener, Tickabl
         }
     }
 
-    // EFFECTS: creates GridBagConstraints at the specific row and column, with the
-    // specified with and with some padding around it
-    private GridBagConstraints createConstraints(int gx, int gy, int width) {
-        GridBagConstraints gbConst = new GridBagConstraints();
-        gbConst.fill = GridBagConstraints.BOTH;
-        gbConst.gridx = gx;
-        gbConst.gridy = gy;
-        gbConst.gridwidth = width;
-        gbConst.weightx = 0.5;
-        gbConst.insets = new Insets(1, 5, 1, 5);
-        return gbConst;
-    }
-
     // MODIFIES: this
     // EFFECTS: updates itself and all relevant sub-components
     public void tick() {
         SimulatorState simState = SimulatorState.getInstance();
         Planet selPlanet = parent.getSwingList().getSelectedValue();
-        handleShouldFieldsBeEditable(simState, selPlanet);
+        handleShouldPanelsBeEditable(simState, selPlanet);
         handleEditFieldText(simState, selPlanet);
     }
 
@@ -178,13 +138,14 @@ public class PlanetEditorPanel extends JPanel implements ActionListener, Tickabl
     }
 
     // MODIFIES: this
-    // EFFECTS: handles whether the editfields should be editable
-    private void handleShouldFieldsBeEditable(SimulatorState simState, Planet selPlanet) {
+    // EFFECTS: handles whether the editfields and buttons should be editable
+    private void handleShouldPanelsBeEditable(SimulatorState simState, Planet selPlanet) {
         boolean isNotRunning = !simState.getIsRunning();
         boolean isPlanetSelected = (selPlanet != null);
 
         boolean canEdit = (isNotRunning && isPlanetSelected);
 
+        removePlaneButton.setEnabled(canEdit);
         nameEditField.setEditable(canEdit);
         posEditField.setEditable(canEdit);
         velEditField.setEditable(canEdit);

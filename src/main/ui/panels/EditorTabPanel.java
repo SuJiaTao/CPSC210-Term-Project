@@ -11,15 +11,16 @@ public class EditorTabPanel extends JTabbedPane implements Tickable {
 
     private PlanetListPanel planetListPanel;
     private CollisionListPanel collisionListPanel;
-    private JPanel saveListPanel;
+    private SavedListPanel savedListPanel;
 
     public EditorTabPanel() {
         planetListPanel = new PlanetListPanel();
         collisionListPanel = new CollisionListPanel();
-        // TODO: implement colListPanel and saveListPanel
+        savedListPanel = new SavedListPanel();
+
         addTab(PLANET_LIST_NAME, planetListPanel);
         addTab(COLLISION_LIST_NAME, collisionListPanel);
-        addTab(SAVE_LIST_NAME, new JPanel());
+        addTab(SAVE_LIST_NAME, savedListPanel);
 
         setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
     }
@@ -28,13 +29,12 @@ public class EditorTabPanel extends JTabbedPane implements Tickable {
         return planetListPanel;
     }
 
-    // TODO: write other getters
-
     // MODIFIES: this
     // EFFECTS: updates this and relevant sub-components
     @Override
     public void tick() {
         planetListPanel.tick();
         collisionListPanel.tick();
+        savedListPanel.tick();
     }
 }

@@ -1,12 +1,7 @@
 package ui;
 
-import model.*;
 import ui.panels.*;
-
 import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import java.util.*;
 
 // Contains all the rendering related data for the SWING based GUI
 public class SimulatorGUI implements Tickable {
@@ -20,11 +15,6 @@ public class SimulatorGUI implements Tickable {
     private SimulatorGUI() {
         if (instance != null) {
             throw new IllegalStateException();
-        }
-
-        for (int i = 0; i < 5; i++) {
-            // SimulatorState.getInstance().getSimulation().addPlanet(new Planet("h",
-            // 1.0f));
         }
 
         mainWindow = new MainWindow(WINDOW_TITLE, WINDOW_DIMENSION);

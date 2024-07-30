@@ -13,6 +13,7 @@ public class PlanetListPanel extends AbstractListPanel<Planet> {
         super(SimulatorState.getInstance().getSimulation().getPlanets());
     }
 
+    // MODIFIES: this
     // EFFECTS: returns the PlanetEditorPanel class
     @Override
     protected JPanel initEditorPanel() {

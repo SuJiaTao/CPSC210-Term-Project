@@ -1,7 +1,14 @@
 package ui;
 
 import model.*;
+
+import java.awt.*;
+import java.awt.event.ActionListener;
 import java.util.*;
+
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 // There are a handful of miscellanious parsing and calculating methods that would 
 // otherwise bloat UI or simple logic code, which is kept here instead
@@ -15,6 +22,8 @@ public class SimulatorUtils {
     private static final float NEW_PLANET_INITIAL_VEL_BOUND = 2.0f;
     private static final float NEW_PLANET_MIN_RAD = 0.5f;
     private static final float NEW_PLANET_MAX_RAD = 1.5f;
+
+    private static final int EDIT_FIELD_COLUMNS = 20;
 
     // EFFECTS: creates a new random planet and returns it
     public static Planet createNewPlanet() {
@@ -52,8 +61,44 @@ public class SimulatorUtils {
         simDestination.getCollisions().addAll(simSource.getCollisions());
     }
 
-    // EFFECTS: checks whether string is valid planet name
-    public static boolean checkIfValidPlanetName(String str) {
+    // EFFECTS: creates a "Title" JLabel and returns it
+    public static JLabel makeTitleLabel(String message) {
+        JLabel title = new JLabel(message);
+        title.setHorizontalAlignment(JLabel.CENTER);
+        title.setVerticalAlignment(JLabel.CENTER);
+        title.setFont(new Font(title.getFont().getName(),
+                Font.BOLD, 15));
+        return title;
+    }
+
+    // EFFECTS: creates GridBagConstraints at the specific row and column, with the
+    // specified with and with some padding around it
+    public static GridBagConstraints makeGbConstraints(int gx, int gy, int width) {
+        GridBagConstraints gbConst = new GridBagConstraints();
+        gbConst.fill = GridBagConstraints.BOTH;
+        gbConst.gridx = gx;
+        gbConst.gridy = gy;
+        gbConst.gridwidth = width;
+        gbConst.weightx = 0.5;
+        gbConst.insets = new Insets(1, 5, 1, 5);
+        return gbConst;
+    }
+
+    // EFFECTS: makes a property field which is labelled on the right, adds it to
+    // the parent, adds the listener to it, and returns it
+    public static JTextField initAndAddPropertyEditField(JPanel parent, ActionListener listener, String title,
+            int height) {
+        parent.add(new JLabel(title, JLabel.RIGHT), SimulatorUtils.makeGbConstraints(0, height, 1));
+        JTextField textField = new JTextField(EDIT_FIELD_COLUMNS);
+        if (listener != null) {
+            textField.addActionListener(listener);
+        }
+        parent.add(textField, SimulatorUtils.makeGbConstraints(1, height, 2));
+        return textField;
+    }
+
+    // EFFECTS: checks whether string is valid name
+    public static boolean checkIfValidName(String str) {
         return (str.length() > 0 && str.charAt(0) != ' ');
     }
 
