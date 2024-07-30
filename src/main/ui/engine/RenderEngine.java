@@ -10,6 +10,7 @@ import java.util.*;
 import javax.swing.*;
 import java.awt.image.*;
 import java.awt.event.*;
+import java.util.concurrent.locks.*;
 
 // Hosts the rendering logic code for ViewportPanel, functions similarly to ui.legacy's ViewportEngine class
 public class RenderEngine implements Tickable {
@@ -24,6 +25,7 @@ public class RenderEngine implements Tickable {
     private float[] depthBuffer;
     private int[] colorBuffer;
     private BufferedImage image;
+    private ReentrantLock imageSync;
 
     private SimulatorState simState;
     private JPanel parent;
@@ -45,6 +47,7 @@ public class RenderEngine implements Tickable {
         bufferSize = size;
         depthBuffer = new float[size * size];
         image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+        imageSync = new ReentrantLock();
 
         // NOTE:
         // this is a real hack of voodo magic to allow me to directly acess the internal
@@ -77,18 +80,25 @@ public class RenderEngine implements Tickable {
         int imageSize = (int) ((float) Math.min(bounds.width, bounds.height) * VIEWPORT_SCALE_FACTOR);
         int offsetX = (int) ((double) (bounds.width - imageSize) * 0.5);
         int offsetY = (int) ((double) (bounds.height - imageSize) * 0.5);
+
+        imageSync.lock();
         gfx.drawImage(image, offsetX, offsetY, imageSize, imageSize, null);
+        imageSync.unlock();
     }
 
     @Override
     public void tick() {
         cameraController.tick();
 
-        clearBuffers();
         simState.lock();
+        imageSync.lock();
+
+        clearBuffers();
         for (Planet planet : simState.getSimulation().getPlanets()) {
             drawPlanet(planet);
         }
+
+        imageSync.unlock();
         simState.unlock();
     }
 

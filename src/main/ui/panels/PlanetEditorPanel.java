@@ -44,8 +44,11 @@ public class PlanetEditorPanel extends JPanel implements ActionListener, Tickabl
     }
 
     // MODIFIES: this
-    // EFFECTS: handles all actionevents
+    // EFFECTS: handles all actionevents, locks the SimulatorState instance as it
+    // directly modifies its contents
     public void actionPerformed(ActionEvent actionEvent) {
+        SimulatorState.getInstance().lock();
+
         if (actionEvent.getSource() instanceof JTextField) {
             handleTextFieldSubmit((JTextField) actionEvent.getSource());
         }
@@ -53,6 +56,8 @@ public class PlanetEditorPanel extends JPanel implements ActionListener, Tickabl
         if (actionEvent.getSource() instanceof JButton) {
             handleButtonPressed((JButton) actionEvent.getSource());
         }
+
+        SimulatorState.getInstance().unlock();
     }
 
     // MODIFIES: this
