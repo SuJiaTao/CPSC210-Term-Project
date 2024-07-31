@@ -20,6 +20,6 @@ public abstract class AbstractShader {
         if (sampleV < 0) {
             sampleV += image.getHeight();
         }
-        return image.getRGB(sampleU, sampleV);
+        return image.getRGB(sampleU, image.getHeight() - 1 - sampleV);
     }
 }

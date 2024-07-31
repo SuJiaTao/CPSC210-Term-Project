@@ -1,13 +1,11 @@
 package ui.engine;
 
 import model.*;
-import java.io.*;
 import java.util.*;
 import java.awt.image.*;
-import javax.imageio.ImageIO;
 
 public class TextureShader extends AbstractShader {
-    
+
     private static final Random RANDOM = new Random();
     private BufferedImage texture;
     private float alpha;

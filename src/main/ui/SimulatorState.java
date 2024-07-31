@@ -75,16 +75,13 @@ public class SimulatorState implements Tickable {
     private void handleCollisionBehavior() {
         // TODO: make more interesting... perhaps ejecting debris and stuff!
         for (Collision collision : simulation.getCollisions()) {
-            try {
-                simulation.removePlanet(collision.getPlanetsInvolved().get(0));
-            } catch (Exception e) {
-
-            }
+            // simulation.removePlanet(collision.getPlanetsInvolved().get(0));
             try {
                 simulation.removePlanet(collision.getPlanetsInvolved().get(1));
             } catch (Exception e) {
 
             }
+
         }
     }
 }

@@ -136,10 +136,10 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
             }
 
             if (keysDown.contains(KeyEvent.VK_UP)) {
-                pitchVelocity += ANGULAR_ACCELERATION * deltaTime;
+                pitchVelocity -= ANGULAR_ACCELERATION * deltaTime;
             }
             if (keysDown.contains(KeyEvent.VK_DOWN)) {
-                pitchVelocity -= ANGULAR_ACCELERATION * deltaTime;
+                pitchVelocity += ANGULAR_ACCELERATION * deltaTime;
             }
         }
     }

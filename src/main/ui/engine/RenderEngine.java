@@ -1,16 +1,10 @@
 package ui.engine;
 
+import ui.*;
 import model.*;
-import ui.SimulatorGUI;
-import ui.SimulatorState;
-import ui.SimulatorUtils;
-import ui.Tickable;
-
 import java.awt.*;
-import java.util.*;
 import javax.swing.*;
 import java.awt.image.*;
-import java.awt.event.*;
 import java.util.concurrent.locks.*;
 
 // Hosts the rendering logic code for ViewportPanel, functions similarly to ui.legacy's ViewportEngine class
@@ -442,6 +436,6 @@ public class RenderEngine implements Tickable {
     }
 
     private int getBufferIndex(int x, int y) {
-        return x + (bufferSize * y);
+        return x + (bufferSize * (bufferSize - 1 - y));
     }
 }
