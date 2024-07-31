@@ -209,24 +209,31 @@ public class RenderEngine implements Tickable {
     private void prepareAndDrawFragment(AbstractShader shader, Vector3 fragPos, Triangle target) {
         Vector3 attribWeights = generateAttribWeightings(fragPos, target);
 
-        float interpDepth = target.verts[0].getZ() * attribWeights.getX() +
-                target.verts[1].getZ() * attribWeights.getY() +
-                target.verts[2].getZ() * attribWeights.getZ();
+        float[] depthVals = { target.verts[0].getZ(), target.verts[1].getZ(), target.verts[2].getZ() };
+        float interpDepth = interpolateAttrib(depthVals, attribWeights, target);
         fragPos = new Vector3(fragPos.getX(), fragPos.getY(), interpDepth);
 
-        float texU = target.uvs[0].getX() * attribWeights.getX() +
-                target.uvs[1].getX() * attribWeights.getY() +
-                target.uvs[2].getX() * attribWeights.getZ();
-        float texV = target.uvs[0].getY() * attribWeights.getX() +
-                target.uvs[1].getY() * attribWeights.getY() +
-                target.uvs[2].getY() * attribWeights.getZ();
+        float[] texUVals = { target.uvs[0].getX(), target.uvs[1].getX(), target.uvs[2].getX() };
+        float texU = interpolateAttrib(texUVals, attribWeights, target);
+
+        float[] texVVals = { target.uvs[0].getY(), target.uvs[1].getY(), target.uvs[2].getY() };
+        float texV = interpolateAttrib(texVVals, attribWeights, target);
+
         drawFragment(fragPos, 0xFF000000 | shader.shade(attribWeights, new Vector3(texU, texV, 0.0f)));
+    }
+
+    // EFFECTS: interpolates an an attbribute depth-correctly based on a given
+    // weighting
+    private float interpolateAttrib(float[] valArray, Vector3 weight, Triangle parent) {
+        float w0 = weight.getX() / parent.verts[0].getZ();
+        float w1 = weight.getY() / parent.verts[1].getZ();
+        float w2 = weight.getZ() / parent.verts[2].getZ();
+        return (valArray[0] * w0 + valArray[1] * w1 + valArray[2] * w2) / (w0 + w1 + w2);
     }
 
     // Refer to:
     // https://gamedev.stackexchange.com/questions/23743/whats-the-most-efficient-way-to-find-barycentric-coordinates
-    // EFFECTS: generates a non-depth corrected (sorry! beyond the scope of my
-    // patience for this class) weighting for the vertex attributes of the target
+    // EFFECTS: generates a weighting for the vertex attributes of the target
     // triangle for this fragment
     private Vector3 generateAttribWeightings(Vector3 fragPos, Triangle target) {
         Vector3 vert0 = target.verts[0];
