@@ -18,12 +18,13 @@ public class RenderEngine implements Tickable {
     private static final int COLOR_CLEAR_VALUE = 0xFF000000;
     private static final float DEPTH_CLEAR_VALUE = Float.NEGATIVE_INFINITY;
     private static final float VIEWPORT_SCALE_FACTOR = 0.97f;
-    private static final float CLIPPING_PLANE_DEPTH = -1.0f;
-    private static final float CLIPPING_PLANE_TOLERANCE = 1.1f;
+    private static final float CLIPPING_PLANE_DEPTH = -0.5f;
+    private static final float CLIPPING_TOLERANCE = 0.1f;
     private static final float SELECTOR_SCALE = 1.15f;
     private static final Mesh PLANET_MESH = Mesh.loadMeshByFileName(Mesh.MESH_UVSPHERE_NAME);
     private static final Mesh PLANET_SELECTOR_MESH = Mesh.loadMeshByFileName(Mesh.MESH_ICOSPHERE_NAME);
     private static final BufferedImage TEXTURE_DEBUG = SimulatorUtils.loadImage("debug.jpg");
+    private static final BufferedImage TEXTURE_EARTH = SimulatorUtils.loadImage("earth.jpg");
 
     private int bufferSize;
     private float[] depthBuffer;
@@ -99,7 +100,7 @@ public class RenderEngine implements Tickable {
 
     private void drawPlanet(Planet planet) {
         Vector3 planetWorldPos = Transform.multiply(viewTransform, planet.getPosition());
-        if (planetWorldPos.getZ() + planet.getRadius() * CLIPPING_PLANE_TOLERANCE >= CLIPPING_PLANE_DEPTH) {
+        if (planetWorldPos.getZ() + planet.getRadius() + CLIPPING_TOLERANCE >= CLIPPING_PLANE_DEPTH) {
             return;
         }
 
@@ -113,7 +114,14 @@ public class RenderEngine implements Tickable {
                     0xFFFFFFFF);
         }
 
-        TextureShader shader = new TextureShader(TEXTURE_DEBUG, 1.0f);
+        BufferedImage planetTexture = null;
+        if (planet.getName().contains("Earth")) {
+            planetTexture = TEXTURE_EARTH;
+        } else {
+            planetTexture = TEXTURE_DEBUG;
+        }
+
+        TextureShader shader = new TextureShader(planetTexture, 1.0f);
         shadeMesh(shader, PLANET_MESH, meshTransform);
 
     }

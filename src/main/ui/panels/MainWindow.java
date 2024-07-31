@@ -1,6 +1,8 @@
 package ui.panels;
 
 import java.awt.*;
+
+import ui.SimulatorUtils;
 import ui.Tickable;
 import javax.swing.*;
 
@@ -16,6 +18,7 @@ public class MainWindow extends JFrame implements Tickable {
         setTitle(title);
         setPreferredSize(size);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setIconImage(SimulatorUtils.loadImage("icon.png"));
 
         editorTabPanel = new EditorTabPanel();
         viewportPanel = new ViewportPanel();

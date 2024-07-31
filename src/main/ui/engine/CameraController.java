@@ -82,6 +82,12 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
         long deltaTimeNanoseconds = System.nanoTime() - lastTickNanoseconds;
         float deltaTimeSeconds = (float) deltaTimeNanoseconds / 1000000000.0f;
 
+        // NOTE:
+        // key release callbacks will not go through if the panel suddenly loses focus
+        if (!parent.getPanel().isFocusOwner()) {
+            keysDown.clear();
+        }
+
         handleInputs(deltaTimeSeconds);
 
         Transform velRotation = Transform.multiply(Transform.rotationX(pitch), Transform.rotationY(yaw));
