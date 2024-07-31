@@ -209,20 +209,25 @@ public class RenderEngine implements Tickable {
     private void prepareAndDrawFragment(AbstractShader shader, Vector3 fragPos, Triangle target) {
         Vector3 attribWeights = generateAttribWeightings(fragPos, target);
 
-        float[] depthVals = { target.verts[0].getZ(), target.verts[1].getZ(), target.verts[2].getZ() };
-        float interpDepth = interpolateAttrib(depthVals, attribWeights, target);
-        fragPos = new Vector3(fragPos.getX(), fragPos.getY(), interpDepth);
-
         float[] texUVals = { target.uvs[0].getX(), target.uvs[1].getX(), target.uvs[2].getX() };
         float texU = interpolateAttrib(texUVals, attribWeights, target);
 
         float[] texVVals = { target.uvs[0].getY(), target.uvs[1].getY(), target.uvs[2].getY() };
         float texV = interpolateAttrib(texVVals, attribWeights, target);
 
+        fragPos = new Vector3(fragPos.getX(), fragPos.getY(), interpolateDepth(attribWeights, target));
         drawFragment(fragPos, 0xFF000000 | shader.shade(attribWeights, new Vector3(texU, texV, 0.0f)));
     }
 
-    // EFFECTS: interpolates an an attbribute depth-correctly based on a given
+    // EFFECTS: interpolates the depth properly
+    private float interpolateDepth(Vector3 weights, Triangle target) {
+        float w0 = weights.getX() / target.verts[0].getZ();
+        float w1 = weights.getY() / target.verts[1].getZ();
+        float w2 = weights.getZ() / target.verts[2].getZ();
+        return 1.0f / (w0 + w1 + w2);
+    }
+
+    // EFFECTS: interpolates an attbribute depth-correctly based on a given
     // weighting
     private float interpolateAttrib(float[] valArray, Vector3 weight, Triangle parent) {
         float w0 = weight.getX() / parent.verts[0].getZ();
@@ -396,7 +401,7 @@ public class RenderEngine implements Tickable {
         float drawX = from.getX();
         float drawY = from.getY();
         for (float step = 0; step <= dist; step++) {
-            float depth = from.getZ() + (to.getZ() - from.getZ()) * (1.0f - step / dist);
+            float depth = from.getZ() + (to.getZ() - from.getZ()) * (step / dist);
             drawFragment(new Vector3(drawX, drawY, depth), color);
             drawX += deltaX / dist;
             drawY += deltaY / dist;
