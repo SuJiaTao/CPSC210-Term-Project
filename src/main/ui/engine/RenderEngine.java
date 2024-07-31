@@ -3,6 +3,7 @@ package ui.engine;
 import model.*;
 import ui.SimulatorGUI;
 import ui.SimulatorState;
+import ui.SimulatorUtils;
 import ui.Tickable;
 
 import java.awt.*;
@@ -18,8 +19,11 @@ public class RenderEngine implements Tickable {
     private static final float DEPTH_CLEAR_VALUE = Float.NEGATIVE_INFINITY;
     private static final float VIEWPORT_SCALE_FACTOR = 0.97f;
     private static final float CLIPPING_PLANE_DEPTH = -1.0f;
-    private static final Color[] PLANET_COLORS = { new Color(0xF6995C), new Color(0x51829B), new Color(0x9BB0C1),
-            new Color(0xEADFB4) };
+    private static final float CLIPPING_PLANE_TOLERANCE = 1.1f;
+    private static final float SELECTOR_SCALE = 1.15f;
+    private static final Mesh PLANET_MESH = Mesh.loadMeshByFileName(Mesh.MESH_UVSPHERE_NAME);
+    private static final Mesh PLANET_SELECTOR_MESH = Mesh.loadMeshByFileName(Mesh.MESH_ICOSPHERE_NAME);
+    private static final BufferedImage TEXTURE_DEBUG = SimulatorUtils.loadImage("debug.jpg");
 
     private int bufferSize;
     private float[] depthBuffer;
@@ -32,11 +36,6 @@ public class RenderEngine implements Tickable {
 
     private Transform viewTransform;
     private CameraController cameraController;
-
-    private BufferedImage textureDebug;
-
-    // TODO: improve
-    private Mesh planetMesh;
 
     public RenderEngine(JPanel parent, int size) {
         this.parent = parent;
@@ -55,12 +54,8 @@ public class RenderEngine implements Tickable {
         // buffered image every frame which would be horribly slow
         colorBuffer = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
 
-        planetMesh = Mesh.getPlanetMesh();
-
         viewTransform = new Transform();
         cameraController = new CameraController(this);
-
-        textureDebug = TextureShader.loadImage("debug.jpg");
     }
 
     public void setViewTransform(Transform viewTransform) {
@@ -103,9 +98,8 @@ public class RenderEngine implements Tickable {
     }
 
     private void drawPlanet(Planet planet) {
-        // TODO: make look good
         Vector3 planetWorldPos = Transform.multiply(viewTransform, planet.getPosition());
-        if (planetWorldPos.getZ() >= CLIPPING_PLANE_DEPTH) {
+        if (planetWorldPos.getZ() + planet.getRadius() * CLIPPING_PLANE_TOLERANCE >= CLIPPING_PLANE_DEPTH) {
             return;
         }
 
@@ -113,23 +107,15 @@ public class RenderEngine implements Tickable {
         Transform planetTransform = Transform.transform(planet.getPosition(), new Vector3(), planetScale);
         Transform meshTransform = Transform.multiply(planetTransform, viewTransform);
 
-        drawWireMesh(planetMesh, meshTransform, 0xFFFFFFFF);
-
-        TextureShader shader = new TextureShader(textureDebug, 0.5f);
-        shadeMesh(shader, planetMesh, meshTransform);
-
-    }
-
-    private int getPlanetColor(Planet planet) {
         if (planet == SimulatorGUI.getInstance().getSelectedPlanet()) {
-            return 0xFFFFFFFF;
+            Vector3 scaleVector = new Vector3(SELECTOR_SCALE, SELECTOR_SCALE, SELECTOR_SCALE);
+            drawWireMesh(PLANET_SELECTOR_MESH, Transform.multiply(Transform.scale(scaleVector), meshTransform),
+                    0xFFFFFFFF);
         }
 
-        int randIndex = planet.getName().hashCode() % PLANET_COLORS.length;
-        if (randIndex < 0) {
-            randIndex += PLANET_COLORS.length;
-        }
-        return PLANET_COLORS[randIndex].getRGB();
+        TextureShader shader = new TextureShader(TEXTURE_DEBUG, 1.0f);
+        shadeMesh(shader, PLANET_MESH, meshTransform);
+
     }
 
     private void drawWireMesh(Mesh mesh, Transform transform, int color) {

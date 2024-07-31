@@ -3,8 +3,13 @@ package ui;
 import model.*;
 import java.awt.*;
 import java.util.*;
+
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 // There are a handful of miscellanious parsing, calculating, and UI methods that would 
 // bloat otherwise unrelated code, so it is kept here instead
@@ -18,9 +23,18 @@ public class SimulatorUtils {
     private static final float NEW_PLANET_INITIAL_POS_BOUND = 30.0f;
     private static final float NEW_PLANET_INITIAL_VEL_BOUND = 0.5f;
     private static final float NEW_PLANET_MIN_RAD = 0.5f;
-    private static final float NEW_PLANET_MAX_RAD = 1.5f;
-
+    private static final float NEW_PLANET_MAX_RAD = 3.5f;
     private static final int EDIT_FIELD_COLUMNS = 20;
+    private static final String IMAGE_PATH = "./data/image/";
+
+    // EFFECTS: loads image
+    public static BufferedImage loadImage(String imgName) {
+        try {
+            return ImageIO.read(new File(IMAGE_PATH + imgName));
+        } catch (IOException err) {
+            throw new IllegalStateException(); // shouldnt happen
+        }
+    }
 
     // EFFECTS: creates a new random planet and returns it
     public static Planet createNewPlanet() {

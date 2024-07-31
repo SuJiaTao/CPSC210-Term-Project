@@ -1,23 +1,21 @@
 package ui.engine;
 
 import model.*;
-import ui.SimulatorUtils;
-
-import java.io.File;
 import java.util.*;
+import java.io.File;
 
 // Mesh object for containing info on object geometry
 public class Mesh {
     private static final String MESH_PATH = "./data/mesh/";
     private static final int INDICIE_ELEMENTS_PER_TRI = 6;
 
+    public static final String MESH_UVSPHERE_NAME = "uvsphere.obj";
+    public static final String MESH_ICOSPHERE_NAME = "icosphere.obj";
+    public static final String MESH_DEBUG_NAME = "debug.obj";
+
     private Vector3[] verts;
     private Vector3[] uvs;
     private int[] indicies;
-
-    public static Mesh getPlanetMesh() {
-        return loadMeshFromObjFile("planet.obj");
-    }
 
     // EFFECTS: initializes a mesh based on the given objects
     private Mesh(Vector3[] verts, Vector3[] uvs, int[] indicies) {
@@ -44,7 +42,7 @@ public class Mesh {
         return new Triangle(tri); // make copy so that references aren't to internal objects
     }
 
-    private static Mesh loadMeshFromObjFile(String fileName) {
+    public static Mesh loadMeshByFileName(String fileName) {
         File modelFile = new File(MESH_PATH + fileName);
         if (!modelFile.isFile()) {
             throw new IllegalStateException(); // shouldnt happen
