@@ -10,12 +10,12 @@ import java.util.concurrent.locks.*;
 
 // Hosts the rendering logic code for ViewportPanel, functions similarly to ui.legacy's ViewportEngine class
 public class RenderEngine implements Tickable {
-    public static final float CLIPPING_PLANE_DEPTH = -3.0f;
+    public static final float CLIPPING_PLANE_DEPTH = -0.1f;
     private static final int COLOR_CLEAR_VALUE = 0xFF000000;
     private static final float DEPTH_CLEAR_VALUE = Float.NEGATIVE_INFINITY;
     private static final float VIEWPORT_SCALE_FACTOR = 0.97f;
     private static final float SELECTOR_SCALE = 1.15f;
-    private static final Mesh PLANET_MESH = Mesh.loadMeshByFileName(Mesh.MESH_DEBUG_NAME);
+    private static final Mesh PLANET_MESH = Mesh.loadMeshByFileName(Mesh.MESH_UVSPHERE_NAME);
     private static final Mesh PLANET_SELECTOR_MESH = Mesh.loadMeshByFileName(Mesh.MESH_ICOSPHERE_NAME);
     private static final BufferedImage TEXTURE_DEBUG = SimulatorUtils.loadImage("debug.jpg");
     private static final BufferedImage TEXTURE_EARTH = SimulatorUtils.loadImage("earth.jpg");
@@ -139,9 +139,12 @@ public class RenderEngine implements Tickable {
             tri.verts[1] = Transform.multiply(transform, tri.verts[1]);
             tri.verts[2] = Transform.multiply(transform, tri.verts[2]);
 
-            tri = projectTriangleToScreenSpace(tri);
+            Triangle[] clippedTris = clipTriangle(tri);
+            for (Triangle clippedTri : clippedTris) {
+                clippedTri = projectTriangleToScreenSpace(clippedTri);
+                shadeTriangle(shader, clippedTri);
+            }
 
-            shadeTriangle(shader, tri);
         }
     }
 
@@ -149,18 +152,13 @@ public class RenderEngine implements Tickable {
     // EFFECTS: renders a given triangle
     private void shadeTriangle(AbstractShader shader, Triangle tri) {
         // NOTE:
-        // the standard procedure for rendering an arbitrary triangle is to clip it,
-        // then split it in the middle, and render the flattop/flatbottom parts of it
-        // each
+        // the standard procedure for rendering an arbitrary triangle is to split it in
+        // the middle, and render the flattop/flatbottom parts of it each
+        Triangle sortedTri = sortTriangleByHeight(tri);
+        Triangle[] cutTris = cutSortedTriangle(sortedTri);
 
-        Triangle[] clippedTris = clipTriangle(tri);
-        for (Triangle clippedTri : clippedTris) {
-            Triangle sortedTri = sortTriangleByHeight(clippedTri);
-            Triangle[] cutTris = cutSortedTriangle(sortedTri);
-
-            shadeTriangleFlatBottom(shader, cutTris[0], sortedTri);
-            shadeTriangleFlatTop(shader, cutTris[1], sortedTri);
-        }
+        shadeTriangleFlatBottom(shader, cutTris[0], sortedTri);
+        shadeTriangleFlatTop(shader, cutTris[1], sortedTri);
     }
 
     // MODIFIES: this
@@ -388,7 +386,7 @@ public class RenderEngine implements Tickable {
         ArrayList<Integer> vertsBehind = new ArrayList<>();
         ArrayList<Integer> vertsBefore = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
-            if (tri.verts[i].getZ() >= CLIPPING_PLANE_DEPTH) {
+            if (tri.verts[i].getZ() > CLIPPING_PLANE_DEPTH) {
                 vertsBehind.add(i);
             } else {
                 vertsBefore.add(i);
@@ -441,7 +439,7 @@ public class RenderEngine implements Tickable {
         triRight.verts[2] = new Vector3(vertexRToB);
         triRight.uvs[2] = new Vector3(uvRToB);
 
-        return new Triangle[] {};
+        return new Triangle[] { triLeft, triRight };
     }
 
     // EFFECTS: clips a triangle in the case that two of the verticies are behind
@@ -450,8 +448,6 @@ public class RenderEngine implements Tickable {
         float factorBToL = getClippingFactor(original.verts[before], original.verts[behindL]);
         Vector3 vertexBToL = interpolateVector3(original.verts[before], original.verts[behindL], factorBToL);
         Vector3 uvBToL = interpolateVector3(original.uvs[before], original.uvs[behindL], factorBToL);
-
-        System.out.println(factorBToL);
 
         float factorBToR = getClippingFactor(original.verts[before], original.verts[behindR]);
         Vector3 vertexBToR = interpolateVector3(original.verts[before], original.verts[behindR], factorBToR);

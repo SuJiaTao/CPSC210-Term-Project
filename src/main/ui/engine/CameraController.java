@@ -106,7 +106,7 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
         Vector3 velActual = Transform.multiply(velRotation, velocity);
         position = Vector3.add(position, Vector3.multiply(velActual, deltaTimeSeconds));
 
-        // handleCameraCollisions();
+        handleCameraCollisions();
 
         yawVelocity = Math.max(Math.min(yawVelocity, MAX_ANGULAR_VELOCITY), -MAX_ANGULAR_VELOCITY);
         yaw += yawVelocity * deltaTimeSeconds;
