@@ -9,10 +9,10 @@ import java.util.concurrent.locks.*;
 
 // Hosts the rendering logic code for ViewportPanel, functions similarly to ui.legacy's ViewportEngine class
 public class RenderEngine implements Tickable {
+    public static final float CLIPPING_PLANE_DEPTH = -0.5f;
     private static final int COLOR_CLEAR_VALUE = 0xFF000000;
     private static final float DEPTH_CLEAR_VALUE = Float.NEGATIVE_INFINITY;
     private static final float VIEWPORT_SCALE_FACTOR = 0.97f;
-    private static final float CLIPPING_PLANE_DEPTH = -0.5f;
     private static final float CLIPPING_TOLERANCE = 0.1f;
     private static final float SELECTOR_SCALE = 1.15f;
     private static final Mesh PLANET_MESH = Mesh.loadMeshByFileName(Mesh.MESH_UVSPHERE_NAME);

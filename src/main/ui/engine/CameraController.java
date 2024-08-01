@@ -2,6 +2,8 @@ package ui.engine;
 
 import model.*;
 import java.util.*;
+
+import ui.SimulatorState;
 import ui.Tickable;
 import java.awt.event.*;
 
@@ -9,6 +11,7 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
     private static final Vector3 INITIAL_POSTION = new Vector3(0, 0, 30.0f);
 
     private static final float MAX_VELOCITY = 15.0f;
+    private static final float MAX_VELOCITY_SHIFT_FACTOR = 2.0f;
     private static final float ACCELERATION = 75.0f;
     private static final float DRAG = 0.97f;
 
@@ -85,16 +88,25 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
         // NOTE:
         // key release callbacks will not go through if the panel suddenly loses focus
         if (!parent.getPanel().isFocusOwner()) {
-            keysDown.clear();
+            synchronized (keysDown) {
+                keysDown.clear();
+            }
         }
 
         handleInputs(deltaTimeSeconds);
 
         Transform velRotation = Transform.multiply(Transform.rotationX(pitch), Transform.rotationY(yaw));
-        velocity = clampVector(velocity, MAX_VELOCITY);
+        if (keysDown.contains(KeyEvent.VK_SHIFT)) {
+            velocity = clampVector(velocity, MAX_VELOCITY * MAX_VELOCITY_SHIFT_FACTOR);
+        } else {
+            velocity = clampVector(velocity, MAX_VELOCITY);
+        }
+
         velocity = Vector3.multiply(velocity, (float) Math.pow((1.0f - DRAG), deltaTimeSeconds));
         Vector3 velActual = Transform.multiply(velRotation, velocity);
         position = Vector3.add(position, Vector3.multiply(velActual, deltaTimeSeconds));
+
+        handleCameraCollisions();
 
         yawVelocity = Math.max(Math.min(yawVelocity, MAX_ANGULAR_VELOCITY), -MAX_ANGULAR_VELOCITY);
         yaw += yawVelocity * deltaTimeSeconds;
@@ -113,6 +125,29 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
         lastTickNanoseconds = System.nanoTime();
     }
 
+    // MODIFIES: this
+    // EFFECTS: de-intersects the camera with all planets
+    private void handleCameraCollisions() {
+        SimulatorState simState = SimulatorState.getInstance();
+        simState.lock();
+
+        for (Planet planet : simState.getSimulation().getPlanets()) {
+            Vector3 displacement = Vector3.sub(position, planet.getPosition());
+            float distance = displacement.magnitude();
+            float boundRadius = Math.abs(RenderEngine.CLIPPING_PLANE_DEPTH * 2.0f) + planet.getRadius();
+            if (distance < boundRadius) {
+                float pushbackDist = boundRadius - distance;
+                Vector3 pushbackVector = Vector3.multiply(Vector3.normalize(displacement), pushbackDist);
+                position = Vector3.add(position, pushbackVector);
+            }
+        }
+
+        simState.unlock();
+    }
+
+    // MODIFIES: this
+    // EFFECTS: handles the camera velocity/angular velocity based on the user
+    // inputs, synchronized with the keys currently down
     private void handleInputs(float deltaTime) {
         synchronized (keysDown) {
             if (keysDown.contains(KeyEvent.VK_W)) {

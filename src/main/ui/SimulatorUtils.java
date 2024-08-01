@@ -21,11 +21,12 @@ public class SimulatorUtils {
             "Mitski" };
     private static final int NEW_PLANET_SUFFIX_MAX = 1000;
     private static final float NEW_PLANET_INITIAL_POS_BOUND = 30.0f;
-    private static final float NEW_PLANET_INITIAL_VEL_BOUND = 0.5f;
+    private static final float NEW_PLANET_INITIAL_VEL_BOUND = 20.0f;
     private static final float NEW_PLANET_MIN_RAD = 0.5f;
-    private static final float NEW_PLANET_MAX_RAD = 3.5f;
+    private static final float NEW_PLANET_MAX_RAD = 4.0f;
     private static final int EDIT_FIELD_COLUMNS = 20;
     private static final String IMAGE_PATH = "./data/image/";
+    private static final Random RANDOM = new Random();
 
     // EFFECTS: loads image
     public static BufferedImage loadImage(String imgName) {
@@ -36,25 +37,28 @@ public class SimulatorUtils {
         }
     }
 
+    // EFFECTS: generates a possible name of a new planet
+    public static String generateNewPlanetName() {
+        String name = NEW_PLANET_NAMES[RANDOM.nextInt(NEW_PLANET_NAMES.length)];
+        String numberSuffix = String.format("%03d", RANDOM.nextInt(NEW_PLANET_SUFFIX_MAX));
+        return name + "-" + numberSuffix;
+    }
+
     // EFFECTS: creates a new random planet and returns it
     public static Planet createNewPlanet() {
-        Random rand = new Random();
-        String name = NEW_PLANET_NAMES[rand.nextInt(NEW_PLANET_NAMES.length)];
-        String numberSuffix = String.format("%03d", rand.nextInt(NEW_PLANET_SUFFIX_MAX));
-
-        float posX = (rand.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_POS_BOUND;
-        float posY = (rand.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_POS_BOUND;
-        float posZ = (rand.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_POS_BOUND;
+        float posX = (RANDOM.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_POS_BOUND;
+        float posY = (RANDOM.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_POS_BOUND;
+        float posZ = (RANDOM.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_POS_BOUND;
         Vector3 newPos = new Vector3(posX, posY, posZ);
 
-        float velX = (rand.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_VEL_BOUND;
-        float velY = (rand.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_VEL_BOUND;
-        float velZ = (rand.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_VEL_BOUND;
+        float velX = (RANDOM.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_VEL_BOUND;
+        float velY = (RANDOM.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_VEL_BOUND;
+        float velZ = (RANDOM.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_VEL_BOUND;
         Vector3 newVel = new Vector3(velX, velY, velZ);
 
-        float scale = NEW_PLANET_MIN_RAD + rand.nextFloat() * (NEW_PLANET_MAX_RAD - NEW_PLANET_MIN_RAD);
+        float scale = NEW_PLANET_MIN_RAD + RANDOM.nextFloat() * (NEW_PLANET_MAX_RAD - NEW_PLANET_MIN_RAD);
 
-        return new Planet(name + "-" + numberSuffix, newPos, newVel, scale);
+        return new Planet(generateNewPlanetName(), newPos, newVel, scale);
     }
 
     // MODIFIES: simDestination

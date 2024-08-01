@@ -8,7 +8,7 @@ import model.exceptions.PlanetDoesntExistException;
 
 // Represents the current n-body simulation state
 public class Simulation {
-    public static final float GRAVITATIONAL_CONSTANT = 10.0f;
+    public static final float GRAVITATIONAL_CONSTANT = 5.0f;
     public static final float EPSILON = 0.001f;
 
     private float timeElapsed;
