@@ -19,6 +19,8 @@ public class RenderEngine implements Tickable {
     private static final Mesh PLANET_SELECTOR_MESH = Mesh.loadMeshByFileName(Mesh.MESH_ICOSPHERE_NAME);
     private static final BufferedImage TEXTURE_DEBUG = SimulatorUtils.loadImage("debug.jpg");
     private static final BufferedImage TEXTURE_EARTH = SimulatorUtils.loadImage("earth.jpg");
+    private static final BufferedImage TEXTURE_UNIVERSE = SimulatorUtils.loadImage("universe.png");
+    private static final float UNIVERSE_SCALE = 100000.0f;
 
     private int bufferSize;
     private float[] depthBuffer;
@@ -88,8 +90,17 @@ public class RenderEngine implements Tickable {
             drawPlanet(planet);
         }
 
+        drawUniverse();
+
         imageSync.unlock();
         simState.unlock();
+    }
+
+    private void drawUniverse() {
+        Transform uniTransform = Transform.scale(new Vector3(UNIVERSE_SCALE, UNIVERSE_SCALE, UNIVERSE_SCALE));
+        uniTransform = Transform.multiply(uniTransform, viewTransform);
+        TextureShader shader = new TextureShader(TEXTURE_UNIVERSE, 1.0f);
+        shadeMesh(shader, PLANET_MESH, uniTransform);
     }
 
     private void drawPlanet(Planet planet) {
@@ -122,11 +133,14 @@ public class RenderEngine implements Tickable {
             tri.verts[1] = Transform.multiply(transform, tri.verts[1]);
             tri.verts[2] = Transform.multiply(transform, tri.verts[2]);
 
-            tri = projectTriangleToScreenSpace(tri);
+            Triangle[] clippedTris = clipTriangle(tri);
+            for (Triangle clippedTri : clippedTris) {
+                clippedTri = projectTriangleToScreenSpace(clippedTri);
 
-            drawLine(tri.verts[0], tri.verts[1], color);
-            drawLine(tri.verts[1], tri.verts[2], color);
-            drawLine(tri.verts[2], tri.verts[0], color);
+                drawLine(clippedTri.verts[0], clippedTri.verts[1], color);
+                drawLine(clippedTri.verts[1], clippedTri.verts[2], color);
+                drawLine(clippedTri.verts[2], clippedTri.verts[0], color);
+            }
         }
     }
 
