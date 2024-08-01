@@ -18,9 +18,27 @@ public class RenderEngine implements Tickable {
     private static final Mesh PLANET_MESH = Mesh.loadMeshByFileName(Mesh.MESH_UVSPHERE_NAME);
     private static final Mesh PLANET_SELECTOR_MESH = Mesh.loadMeshByFileName(Mesh.MESH_ICOSPHERE_NAME);
     private static final BufferedImage TEXTURE_DEBUG = SimulatorUtils.loadImage("debug.jpg");
-    private static final BufferedImage TEXTURE_EARTH = SimulatorUtils.loadImage("earth.jpg");
-    private static final BufferedImage TEXTURE_UNIVERSE = SimulatorUtils.loadImage("universe.png");
+    private static final BufferedImage TEXTURE_EARTH = SimulatorUtils.loadImage("special/earth.jpg");
+    private static final BufferedImage TEXTURE_PAUL = SimulatorUtils.loadImage("special/paul.jpg");
+    private static final BufferedImage TEXTURE_UNIVERSE = SimulatorUtils.loadImage("special/universe.png");
     private static final float UNIVERSE_SCALE = 100000.0f;
+    private static final BufferedImage[] TEXTURE_PLANETS = {
+            SimulatorUtils.loadImage("planetA.jpg"),
+            SimulatorUtils.loadImage("planetB.jpg"),
+            SimulatorUtils.loadImage("planetC.jpg"),
+            SimulatorUtils.loadImage("planetD.jpg"),
+            SimulatorUtils.loadImage("planetE.jpg"),
+            SimulatorUtils.loadImage("planetF.jpg"),
+            SimulatorUtils.loadImage("planetG.jpg"),
+            SimulatorUtils.loadImage("planetH.jpg"),
+            SimulatorUtils.loadImage("planetI.jpg"),
+            SimulatorUtils.loadImage("planetJ.jpg")
+    };
+    private static final BufferedImage[] TEXTURE_CLOUDS = {
+            SimulatorUtils.loadImage("cloudsA.jpg"),
+            SimulatorUtils.loadImage("cloudsB.jpg"),
+            SimulatorUtils.loadImage("cloudsC.jpg")
+    };
 
     private int bufferSize;
     private float[] depthBuffer;
@@ -114,16 +132,27 @@ public class RenderEngine implements Tickable {
                     0xFFFFFFFF);
         }
 
-        BufferedImage planetTexture = null;
-        if (planet.getName().contains("Earth")) {
-            planetTexture = TEXTURE_EARTH;
-        } else {
-            planetTexture = TEXTURE_DEBUG;
-        }
-
-        TextureShader shader = new TextureShader(planetTexture, 1.0f);
+        TextureShader shader = new TextureShader(getPlanetTexture(planet), 1.0f);
         shadeMesh(shader, PLANET_MESH, meshTransform);
+    }
 
+    private BufferedImage getPlanetTexture(Planet planet) {
+        BufferedImage texture = handleSpecialPlanetTexture(planet);
+        if (texture == null) {
+            int index = Math.abs(planet.getName().hashCode()) % TEXTURE_PLANETS.length;
+            texture = TEXTURE_PLANETS[index];
+        }
+        return texture;
+    }
+
+    private BufferedImage handleSpecialPlanetTexture(Planet planet) {
+        if (planet.getName().contains("Earth")) {
+            return TEXTURE_EARTH;
+        }
+        if (planet.getName().contains("Paul")) {
+            return TEXTURE_PAUL;
+        }
+        return null;
     }
 
     private void drawWireMesh(Mesh mesh, Transform transform, int color) {
@@ -132,15 +161,9 @@ public class RenderEngine implements Tickable {
             tri.verts[0] = Transform.multiply(transform, tri.verts[0]);
             tri.verts[1] = Transform.multiply(transform, tri.verts[1]);
             tri.verts[2] = Transform.multiply(transform, tri.verts[2]);
-
-            Triangle[] clippedTris = clipTriangle(tri);
-            for (Triangle clippedTri : clippedTris) {
-                clippedTri = projectTriangleToScreenSpace(clippedTri);
-
-                drawLine(clippedTri.verts[0], clippedTri.verts[1], color);
-                drawLine(clippedTri.verts[1], clippedTri.verts[2], color);
-                drawLine(clippedTri.verts[2], clippedTri.verts[0], color);
-            }
+            drawLine(tri.verts[0], tri.verts[1], color);
+            drawLine(tri.verts[1], tri.verts[2], color);
+            drawLine(tri.verts[2], tri.verts[0], color);
         }
     }
 
@@ -152,27 +175,27 @@ public class RenderEngine implements Tickable {
             tri.verts[0] = Transform.multiply(transform, tri.verts[0]);
             tri.verts[1] = Transform.multiply(transform, tri.verts[1]);
             tri.verts[2] = Transform.multiply(transform, tri.verts[2]);
-
-            Triangle[] clippedTris = clipTriangle(tri);
-            for (Triangle clippedTri : clippedTris) {
-                clippedTri = projectTriangleToScreenSpace(clippedTri);
-                shadeTriangle(shader, clippedTri);
-            }
-
+            shadeTriangle(shader, tri);
         }
     }
 
     // MODIFIES: this
     // EFFECTS: renders a given triangle
     private void shadeTriangle(AbstractShader shader, Triangle tri) {
-        // NOTE:
-        // the standard procedure for rendering an arbitrary triangle is to split it in
-        // the middle, and render the flattop/flatbottom parts of it each
-        Triangle sortedTri = sortTriangleByHeight(tri);
-        Triangle[] cutTris = cutSortedTriangle(sortedTri);
+        Triangle[] clippedTris = clipTriangle(tri);
 
-        shadeTriangleFlatBottom(shader, cutTris[0], sortedTri);
-        shadeTriangleFlatTop(shader, cutTris[1], sortedTri);
+        for (Triangle clippedTri : clippedTris) {
+            clippedTri = projectTriangleToScreenSpace(clippedTri);
+
+            // NOTE:
+            // the standard procedure for rendering an arbitrary triangle is to split it in
+            // the middle, and render the flattop/flatbottom parts of it each
+            Triangle sortedTri = sortTriangleByHeight(clippedTri);
+            Triangle[] cutTris = cutSortedTriangle(sortedTri);
+
+            shadeTriangleFlatBottom(shader, cutTris[0], sortedTri);
+            shadeTriangleFlatTop(shader, cutTris[1], sortedTri);
+        }
     }
 
     // MODIFIES: this
@@ -516,17 +539,18 @@ public class RenderEngine implements Tickable {
     }
 
     private void drawLine(Vector3 from, Vector3 to, int color) {
-        float deltaX = to.getX() - from.getX();
-        float deltaY = to.getY() - from.getY();
-        float dist = (float) Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-        float drawX = from.getX();
-        float drawY = from.getY();
-        for (float step = 0; step <= dist; step++) {
-            float depth = from.getZ() + (to.getZ() - from.getZ()) * (step / dist);
-            drawFragment(new Vector3(drawX, drawY, depth), color);
-            drawX += deltaX / dist;
-            drawY += deltaY / dist;
-        }
+        Triangle lineTri = new Triangle();
+
+        lineTri.verts[0] = new Vector3(from);
+        lineTri.verts[1] = new Vector3(to);
+        lineTri.verts[2] = new Vector3();
+
+        Vector3 uvDummy = new Vector3();
+        lineTri.uvs[0] = uvDummy;
+        lineTri.uvs[1] = uvDummy;
+        lineTri.uvs[2] = uvDummy;
+
+        shadeTriangle(new LineShader(color), lineTri);
     }
 
     private void drawFragment(Vector3 position, int color) {
