@@ -55,8 +55,11 @@ public class Vector3 {
     // EFFECTS:
     // returns a vector where each component is the difference of leftVector and
     // rightVector's corresponding componenets
-    public static Vector3 sub(Vector3 lefVector3, Vector3 rightVector) {
-        return add(lefVector3, multiply(rightVector, -1.0f));
+    public static Vector3 sub(Vector3 leftVector, Vector3 rightVector) {
+        float x = leftVector.getX() - rightVector.getX();
+        float y = leftVector.getY() - rightVector.getY();
+        float z = leftVector.getZ() - rightVector.getZ();
+        return new Vector3(x, y, z);
     }
 
     // EFFECTS:

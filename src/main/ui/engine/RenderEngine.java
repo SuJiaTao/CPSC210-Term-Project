@@ -10,13 +10,12 @@ import java.util.concurrent.locks.*;
 
 // Hosts the rendering logic code for ViewportPanel, functions similarly to ui.legacy's ViewportEngine class
 public class RenderEngine implements Tickable {
-    public static final float CLIPPING_PLANE_DEPTH = -0.5f;
+    public static final float CLIPPING_PLANE_DEPTH = -3.0f;
     private static final int COLOR_CLEAR_VALUE = 0xFF000000;
     private static final float DEPTH_CLEAR_VALUE = Float.NEGATIVE_INFINITY;
     private static final float VIEWPORT_SCALE_FACTOR = 0.97f;
-    private static final float CLIPPING_TOLERANCE = 0.1f;
     private static final float SELECTOR_SCALE = 1.15f;
-    private static final Mesh PLANET_MESH = Mesh.loadMeshByFileName(Mesh.MESH_UVSPHERE_NAME);
+    private static final Mesh PLANET_MESH = Mesh.loadMeshByFileName(Mesh.MESH_DEBUG_NAME);
     private static final Mesh PLANET_SELECTOR_MESH = Mesh.loadMeshByFileName(Mesh.MESH_ICOSPHERE_NAME);
     private static final BufferedImage TEXTURE_DEBUG = SimulatorUtils.loadImage("debug.jpg");
     private static final BufferedImage TEXTURE_EARTH = SimulatorUtils.loadImage("earth.jpg");
@@ -442,7 +441,7 @@ public class RenderEngine implements Tickable {
         triRight.verts[2] = new Vector3(vertexRToB);
         triRight.uvs[2] = new Vector3(uvRToB);
 
-        return new Triangle[] { triLeft, triRight };
+        return new Triangle[] {};
     }
 
     // EFFECTS: clips a triangle in the case that two of the verticies are behind
@@ -451,6 +450,8 @@ public class RenderEngine implements Tickable {
         float factorBToL = getClippingFactor(original.verts[before], original.verts[behindL]);
         Vector3 vertexBToL = interpolateVector3(original.verts[before], original.verts[behindL], factorBToL);
         Vector3 uvBToL = interpolateVector3(original.uvs[before], original.uvs[behindL], factorBToL);
+
+        System.out.println(factorBToL);
 
         float factorBToR = getClippingFactor(original.verts[before], original.verts[behindR]);
         Vector3 vertexBToR = interpolateVector3(original.verts[before], original.verts[behindR], factorBToR);
