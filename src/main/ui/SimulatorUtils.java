@@ -20,10 +20,10 @@ public class SimulatorUtils {
             "Chura", "Maskita", "Nanron", "Ugaris", "Yvaga", "Youssef", "Lebnitz", "Doodski", "Phobos", "WASP",
             "Mitski" };
     private static final int NEW_PLANET_SUFFIX_MAX = 1000;
-    private static final float NEW_PLANET_INITIAL_POS_BOUND = 30.0f;
+    private static final float NEW_PLANET_INITIAL_POS_BOUND = 50.0f;
     private static final float NEW_PLANET_INITIAL_VEL_BOUND = 20.0f;
-    private static final float NEW_PLANET_MIN_RAD = 0.5f;
-    private static final float NEW_PLANET_MAX_RAD = 4.0f;
+    private static final float NEW_PLANET_MAX_RAD = NEW_PLANET_INITIAL_POS_BOUND / 12.0f;
+    private static final float NEW_PLANET_MIN_RAD = NEW_PLANET_MAX_RAD * 0.3f;
     private static final int EDIT_FIELD_COLUMNS = 20;
     private static final String IMAGE_PATH = "./data/image/";
     private static final Random RANDOM = new Random();
