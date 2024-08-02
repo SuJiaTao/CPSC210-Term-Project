@@ -10,10 +10,10 @@ import java.awt.event.*;
 public class CameraController implements Tickable, KeyListener, MouseListener {
     private static final Vector3 INITIAL_POSTION = new Vector3(0, 0, 30.0f);
 
-    private static final float MAX_VELOCITY = 100.0f;
-    private static final float MAX_VELOCITY_SHIFT_FACTOR = 5.0f;
-    private static final float ACCELERATION = 500.0f;
-    private static final float ACCELERATION_SHIFT_FACTOR = 3.0f;
+    private static final float MAX_VELOCITY = 300.0f;
+    private static final float MAX_VELOCITY_SHIFT_FACTOR = 7.5f;
+    private static final float ACCELERATION = 1000.0f;
+    private static final float ACCELERATION_SHIFT_FACTOR = 10.0f;
     private static final float DRAG = 0.97f;
 
     private static final float MAX_ANGULAR_VELOCITY = 90.0f;

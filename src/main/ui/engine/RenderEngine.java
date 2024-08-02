@@ -37,7 +37,9 @@ public class RenderEngine implements Tickable {
             SimulatorUtils.loadImage("gasA.jpg"),
             SimulatorUtils.loadImage("gasB.jpg"),
             SimulatorUtils.loadImage("gasC.jpg"),
-            SimulatorUtils.loadImage("gasD.jpg")
+            SimulatorUtils.loadImage("gasD.jpg"),
+            SimulatorUtils.loadImage("gasE.jpg"),
+            SimulatorUtils.loadImage("gasF.jpg")
     };
     private static final BufferedImage[] TEXTURE_CLOUDS = {
             SimulatorUtils.loadImage("cloudsA.jpg"),
