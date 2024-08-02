@@ -70,6 +70,10 @@ public class ViewportPanel extends JPanel implements ActionListener, Tickable {
         add(splitter);
     }
 
+    public RenderEngine getRenderEngine() {
+        return renderEngine;
+    }
+
     // MODIFIES: this
     // EFFECTS: handles actionevents, locks simulation state as it directly modifies
     // it

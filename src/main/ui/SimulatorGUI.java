@@ -31,6 +31,10 @@ public class SimulatorGUI implements Tickable {
         return instance;
     }
 
+    public MainWindow getMainWindow() {
+        return mainWindow;
+    }
+
     // MODIFIES: this
     // EFFECTS: updates self and all relevant sub-components
     @Override

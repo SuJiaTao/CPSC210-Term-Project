@@ -22,6 +22,8 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
 
     private static final float PITCH_RANGE = 85.0f;
 
+    private static final float PLANET_JUMP_PULLBACK_FACTOR = 5.0f;
+
     private RenderEngine parent;
 
     private java.util.List<Integer> keysDown;
@@ -79,6 +81,13 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
                 keysDown.remove(Integer.valueOf(e.getKeyCode()));
             }
         }
+    }
+
+    public void jumpToPlanet(Planet planet) {
+        Transform cameraRotation = Transform.multiply(Transform.rotationY(yaw), Transform.rotationX(pitch));
+        Vector3 pullbackPos = Transform.multiply(cameraRotation,
+                new Vector3(0.0f, 0.0f, planet.getRadius() * PLANET_JUMP_PULLBACK_FACTOR));
+        position = Vector3.add(planet.getPosition(), pullbackPos);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package ui.panels;
 
 import ui.*;
+import ui.legacy.SimulationGraphics;
 import model.*;
 import java.awt.*;
 import javax.swing.*;
@@ -15,6 +16,7 @@ public class PlanetEditorPanel extends JPanel implements ActionListener, Tickabl
     private JTextField radEditField;
     private JButton addPlanetButton;
     private JButton removePlaneButton;
+    private JButton jumpToPlanetButton;
 
     public PlanetEditorPanel(PlanetListPanel parent) {
         super(new BorderLayout());
@@ -39,6 +41,10 @@ public class PlanetEditorPanel extends JPanel implements ActionListener, Tickabl
         removePlaneButton = new JButton("Remove");
         removePlaneButton.addActionListener(this);
         infoPanel.add(removePlaneButton, SimulatorUtils.makeGbConstraints(2, 5, 1));
+
+        jumpToPlanetButton = new JButton("Jump To Planet");
+        jumpToPlanetButton.addActionListener(this);
+        infoPanel.add(jumpToPlanetButton, SimulatorUtils.makeGbConstraints(1, 6, 2));
 
         add(infoPanel, BorderLayout.CENTER);
     }
@@ -96,11 +102,16 @@ public class PlanetEditorPanel extends JPanel implements ActionListener, Tickabl
             SimulatorState.getInstance().getSimulation().addPlanet(newPlanet);
             parent.getSwingList().setSelectedValue(newPlanet, true);
         }
-        if (buttonSrc == removePlaneButton && getSelectedPlanet() != null) {
+        if (buttonSrc == removePlaneButton) {
             SimulatorState.getInstance().getSimulation().removePlanet(getSelectedPlanet());
             if (getSelectedPlanet() == null) {
                 parent.getSwingList().setSelectedIndex(parent.getSwingList().getModel().getSize() - 1);
             }
+        }
+        if (buttonSrc == jumpToPlanetButton) {
+            // LMAO
+            SimulatorGUI.getInstance().getMainWindow().getViewportPanel().getRenderEngine().getCameraController()
+                    .jumpToPlanet(getSelectedPlanet());
         }
     }
 
@@ -148,6 +159,7 @@ public class PlanetEditorPanel extends JPanel implements ActionListener, Tickabl
         boolean canEdit = (isNotRunning && isPlanetSelected);
 
         removePlaneButton.setEnabled(isPlanetSelected);
+        jumpToPlanetButton.setEnabled(isPlanetSelected);
         nameEditField.setEditable(canEdit);
         posEditField.setEditable(canEdit);
         velEditField.setEditable(canEdit);

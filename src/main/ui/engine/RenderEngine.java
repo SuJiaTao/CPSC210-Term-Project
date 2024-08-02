@@ -44,7 +44,7 @@ public class RenderEngine implements Tickable {
             SimulatorUtils.loadImage("cloudsB.jpg"),
             SimulatorUtils.loadImage("cloudsC.jpg")
     };
-    private static final Random RANDOM = new Random();
+    private static final float PLANET_SPIN_MAX = 500.0f;
 
     private int bufferSize;
     private float[] depthBuffer;
@@ -139,29 +139,38 @@ public class RenderEngine implements Tickable {
         }
 
         AbstractShader shader = null;
-        int textureHash = Math.abs(planet.getName().hashCode());
+        int planetSeed = Math.abs(planet.getName().hashCode());
+        float planeSpinSpeed = getPlanetSpinRate(planet);
+        Transform planetSpin = Transform
+                .rotationY(planeSpinSpeed * SimulatorState.getInstance().getSimulation().getTimeElapsed());
         switch (SimulatorUtils.getPlanetType(planet)) {
             case Star:
                 shader = new SunShader(TEXTURE_SUN);
-                shadeMesh(shader, PLANET_MESH, meshTransform);
+                shadeMesh(shader, PLANET_MESH, Transform.multiply(planetSpin, meshTransform));
                 break;
 
             case GasGiant:
-                textureHash %= TEXTURE_GASGIANT_PLANETS.length;
-                shader = new TextureShader(TEXTURE_GASGIANT_PLANETS[textureHash]);
-                shadeMesh(shader, PLANET_MESH, meshTransform);
+                planetSeed %= TEXTURE_GASGIANT_PLANETS.length;
+                shader = new TextureShader(TEXTURE_GASGIANT_PLANETS[planetSeed]);
+                shadeMesh(shader, PLANET_MESH, Transform.multiply(planetSpin, meshTransform));
                 break;
 
             case Rocky:
-                textureHash %= TEXTURE_ROCKY_PLANETS.length;
-                shader = new TextureShader(TEXTURE_ROCKY_PLANETS[textureHash]);
-                shadeMesh(shader, PLANET_MESH, meshTransform);
+                planetSeed %= TEXTURE_ROCKY_PLANETS.length;
+                shader = new TextureShader(TEXTURE_ROCKY_PLANETS[planetSeed]);
+                shadeMesh(shader, PLANET_MESH, Transform.multiply(planetSpin, meshTransform));
                 break;
 
             default:
                 shader = new TextureShader(TEXTURE_DEBUG);
                 shadeMesh(shader, DEBUG_MESH, meshTransform);
         }
+    }
+
+    private float getPlanetSpinRate(Planet planet) {
+        int seed = Math.abs(planet.getName().hashCode());
+        float norm = ((float) (seed & 0xFFFFFF) / (float) 0xFFFFFF);
+        return norm * (PLANET_SPIN_MAX / Math.max(1.0f, planet.getRadius()));
     }
 
     private void drawWireMesh(Mesh mesh, Transform transform, int color) {
