@@ -14,19 +14,42 @@ import java.io.IOException;
 // There are a handful of miscellanious parsing, calculating, and UI methods that would 
 // bloat otherwise unrelated code, so it is kept here instead
 public class SimulatorUtils {
-    private static final String[] NEW_PLANET_NAMES = { "Kepler", "Earth", "Solaris", "Tatoonie", "Furball", "X",
+    public static final String[] NEW_PLANET_NAMES = { "Kepler", "Earth", "Solaris", "Tatoonie", "Furball", "X",
             "Atlas", "Gemini", "Spongey", "Arrakis", "Paul", "Trapist", "Proxima", "Mundley", "Bongcloud", "Euclid",
             "Hades", "Jupiter", "Nguyen", "Draper", "Randy", "Draconis", "Cancri", "Awohali", "Vytis", "Igsael",
             "Chura", "Maskita", "Nanron", "Ugaris", "Yvaga", "Youssef", "Lebnitz", "Doodski", "Phobos", "WASP",
-            "Mitski" };
-    private static final int NEW_PLANET_SUFFIX_MAX = 1000;
-    private static final float NEW_PLANET_INITIAL_POS_BOUND = 50.0f;
-    private static final float NEW_PLANET_INITIAL_VEL_BOUND = 20.0f;
-    private static final float NEW_PLANET_MAX_RAD = NEW_PLANET_INITIAL_POS_BOUND / 12.0f;
-    private static final float NEW_PLANET_MIN_RAD = NEW_PLANET_MAX_RAD * 0.3f;
+            "Mitski", "Cupid", "Demeter", "Saturn", "Sputnik", "Quix", "Pontus" };
+    public static final int NEW_PLANET_SUFFIX_MAX = 1000;
+
+    public enum PlanetVisualType {
+        Star,
+        GasGiant,
+        Rocky,
+        Asteroid
+    };
+
+    public static final float PLANET_STAR_MINRADIUS = 64.0f;
+    public static final float PLANET_GASGIANT_MINRADIUS = 16.0f;
+    public static final float PLANET_ROCKY_MINRADIUS = 4.0f;
+
     private static final int EDIT_FIELD_COLUMNS = 20;
     private static final String IMAGE_PATH = "./data/image/";
     private static final Random RANDOM = new Random();
+
+    // EFFECTS: returns the visual type of a given planet
+    public static PlanetVisualType getPlanetVisualType(Planet planet) {
+        float radius = planet.getRadius();
+        if (radius >= PLANET_STAR_MINRADIUS) {
+            return PlanetVisualType.Star;
+        }
+        if (radius >= PLANET_GASGIANT_MINRADIUS) {
+            return PlanetVisualType.GasGiant;
+        }
+        if (radius >= PLANET_ROCKY_MINRADIUS) {
+            return PlanetVisualType.Rocky;
+        }
+        return PlanetVisualType.Asteroid;
+    }
 
     // EFFECTS: loads image
     public static BufferedImage loadImage(String imgName) {
