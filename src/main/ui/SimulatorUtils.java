@@ -25,9 +25,9 @@ public class SimulatorUtils {
         Star, GasGiant, Rocky, Asteroid
     }
 
-    private static final float PLANET_STAR_MAXRADIUS = 160.0f;
+    private static final float PLANET_STAR_MAXRADIUS = 210.0f;
     private static final float PLANET_STAR_MINRADIUS = 110.0f;
-    private static final float PLANET_GASGIANT_MAXRADIUS = 60.0f;
+    private static final float PLANET_GASGIANT_MAXRADIUS = 65.0f;
     private static final float PLANET_GASGIANT_MINRADIUS = 30.5f;
     private static final float PLANET_ROCKY_MAXRADIUS = 13.0f;
     private static final float PLANET_ROCKY_MINRADIUS = 4.0f;
@@ -41,8 +41,8 @@ public class SimulatorUtils {
 
     private static final float NEWEWST_STAR_PUSHBACK_FACTOR = 15.0f;
 
-    private static final int MAX_GASGIANT_TO_STAR_RATIO = 12;
-    private static final int MAX_ROCKY_TO_GASGIANT_RATIO = 2;
+    private static final int MAX_GASGIANT_TO_STAR_RATIO = 20;
+    private static final int MAX_ROCKY_TO_GASGIANT_RATIO = 3;
 
     private static final int EDIT_FIELD_COLUMNS = 20;
     private static final String IMAGE_PATH = "./data/image/";
@@ -112,7 +112,7 @@ public class SimulatorUtils {
             return newestStar;
         }
         if ((gasPlanets.size() != 0) && (rockyPlanets.size() < gasPlanets.size() * MAX_ROCKY_TO_GASGIANT_RATIO)) {
-            Planet toOrbit = gasPlanets.get(RANDOM.nextInt(gasPlanets.size()));
+            Planet toOrbit = gasPlanets.get(Math.max(0, gasPlanets.size() - 1 - RANDOM.nextInt(1)));
             float newRadius = randomFloatInRangeGaussian(PLANET_ROCKY_MINRADIUS, PLANET_ROCKY_MAXRADIUS);
             Planet newRocky = new Planet(generateNewPlanetName(), newRadius);
             setPlanetToOrbit(newRocky, toOrbit, ROCKY_ORBIT_MINMULTIPLE, ROCKY_ORBIT_MAXMULTIPLE);
@@ -144,7 +144,7 @@ public class SimulatorUtils {
         float orbitRadius = randomFloatInRange(orbitee.getRadius() * minMultiple, orbitee.getRadius() * maxMultiple);
         Vector3 orbitRotation = new Vector3(
                 randomFloatInRangeGaussian(-PLANET_ORBIT_ROTVARIANCE, PLANET_ORBIT_ROTVARIANCE),
-                randomFloatInRange(-360.0f, 360.0f),
+                randomFloatInRange(0.0f, 360.0f),
                 randomFloatInRangeGaussian(-PLANET_ORBIT_ROTVARIANCE, PLANET_ORBIT_ROTVARIANCE));
         Transform rotationTransform = Transform.rotation(orbitRotation);
         Vector3 orbitPosOrigin = Transform.multiply(rotationTransform, new Vector3(orbitRadius, 0, 0));

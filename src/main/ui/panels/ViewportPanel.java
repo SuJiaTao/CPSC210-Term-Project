@@ -16,6 +16,7 @@ public class ViewportPanel extends JPanel implements ActionListener, Tickable {
     private JButton stopButton;
     private JButton resetButton;
     private JButton resetCameraButton;
+    private JSlider timeScaleSlider;
     private JLabel timeElapsedLabel;
     private RenderEngine renderEngine;
 
@@ -56,6 +57,10 @@ public class ViewportPanel extends JPanel implements ActionListener, Tickable {
         resetCameraButton = new JButton("Reset Camera");
         resetCameraButton.addActionListener(this);
         simControlPanel.add(resetCameraButton);
+
+        timeScaleSlider = new JSlider((int) SimulatorState.TIMESCALE_MIN, (int) SimulatorState.TIMESCALE_MAX,
+                (int) SimulatorState.getInstance().getTimeScale());
+        simControlPanel.add(timeScaleSlider);
 
         timeElapsedLabel = new JLabel();
         simControlPanel.add(timeElapsedLabel);
@@ -105,7 +110,9 @@ public class ViewportPanel extends JPanel implements ActionListener, Tickable {
     public void tick() {
         handleButtonsUsability();
 
-        float timeElapsed = SimulatorState.getInstance().getSimulation().getTimeElapsed();
+        SimulatorState simState = SimulatorState.getInstance();
+        simState.setTimeScale(timeScaleSlider.getValue());
+        float timeElapsed = simState.getSimulation().getTimeElapsed();
         timeElapsedLabel.setText(String.format("Time Elapsed: %03.3fs", timeElapsed));
 
         renderEngine.tick();

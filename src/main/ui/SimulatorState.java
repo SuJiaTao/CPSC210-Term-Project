@@ -7,9 +7,13 @@ import java.util.concurrent.locks.*;
 
 // Contains all the simulation state related data
 public class SimulatorState implements Tickable {
+    public static final float TIMESCALE_MIN = 1.0f;
+    public static final float TIMESCALE_MAX = 20.0f;
+
     private static SimulatorState instance;
     private Simulation simulation;
     private float lastSimTime;
+    private float timeScale;
     private boolean isRunning;
     private long lastTickNanoseconds;
     private Lock lock;
@@ -21,6 +25,7 @@ public class SimulatorState implements Tickable {
         }
         simulation = new Simulation();
         lastSimTime = 0.0f;
+        timeScale = 1.0f;
         isRunning = false;
         lastTickNanoseconds = System.nanoTime();
         lock = new ReentrantLock();
@@ -46,6 +51,14 @@ public class SimulatorState implements Tickable {
         isRunning = val;
     }
 
+    public float getTimeScale() {
+        return timeScale;
+    }
+
+    public void setTimeScale(float newTimeScale) {
+        timeScale = newTimeScale;
+    }
+
     public void lock() {
         lock.lock();
     }
@@ -64,7 +77,7 @@ public class SimulatorState implements Tickable {
 
             lock();
             lastSimTime = simulation.getTimeElapsed();
-            simulation.progressBySeconds(deltaTimeSeconds);
+            simulation.progressBySeconds(deltaTimeSeconds * timeScale);
             handleCollisionBehavior();
             unlock();
 
