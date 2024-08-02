@@ -26,7 +26,7 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
 
     private RenderEngine parent;
 
-    private java.util.List<Integer> keysDown;
+    private Set<Integer> keysDown;
 
     private long lastTickNanoseconds;
     private Vector3 position;
@@ -44,7 +44,7 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
         this.parent.getPanel().addKeyListener(this);
         this.parent.getPanel().addMouseListener(this);
 
-        keysDown = new ArrayList<>();
+        keysDown = new HashSet<>();
         resetCamera();
 
         lastTickNanoseconds = System.nanoTime();
@@ -67,24 +67,16 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        synchronized (keysDown) {
-            if (!keysDown.contains(e.getKeyCode())) {
-                keysDown.add(e.getKeyCode());
-            }
-        }
+        keysDown.add(e.getKeyCode());
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-        synchronized (keysDown) {
-            if (keysDown.contains(e.getKeyCode())) {
-                keysDown.remove(Integer.valueOf(e.getKeyCode()));
-            }
-        }
+        keysDown.remove(Integer.valueOf(e.getKeyCode()));
     }
 
     public void jumpToPlanet(Planet planet) {
-        Transform cameraRotation = Transform.multiply(Transform.rotationY(yaw), Transform.rotationX(pitch));
+        Transform cameraRotation = Transform.multiply(Transform.rotationX(pitch), Transform.rotationY(yaw));
         Vector3 pullbackPos = Transform.multiply(cameraRotation,
                 new Vector3(0.0f, 0.0f, planet.getRadius() * PLANET_JUMP_PULLBACK_FACTOR));
         position = Vector3.add(planet.getPosition(), pullbackPos);
@@ -98,9 +90,7 @@ public class CameraController implements Tickable, KeyListener, MouseListener {
         // NOTE:
         // key release callbacks will not go through if the panel suddenly loses focus
         if (!parent.getPanel().isFocusOwner()) {
-            synchronized (keysDown) {
-                keysDown.clear();
-            }
+            keysDown.clear();
         }
 
         handleInputs(deltaTimeSeconds);

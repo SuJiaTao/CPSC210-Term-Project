@@ -23,7 +23,7 @@ public class RenderEngine implements Tickable {
     private static final BufferedImage TEXTURE_EARTH = SimulatorUtils.loadImage("special/earth.jpg");
     private static final BufferedImage TEXTURE_PAUL = SimulatorUtils.loadImage("special/paul.jpg");
     private static final BufferedImage TEXTURE_UNIVERSE = SimulatorUtils.loadImage("special/universe.png");
-    private static final float UNIVERSE_SCALE = 100000.0f;
+    private static final float UNIVERSE_SCALE = 500000.0f;
     private static final BufferedImage TEXTURE_SUN = SimulatorUtils.loadImage("sun.jpg");
     private static final BufferedImage[] TEXTURE_ROCKY_PLANETS = {
             SimulatorUtils.loadImage("rockyA.jpg"),
@@ -125,6 +125,8 @@ public class RenderEngine implements Tickable {
     private void drawUniverse() {
         Transform uniTransform = Transform.scale(new Vector3(UNIVERSE_SCALE, UNIVERSE_SCALE, UNIVERSE_SCALE));
         uniTransform = Transform.multiply(uniTransform, viewTransform);
+        Vector3 cameraOffset = Transform.extractTranslation(viewTransform);
+        uniTransform = Transform.multiply(uniTransform, Transform.translation(Vector3.multiply(cameraOffset, -1.0f)));
         TextureShader shader = new TextureShader(TEXTURE_UNIVERSE);
         shadeMesh(shader, PLANET_MESH, uniTransform);
     }
@@ -175,7 +177,7 @@ public class RenderEngine implements Tickable {
         planetSeed %= TEXTURE_GASGIANT_PLANETS.length;
         BufferedImage texture = TEXTURE_GASGIANT_PLANETS[planetSeed];
 
-        GasGiantLayerShader layer0 = new GasGiantLayerShader(texture, 0.0f, 1.0f);
+        GasGiantLayerShader layer0 = new GasGiantLayerShader(texture, 5.0f, 1.0f);
         shadeMesh(layer0, PLANET_MESH, Transform.multiply(Transform.scale(uniformScaleVector(1.0f)), transform));
 
         GasGiantLayerShader layer1 = new GasGiantLayerShader(texture, 25.0f, 0.6f);

@@ -36,7 +36,7 @@ public class SimulatorUtils {
     private static final float GASGIANT_ORBIT_MAXMULTIPLE = 65.0f;
     private static final float ROCKY_ORBIT_MINMULTIPLE = 5.0f;
     private static final float ROCKY_ORBIT_MAXMULTIPLE = 20.0f;
-    private static final float PLANET_ORBIT_ROTVARIANCE = 20.0f;
+    private static final float PLANET_ORBIT_ROTVARIANCE = 10.0f;
     private static final float PLANET_ORBIT_VELVARIANCE = 0.25f;
 
     private static final float NEWEWST_STAR_PUSHBACK_FACTOR = 15.0f;
