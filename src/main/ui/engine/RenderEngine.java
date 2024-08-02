@@ -161,9 +161,10 @@ public class RenderEngine implements Tickable {
             tri.verts[0] = Transform.multiply(transform, tri.verts[0]);
             tri.verts[1] = Transform.multiply(transform, tri.verts[1]);
             tri.verts[2] = Transform.multiply(transform, tri.verts[2]);
-            drawLine(tri.verts[0], tri.verts[1], color);
-            drawLine(tri.verts[1], tri.verts[2], color);
-            drawLine(tri.verts[2], tri.verts[0], color);
+            LineShader shader = new LineShader(color);
+            drawLine(shader, tri.verts[0], tri.verts[1]);
+            drawLine(shader, tri.verts[1], tri.verts[2]);
+            drawLine(shader, tri.verts[2], tri.verts[0]);
         }
     }
 
@@ -538,19 +539,42 @@ public class RenderEngine implements Tickable {
         return new Vector3(posX, posY, point.getZ());
     }
 
-    private void drawLine(Vector3 from, Vector3 to, int color) {
-        Triangle lineTri = new Triangle();
+    private void drawLine(AbstractShader shader, Vector3 from, Vector3 to) {
+        // order from furthest to closest to camera
+        if (from.getZ() > to.getZ()) {
+            Vector3 temp = from;
+            from = to;
+            to = temp;
+        }
 
-        lineTri.verts[0] = new Vector3(from);
-        lineTri.verts[1] = new Vector3(to);
-        lineTri.verts[2] = new Vector3();
+        if (from.getZ() > CLIPPING_PLANE_DEPTH && to.getZ() > CLIPPING_PLANE_DEPTH) {
+            return;
+        }
 
-        Vector3 uvDummy = new Vector3();
-        lineTri.uvs[0] = uvDummy;
-        lineTri.uvs[1] = uvDummy;
-        lineTri.uvs[2] = uvDummy;
+        if (to.getZ() > CLIPPING_PLANE_DEPTH) {
+            float factor = getClippingFactor(from, to);
+            to = interpolateVector3(from, to, factor);
+        }
 
-        shadeTriangle(new LineShader(color), lineTri);
+        Vector3 projectedFrom = projectVectorToScreenSpace(from);
+        Vector3 projectedTo = projectVectorToScreenSpace(to);
+
+        drawLineScreenspace(shader, projectedFrom, projectedTo);
+    }
+
+    private void drawLineScreenspace(AbstractShader shader, Vector3 from, Vector3 to) {
+        float deltaX = to.getX() - from.getX();
+        float deltaY = to.getY() - from.getY();
+        float dist = (float) Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        float drawX = from.getX();
+        float drawY = from.getY();
+        for (float step = 0; step <= dist; step++) {
+            float depth = from.getZ() + (to.getZ() - from.getZ()) * (step / dist);
+            Vector3 dummy = new Vector3();
+            drawFragment(new Vector3(drawX, drawY, depth), shader.shade(dummy, dummy));
+            drawX += deltaX / dist;
+            drawY += deltaY / dist;
+        }
     }
 
     private void drawFragment(Vector3 position, int color) {
