@@ -14,42 +14,34 @@ import java.io.IOException;
 // There are a handful of miscellanious parsing, calculating, and UI methods that would 
 // bloat otherwise unrelated code, so it is kept here instead
 public class SimulatorUtils {
-    public static final String[] NEW_PLANET_NAMES = { "Kepler", "Earth", "Solaris", "Tatoonie", "Furball", "X",
+    private static final String[] NEW_PLANET_NAMES = { "Kepler", "Earth", "Solaris", "Tatoonie", "Furball", "X",
             "Atlas", "Gemini", "Spongey", "Arrakis", "Paul", "Trapist", "Proxima", "Mundley", "Bongcloud", "Euclid",
             "Hades", "Jupiter", "Nguyen", "Draper", "Randy", "Draconis", "Cancri", "Awohali", "Vytis", "Igsael",
             "Chura", "Maskita", "Nanron", "Ugaris", "Yvaga", "Youssef", "Lebnitz", "Doodski", "Phobos", "WASP",
             "Mitski", "Cupid", "Demeter", "Saturn", "Sputnik", "Quix", "Pontus" };
-    public static final int NEW_PLANET_SUFFIX_MAX = 1000;
+    private static final int NEW_PLANET_SUFFIX_MAX = 1000;
 
-    public enum PlanetVisualType {
-        Star,
-        GasGiant,
-        Rocky,
-        Asteroid
-    };
+    public enum PlanetType {
+        Star, GasGiant, Rocky, Asteroid
+    }
 
-    public static final float PLANET_STAR_MINRADIUS = 64.0f;
-    public static final float PLANET_GASGIANT_MINRADIUS = 16.0f;
-    public static final float PLANET_ROCKY_MINRADIUS = 4.0f;
+    private static final float PLANET_STAR_MAXRADIUS = 135.0f;
+    private static final float PLANET_STAR_MINRADIUS = 100.0f;
+    private static final float PLANET_GASGIANT_MAXRADIUS = 60.0f;
+    private static final float PLANET_GASGIANT_MINRADIUS = 30.5f;
+    private static final float PLANET_ROCKY_MAXRADIUS = 13.0f;
+    private static final float PLANET_ROCKY_MINRADIUS = 4.0f;
+
+    private static final float PLANET_ORBIT_MINMULTIPLE = 7.5f;
+    private static final float PLANET_ORBIT_MAXMULTIPLE = 15.0f;
+    private static final float PLANET_ORBIT_ROTVARIANCE = 20.0f;
+
+    private static final int MAX_GASGIANT_TO_STAR_RATIO = 25;
+    private static final int MAX_ROCKY_TO_GASGIANT_RATIO = 4;
 
     private static final int EDIT_FIELD_COLUMNS = 20;
     private static final String IMAGE_PATH = "./data/image/";
     private static final Random RANDOM = new Random();
-
-    // EFFECTS: returns the visual type of a given planet
-    public static PlanetVisualType getPlanetVisualType(Planet planet) {
-        float radius = planet.getRadius();
-        if (radius >= PLANET_STAR_MINRADIUS) {
-            return PlanetVisualType.Star;
-        }
-        if (radius >= PLANET_GASGIANT_MINRADIUS) {
-            return PlanetVisualType.GasGiant;
-        }
-        if (radius >= PLANET_ROCKY_MINRADIUS) {
-            return PlanetVisualType.Rocky;
-        }
-        return PlanetVisualType.Asteroid;
-    }
 
     // EFFECTS: loads image
     public static BufferedImage loadImage(String imgName) {
@@ -67,21 +59,108 @@ public class SimulatorUtils {
         return name + "-" + numberSuffix;
     }
 
-    // EFFECTS: creates a new random planet and returns it
+    // EFFECTS: returns the type of a given planet
+    public static PlanetType getPlanetType(Planet planet) {
+        float radius = planet.getRadius();
+        if (radius >= PLANET_STAR_MINRADIUS) {
+            return PlanetType.Star;
+        }
+        if (radius >= PLANET_GASGIANT_MINRADIUS) {
+            return PlanetType.GasGiant;
+        }
+        if (radius >= PLANET_ROCKY_MINRADIUS) {
+            return PlanetType.Rocky;
+        }
+        return PlanetType.Asteroid;
+    }
+
+    // EFFECTS: creates a new planet based on the existing planets and returns it
     public static Planet createNewPlanet() {
-        float posX = (RANDOM.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_POS_BOUND;
-        float posY = (RANDOM.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_POS_BOUND;
-        float posZ = (RANDOM.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_POS_BOUND;
-        Vector3 newPos = new Vector3(posX, posY, posZ);
+        SimulatorState simState = SimulatorState.getInstance();
 
-        float velX = (RANDOM.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_VEL_BOUND;
-        float velY = (RANDOM.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_VEL_BOUND;
-        float velZ = (RANDOM.nextFloat() - 0.5f) * NEW_PLANET_INITIAL_VEL_BOUND;
-        Vector3 newVel = new Vector3(velX, velY, velZ);
+        simState.lock();
 
-        float scale = NEW_PLANET_MIN_RAD + RANDOM.nextFloat() * (NEW_PLANET_MAX_RAD - NEW_PLANET_MIN_RAD);
+        java.util.List<Planet> planetList = simState.getSimulation().getPlanets();
+        ArrayList<Planet> starPlanets = new ArrayList<>();
+        ArrayList<Planet> gasPlanets = new ArrayList<>();
+        ArrayList<Planet> rockyPlanets = new ArrayList<>();
+        for (Planet planet : planetList) {
+            switch (getPlanetType(planet)) {
+                case Star:
+                    starPlanets.add(planet);
+                    break;
+                case GasGiant:
+                    gasPlanets.add(planet);
+                    break;
+                case Rocky:
+                    rockyPlanets.add(planet);
+                    break;
+                default:
+                    break;
+            }
+        }
 
-        return new Planet(generateNewPlanetName(), newPos, newVel, scale);
+        if (starPlanets.size() == 0) {
+            simState.unlock();
+            Planet newestStar = createNewStar();
+            newestStar.setPosition(new Vector3(0, 0, -newestStar.getRadius() * 5.0f));
+            return newestStar;
+        }
+        if ((gasPlanets.size() != 0) && (rockyPlanets.size() < gasPlanets.size() * MAX_ROCKY_TO_GASGIANT_RATIO)) {
+            Planet toOrbit = gasPlanets.get(RANDOM.nextInt(gasPlanets.size()));
+            float newRadius = randomFloatInRange(PLANET_ROCKY_MINRADIUS, PLANET_ROCKY_MAXRADIUS);
+            Planet newRocky = new Planet(generateNewPlanetName(), newRadius);
+            setPlanetToOrbit(newRocky, toOrbit);
+
+            simState.unlock();
+            return newRocky;
+        }
+        if (gasPlanets.size() < starPlanets.size() * MAX_GASGIANT_TO_STAR_RATIO) {
+            Planet toOrbit = starPlanets.get(RANDOM.nextInt(starPlanets.size()));
+            float newRadius = randomFloatInRange(PLANET_GASGIANT_MINRADIUS, PLANET_GASGIANT_MAXRADIUS);
+            Planet newGasPlanet = new Planet(generateNewPlanetName(), newRadius);
+            setPlanetToOrbit(newGasPlanet, toOrbit);
+
+            simState.unlock();
+            return newGasPlanet;
+        }
+
+        simState.unlock();
+        return createNewStar();
+    }
+
+    private static float getOrbitalVelocity(Planet planet, float radius) {
+        return (float) Math.sqrt(planet.getMass() * Simulation.GRAVITATIONAL_CONSTANT / radius);
+    }
+
+    private static void setPlanetToOrbit(Planet orbiter, Planet orbitee) {
+        float orbitRadius = randomFloatInRange(orbitee.getRadius() * PLANET_ORBIT_MINMULTIPLE,
+                orbitee.getRadius() * PLANET_ORBIT_MAXMULTIPLE);
+        Vector3 orbitRotation = new Vector3(
+                randomFloatInRange(-PLANET_ORBIT_ROTVARIANCE, PLANET_ORBIT_ROTVARIANCE),
+                randomFloatInRange(-360.0f, 360.0f),
+                randomFloatInRange(-PLANET_ORBIT_ROTVARIANCE, PLANET_ORBIT_ROTVARIANCE));
+        Transform rotationTransform = Transform.rotation(orbitRotation);
+        Vector3 orbitPosOrigin = Transform.multiply(rotationTransform, new Vector3(orbitRadius, 0, 0));
+        Vector3 orbitVelocity = Transform.multiply(rotationTransform,
+                new Vector3(0, 0, getOrbitalVelocity(orbitee, orbitRadius)));
+        orbiter.setPosition(Vector3.add(orbitee.getPosition(), orbitPosOrigin));
+        orbiter.setVelocity(Vector3.add(orbitee.getVelocity(), orbitVelocity));
+    }
+
+    private static Planet createNewStar() {
+        float newRadius = randomFloatInRange(PLANET_STAR_MINRADIUS, PLANET_STAR_MAXRADIUS);
+        Vector3 newPos = new Vector3(
+                randomFloatInRange(-newRadius * PLANET_ORBIT_MINMULTIPLE, newRadius * PLANET_ORBIT_MINMULTIPLE),
+                randomFloatInRange(-newRadius * PLANET_ORBIT_MINMULTIPLE, newRadius * PLANET_ORBIT_MINMULTIPLE),
+                randomFloatInRange(-newRadius * PLANET_ORBIT_MINMULTIPLE, newRadius * PLANET_ORBIT_MINMULTIPLE));
+        return new Planet(generateNewPlanetName(), newPos, new Vector3(), newRadius);
+    }
+
+    // REQUIRES: min <= max
+    // EFFECTS: returns a random float between a given range
+    private static float randomFloatInRange(float min, float max) {
+        return min + (RANDOM.nextFloat() * (max - min));
     }
 
     // MODIFIES: simDestination

@@ -3,6 +3,7 @@ package ui.engine;
 import ui.*;
 import model.*;
 import java.awt.*;
+import java.util.*;
 import javax.swing.*;
 import java.awt.image.*;
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ public class RenderEngine implements Tickable {
     private static final float DEPTH_CLEAR_VALUE = Float.NEGATIVE_INFINITY;
     private static final float VIEWPORT_SCALE_FACTOR = 0.97f;
     private static final float SELECTOR_SCALE = 1.15f;
+    private static final Mesh DEBUG_MESH = Mesh.loadMeshByFileName(Mesh.MESH_DEBUG_NAME);
     private static final Mesh PLANET_MESH = Mesh.loadMeshByFileName(Mesh.MESH_UVSPHERE_NAME);
     private static final Mesh PLANET_SELECTOR_MESH = Mesh.loadMeshByFileName(Mesh.MESH_ICOSPHERE_NAME);
     private static final BufferedImage TEXTURE_DEBUG = SimulatorUtils.loadImage("debug.jpg");
@@ -22,23 +24,27 @@ public class RenderEngine implements Tickable {
     private static final BufferedImage TEXTURE_PAUL = SimulatorUtils.loadImage("special/paul.jpg");
     private static final BufferedImage TEXTURE_UNIVERSE = SimulatorUtils.loadImage("special/universe.png");
     private static final float UNIVERSE_SCALE = 100000.0f;
-    private static final BufferedImage[] TEXTURE_PLANETS = {
-            SimulatorUtils.loadImage("planetA.jpg"),
-            SimulatorUtils.loadImage("planetB.jpg"),
-            SimulatorUtils.loadImage("planetC.jpg"),
-            SimulatorUtils.loadImage("planetD.jpg"),
-            SimulatorUtils.loadImage("planetE.jpg"),
-            SimulatorUtils.loadImage("planetF.jpg"),
-            SimulatorUtils.loadImage("planetG.jpg"),
-            SimulatorUtils.loadImage("planetH.jpg"),
-            SimulatorUtils.loadImage("planetI.jpg"),
-            SimulatorUtils.loadImage("planetJ.jpg")
+    private static final BufferedImage TEXTURE_SUN = SimulatorUtils.loadImage("sun.jpg");
+    private static final BufferedImage[] TEXTURE_ROCKY_PLANETS = {
+            SimulatorUtils.loadImage("rockyA.jpg"),
+            SimulatorUtils.loadImage("rockyB.jpg"),
+            SimulatorUtils.loadImage("rockyC.jpg"),
+            SimulatorUtils.loadImage("rockyD.jpg"),
+            SimulatorUtils.loadImage("rockyE.jpg"),
+            SimulatorUtils.loadImage("rockyF.jpg"),
+    };
+    private static final BufferedImage[] TEXTURE_GASGIANT_PLANETS = {
+            SimulatorUtils.loadImage("gasA.jpg"),
+            SimulatorUtils.loadImage("gasB.jpg"),
+            SimulatorUtils.loadImage("gasC.jpg"),
+            SimulatorUtils.loadImage("gasD.jpg")
     };
     private static final BufferedImage[] TEXTURE_CLOUDS = {
             SimulatorUtils.loadImage("cloudsA.jpg"),
             SimulatorUtils.loadImage("cloudsB.jpg"),
             SimulatorUtils.loadImage("cloudsC.jpg")
     };
+    private static final Random RANDOM = new Random();
 
     private int bufferSize;
     private float[] depthBuffer;
@@ -117,7 +123,7 @@ public class RenderEngine implements Tickable {
     private void drawUniverse() {
         Transform uniTransform = Transform.scale(new Vector3(UNIVERSE_SCALE, UNIVERSE_SCALE, UNIVERSE_SCALE));
         uniTransform = Transform.multiply(uniTransform, viewTransform);
-        TextureShader shader = new TextureShader(TEXTURE_UNIVERSE, 1.0f);
+        TextureShader shader = new TextureShader(TEXTURE_UNIVERSE);
         shadeMesh(shader, PLANET_MESH, uniTransform);
     }
 
@@ -132,27 +138,30 @@ public class RenderEngine implements Tickable {
                     0xFFFFFFFF);
         }
 
-        TextureShader shader = new TextureShader(getPlanetTexture(planet), 1.0f);
-        shadeMesh(shader, PLANET_MESH, meshTransform);
-    }
+        AbstractShader shader = null;
+        int textureHash = Math.abs(planet.getName().hashCode());
+        switch (SimulatorUtils.getPlanetType(planet)) {
+            case Star:
+                shader = new SunShader(TEXTURE_SUN);
+                shadeMesh(shader, PLANET_MESH, meshTransform);
+                break;
 
-    private BufferedImage getPlanetTexture(Planet planet) {
-        BufferedImage texture = handleSpecialPlanetTexture(planet);
-        if (texture == null) {
-            int index = Math.abs(planet.getName().hashCode()) % TEXTURE_PLANETS.length;
-            texture = TEXTURE_PLANETS[index];
-        }
-        return texture;
-    }
+            case GasGiant:
+                textureHash %= TEXTURE_GASGIANT_PLANETS.length;
+                shader = new TextureShader(TEXTURE_GASGIANT_PLANETS[textureHash]);
+                shadeMesh(shader, PLANET_MESH, meshTransform);
+                break;
 
-    private BufferedImage handleSpecialPlanetTexture(Planet planet) {
-        if (planet.getName().contains("Earth")) {
-            return TEXTURE_EARTH;
+            case Rocky:
+                textureHash %= TEXTURE_ROCKY_PLANETS.length;
+                shader = new TextureShader(TEXTURE_ROCKY_PLANETS[textureHash]);
+                shadeMesh(shader, PLANET_MESH, meshTransform);
+                break;
+
+            default:
+                shader = new TextureShader(TEXTURE_DEBUG);
+                shadeMesh(shader, DEBUG_MESH, meshTransform);
         }
-        if (planet.getName().contains("Paul")) {
-            return TEXTURE_PAUL;
-        }
-        return null;
     }
 
     private void drawWireMesh(Mesh mesh, Transform transform, int color) {
