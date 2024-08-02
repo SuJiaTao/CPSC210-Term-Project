@@ -1,7 +1,6 @@
 package ui.panels;
 
 import ui.*;
-import ui.legacy.SimulationGraphics;
 import model.*;
 import java.awt.*;
 import javax.swing.*;

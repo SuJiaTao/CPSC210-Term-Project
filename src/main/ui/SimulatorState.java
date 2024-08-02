@@ -96,16 +96,20 @@ public class SimulatorState implements Tickable {
                     p2Weight);
             float newRadius = calculateCombinedRadius(planet1, planet2);
 
-            String newPlanetName = null;
+            Planet bigPlanet = null;
+            Planet smallPlanet = null;
             if (planet1.getRadius() > planet2.getRadius()) {
-                newPlanetName = planet1.getName();
+                bigPlanet = planet1;
+                smallPlanet = planet2;
             } else {
-                newPlanetName = planet2.getName();
+                bigPlanet = planet2;
+                smallPlanet = planet1;
             }
-            Planet mergedPlanet = new Planet(newPlanetName, newPos, newVel, newRadius);
-            handleRemovePlanet(planet1);
-            handleRemovePlanet(planet2);
-            simulation.addPlanet(mergedPlanet);
+
+            simulation.removePlanet(smallPlanet);
+            bigPlanet.setPosition(newPos);
+            bigPlanet.setVelocity(newVel);
+            bigPlanet.setRadius(newRadius);
         }
     }
 

@@ -4,9 +4,6 @@ import model.*;
 import ui.panels.*;
 import java.awt.*;
 
-import javax.swing.UIManager;
-import javax.swing.UIManager.LookAndFeelInfo;
-
 // Contains all the rendering related data for the SWING based GUI
 public class SimulatorGUI implements Tickable {
     private static SimulatorGUI instance;

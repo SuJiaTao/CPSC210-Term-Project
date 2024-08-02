@@ -25,15 +25,15 @@ public class SimulatorUtils {
         Star, GasGiant, Rocky, Asteroid
     }
 
-    private static final float PLANET_STAR_MAXRADIUS = 135.0f;
-    private static final float PLANET_STAR_MINRADIUS = 100.0f;
+    private static final float PLANET_STAR_MAXRADIUS = 160.0f;
+    private static final float PLANET_STAR_MINRADIUS = 110.0f;
     private static final float PLANET_GASGIANT_MAXRADIUS = 60.0f;
     private static final float PLANET_GASGIANT_MINRADIUS = 30.5f;
     private static final float PLANET_ROCKY_MAXRADIUS = 13.0f;
     private static final float PLANET_ROCKY_MINRADIUS = 4.0f;
 
-    private static final float PLANET_ORBIT_MINMULTIPLE = 7.5f;
-    private static final float PLANET_ORBIT_MAXMULTIPLE = 15.0f;
+    private static final float PLANET_ORBIT_MINMULTIPLE = 5.5f;
+    private static final float PLANET_ORBIT_MAXMULTIPLE = 15.5f;
     private static final float PLANET_ORBIT_ROTVARIANCE = 20.0f;
 
     private static final int MAX_GASGIANT_TO_STAR_RATIO = 25;
@@ -108,7 +108,7 @@ public class SimulatorUtils {
         }
         if ((gasPlanets.size() != 0) && (rockyPlanets.size() < gasPlanets.size() * MAX_ROCKY_TO_GASGIANT_RATIO)) {
             Planet toOrbit = gasPlanets.get(RANDOM.nextInt(gasPlanets.size()));
-            float newRadius = randomFloatInRange(PLANET_ROCKY_MINRADIUS, PLANET_ROCKY_MAXRADIUS);
+            float newRadius = randomFloatInRangeGaussian(PLANET_ROCKY_MINRADIUS, PLANET_ROCKY_MAXRADIUS);
             Planet newRocky = new Planet(generateNewPlanetName(), newRadius);
             setPlanetToOrbit(newRocky, toOrbit);
 
@@ -117,7 +117,7 @@ public class SimulatorUtils {
         }
         if (gasPlanets.size() < starPlanets.size() * MAX_GASGIANT_TO_STAR_RATIO) {
             Planet toOrbit = starPlanets.get(RANDOM.nextInt(starPlanets.size()));
-            float newRadius = randomFloatInRange(PLANET_GASGIANT_MINRADIUS, PLANET_GASGIANT_MAXRADIUS);
+            float newRadius = randomFloatInRangeGaussian(PLANET_GASGIANT_MINRADIUS, PLANET_GASGIANT_MAXRADIUS);
             Planet newGasPlanet = new Planet(generateNewPlanetName(), newRadius);
             setPlanetToOrbit(newGasPlanet, toOrbit);
 
@@ -134,12 +134,12 @@ public class SimulatorUtils {
     }
 
     private static void setPlanetToOrbit(Planet orbiter, Planet orbitee) {
-        float orbitRadius = randomFloatInRange(orbitee.getRadius() * PLANET_ORBIT_MINMULTIPLE,
+        float orbitRadius = randomFloatInRangeGaussian(orbitee.getRadius() * PLANET_ORBIT_MINMULTIPLE,
                 orbitee.getRadius() * PLANET_ORBIT_MAXMULTIPLE);
         Vector3 orbitRotation = new Vector3(
-                randomFloatInRange(-PLANET_ORBIT_ROTVARIANCE, PLANET_ORBIT_ROTVARIANCE),
+                randomFloatInRangeGaussian(-PLANET_ORBIT_ROTVARIANCE, PLANET_ORBIT_ROTVARIANCE),
                 randomFloatInRange(-360.0f, 360.0f),
-                randomFloatInRange(-PLANET_ORBIT_ROTVARIANCE, PLANET_ORBIT_ROTVARIANCE));
+                randomFloatInRangeGaussian(-PLANET_ORBIT_ROTVARIANCE, PLANET_ORBIT_ROTVARIANCE));
         Transform rotationTransform = Transform.rotation(orbitRotation);
         Vector3 orbitPosOrigin = Transform.multiply(rotationTransform, new Vector3(orbitRadius, 0, 0));
         Vector3 orbitVelocity = Transform.multiply(rotationTransform,
@@ -149,7 +149,7 @@ public class SimulatorUtils {
     }
 
     private static Planet createNewStar() {
-        float newRadius = randomFloatInRange(PLANET_STAR_MINRADIUS, PLANET_STAR_MAXRADIUS);
+        float newRadius = randomFloatInRangeGaussian(PLANET_STAR_MINRADIUS, PLANET_STAR_MAXRADIUS);
         Vector3 newPos = new Vector3(
                 randomFloatInRange(-newRadius * PLANET_ORBIT_MINMULTIPLE, newRadius * PLANET_ORBIT_MINMULTIPLE),
                 randomFloatInRange(-newRadius * PLANET_ORBIT_MINMULTIPLE, newRadius * PLANET_ORBIT_MINMULTIPLE),
@@ -161,6 +161,15 @@ public class SimulatorUtils {
     // EFFECTS: returns a random float between a given range
     private static float randomFloatInRange(float min, float max) {
         return min + (RANDOM.nextFloat() * (max - min));
+    }
+
+    // REQUIRES: min <= max
+    // EFFECTS: returns a random float between a given range, with gauss
+    // distribution
+    private static float randomFloatInRangeGaussian(float min, float max) {
+        float mean = (min + max) / 2.0f;
+        float deviation = (max - min) / 6.0f;
+        return mean + deviation * (float) RANDOM.nextGaussian();
     }
 
     // MODIFIES: simDestination
