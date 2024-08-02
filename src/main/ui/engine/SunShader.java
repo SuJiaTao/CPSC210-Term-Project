@@ -6,7 +6,7 @@ import java.awt.image.*;
 
 public class SunShader extends TextureShader {
     private static final Random RANDOM = new Random();
-    private static final float WIGGLE_FACTOR = 10.5f;
+    private static final float WIGGLE_FACTOR = 10.0f;
     private final float uvWiggle;
 
     public SunShader(BufferedImage texture) {

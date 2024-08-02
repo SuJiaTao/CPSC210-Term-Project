@@ -145,14 +145,11 @@ public class RenderEngine implements Tickable {
                 .rotationY(planeSpinSpeed * SimulatorState.getInstance().getSimulation().getTimeElapsed());
         switch (SimulatorUtils.getPlanetType(planet)) {
             case Star:
-                shader = new SunShader(TEXTURE_SUN);
-                shadeMesh(shader, PLANET_MESH, Transform.multiply(planetSpin, meshTransform));
+                drawPlanetSun(planet, Transform.multiply(planetSpin, meshTransform));
                 break;
 
             case GasGiant:
-                planetSeed %= TEXTURE_GASGIANT_PLANETS.length;
-                shader = new TextureShader(TEXTURE_GASGIANT_PLANETS[planetSeed]);
-                shadeMesh(shader, PLANET_MESH, Transform.multiply(planetSpin, meshTransform));
+                drawPlanetGasGiant(planetSeed, planet, Transform.multiply(planetSpin, meshTransform));
                 break;
 
             case Rocky:
@@ -165,6 +162,29 @@ public class RenderEngine implements Tickable {
                 shader = new TextureShader(TEXTURE_DEBUG);
                 shadeMesh(shader, DEBUG_MESH, meshTransform);
         }
+    }
+
+    private void drawPlanetSun(Planet planet, Transform transform) {
+        AbstractShader shader = new SunShader(TEXTURE_SUN);
+        shadeMesh(shader, PLANET_MESH, transform);
+    }
+
+    private void drawPlanetGasGiant(int planetSeed, Planet planet, Transform transform) {
+        planetSeed %= TEXTURE_GASGIANT_PLANETS.length;
+        BufferedImage texture = TEXTURE_GASGIANT_PLANETS[planetSeed];
+
+        GasGiantLayerShader layer0 = new GasGiantLayerShader(texture, 0.0f, 1.0f);
+        shadeMesh(layer0, PLANET_MESH, Transform.multiply(Transform.scale(uniformScaleVector(1.0f)), transform));
+
+        GasGiantLayerShader layer1 = new GasGiantLayerShader(texture, 25.0f, 0.6f);
+        shadeMesh(layer1, PLANET_MESH, Transform.multiply(Transform.scale(uniformScaleVector(1.02f)), transform));
+
+        GasGiantLayerShader layer2 = new GasGiantLayerShader(texture, 50.0f, 0.3f);
+        shadeMesh(layer2, PLANET_MESH, Transform.multiply(Transform.scale(uniformScaleVector(1.05f)), transform));
+    }
+
+    private Vector3 uniformScaleVector(float scale) {
+        return new Vector3(scale, scale, scale);
     }
 
     private float getPlanetSpinRate(Planet planet) {
@@ -279,7 +299,11 @@ public class RenderEngine implements Tickable {
         float texV = interpolateAttrib(texVVals, attribWeights, target);
 
         fragPos = new Vector3(fragPos.getX(), fragPos.getY(), interpolateDepth(attribWeights, target));
-        drawFragment(fragPos, 0xFF000000 | shader.shade(attribWeights, new Vector3(texU, texV, 0.0f)));
+        int color = shader.shade(attribWeights, new Vector3(texU, texV, 0.0f));
+        if (color == AbstractShader.CULL_FRAGMENT) {
+            return;
+        }
+        drawFragment(fragPos, 0xFF000000 | color);
     }
 
     // EFFECTS: interpolates the depth properly
