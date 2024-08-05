@@ -1,6 +1,12 @@
 package ui.engine;
 
 import ui.*;
+import ui.engine.shader.AbstractShader;
+import ui.engine.shader.CloudShader;
+import ui.engine.shader.GasGiantLayerShader;
+import ui.engine.shader.LineShader;
+import ui.engine.shader.SunShader;
+import ui.engine.shader.TextureShader;
 import model.*;
 import java.awt.*;
 import javax.swing.*;
@@ -168,9 +174,7 @@ public class RenderEngine implements Tickable {
                 break;
 
             case Rocky:
-                planetSeed %= TEXTURE_ROCKY_PLANETS.length;
-                shader = new TextureShader(TEXTURE_ROCKY_PLANETS[planetSeed]);
-                shadeMesh(shader, PLANET_MESH, Transform.multiply(planetSpin, meshTransform));
+                drawPlanetRocky(planetSeed, planet, Transform.multiply(planetSpin, meshTransform));
                 break;
 
             default:
@@ -201,6 +205,24 @@ public class RenderEngine implements Tickable {
 
         GasGiantLayerShader layer2 = new GasGiantLayerShader(texture, 50.0f, 0.3f);
         shadeMesh(layer2, PLANET_MESH, Transform.multiply(Transform.scale(uniformScaleVector(1.05f)), transform));
+    }
+
+    // MODIFIES: this
+    // EFFECTS: chooses a random rocky texture and cloud texture based on the
+    // planets name, inits the appropriate shaders, and then renders the planet in
+    // layers
+    private void drawPlanetRocky(int planetSeed, Planet planet, Transform transform) {
+        int groundSeed = planetSeed % TEXTURE_ROCKY_PLANETS.length;
+        int skySeed = planetSeed % TEXTURE_CLOUDS.length;
+
+        BufferedImage groundTexture = TEXTURE_ROCKY_PLANETS[groundSeed];
+        BufferedImage skyTexture = TEXTURE_CLOUDS[skySeed];
+
+        TextureShader groundShader = new TextureShader(groundTexture);
+        shadeMesh(groundShader, PLANET_MESH, transform);
+
+        CloudShader skyShader = new CloudShader(skyTexture, 0.6f);
+        shadeMesh(skyShader, PLANET_MESH, Transform.multiply(Transform.scale(uniformScaleVector(1.10f)), transform));
     }
 
     // EFFECTS: creates a vector with all components set to scale

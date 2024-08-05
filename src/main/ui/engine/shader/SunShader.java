@@ -1,6 +1,7 @@
-package ui.engine;
+package ui.engine.shader;
 
 import model.*;
+
 import java.util.*;
 import java.awt.image.*;
 

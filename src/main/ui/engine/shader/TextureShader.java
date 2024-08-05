@@ -1,6 +1,7 @@
-package ui.engine;
+package ui.engine.shader;
 
 import model.*;
+
 import java.awt.image.*;
 
 // Simple texture shader which always samples the color from a specified texture
