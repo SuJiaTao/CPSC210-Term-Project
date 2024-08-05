@@ -60,6 +60,8 @@ public class RenderEngine implements Tickable {
     private Transform viewTransform;
     private CameraController cameraController;
 
+    // EFFECTS: initializes the framebuffer to be size x size dimensions,
+    // initializes a cameracontroller and viewtransfrom
     public RenderEngine(JPanel parent, int size) {
         this.parent = parent;
         parent.setFocusable(true);
@@ -93,6 +95,8 @@ public class RenderEngine implements Tickable {
         return cameraController;
     }
 
+    // EFFECTS: synchronously draws the current state of the framebuffer to the
+    // given Graphics object
     public void drawCurrentFrame(Graphics gfx) {
         Rectangle bounds = gfx.getClipBounds();
         int imageSize = (int) ((float) Math.min(bounds.width, bounds.height) * VIEWPORT_SCALE_FACTOR);
@@ -104,12 +108,14 @@ public class RenderEngine implements Tickable {
         imageSync.unlock();
     }
 
+    // MODIFIES: this
+    // EFFECTS: synchronously updates the camera controller, draws all the planets
+    // to the framebuffer and finally draws the universe skybox
     @Override
     public void tick() {
-        cameraController.tick();
-
         simState.lock();
         imageSync.lock();
+        cameraController.tick();
 
         clearBuffers();
         for (Planet planet : simState.getSimulation().getPlanets()) {
@@ -122,6 +128,8 @@ public class RenderEngine implements Tickable {
         simState.unlock();
     }
 
+    // MODIFIES: this
+    // EFFECTS: draws a massive universe skybox which tracks to the camera
     private void drawUniverse() {
         Transform uniTransform = Transform.scale(new Vector3(UNIVERSE_SCALE, UNIVERSE_SCALE, UNIVERSE_SCALE));
         uniTransform = Transform.multiply(uniTransform, viewTransform);
@@ -131,6 +139,10 @@ public class RenderEngine implements Tickable {
         shadeMesh(shader, PLANET_MESH, uniTransform);
     }
 
+    // MODIFIES: this
+    // EFFECTS: generates a transformation matrix for the current planet, draws an
+    // outline if the planet is selected, selects the appropriate shader for the
+    // planet, and then renders the planet to the framebuffer
     private void drawPlanet(Planet planet) {
         Vector3 planetScale = new Vector3(planet.getRadius(), planet.getRadius(), planet.getRadius());
         Transform planetTransform = Transform.transform(planet.getPosition(), new Vector3(), planetScale);
@@ -168,11 +180,16 @@ public class RenderEngine implements Tickable {
         }
     }
 
+    // MODIFIES: this
+    // EFFECTS: selects the sun shader and renders the planet with it
     private void drawPlanetSun(Planet planet, Transform transform) {
         AbstractShader shader = new SunShader(TEXTURE_SUN);
         shadeMesh(shader, PLANET_MESH, transform);
     }
 
+    // MODIFIES: this
+    // EFFECTS: chooses a random gas giant texture based on the planet's name,
+    // initializes the appropriate shaders, and renders the planet in layers
     private void drawPlanetGasGiant(int planetSeed, Planet planet, Transform transform) {
         planetSeed %= TEXTURE_GASGIANT_PLANETS.length;
         BufferedImage texture = TEXTURE_GASGIANT_PLANETS[planetSeed];
@@ -187,16 +204,22 @@ public class RenderEngine implements Tickable {
         shadeMesh(layer2, PLANET_MESH, Transform.multiply(Transform.scale(uniformScaleVector(1.05f)), transform));
     }
 
+    // EFFECTS: creates a vector with all components set to scale
     private Vector3 uniformScaleVector(float scale) {
         return new Vector3(scale, scale, scale);
     }
 
+    // EFFECTS: returns a random planet angular velocity based on its name and
+    // radius
     private float getPlanetSpinRate(Planet planet) {
         int seed = Math.abs(planet.getName().hashCode());
         float norm = ((float) (seed & 0xFFFFFF) / (float) 0xFFFFFF);
         return norm * (PLANET_SPIN_MAX / Math.max(1.0f, planet.getRadius()));
     }
 
+    // MODIFIES: this
+    // EFFECTS: draws a wireframe of the specified mesh with the given color,
+    // transformed by the specified matrix
     private void drawWireMesh(Mesh mesh, Transform transform, int color) {
         for (int triIndex = 0; triIndex < mesh.getTriangleCount(); triIndex++) {
             Triangle tri = mesh.getTriangle(triIndex);
@@ -585,6 +608,9 @@ public class RenderEngine implements Tickable {
         return new Vector3(posX, posY, point.getZ());
     }
 
+    // MODIFIES: this
+    // EFFECTS: draws a 3D line with the specified shader, with proper camera
+    // clipping
     private void drawLine(AbstractShader shader, Vector3 from, Vector3 to) {
         // order from furthest to closest to camera
         if (from.getZ() > to.getZ()) {
@@ -608,6 +634,8 @@ public class RenderEngine implements Tickable {
         drawLineScreenspace(shader, projectedFrom, projectedTo);
     }
 
+    // MODIFIES: this
+    // EFFECTS: draws a 2D line to the framebuffer with the given shader
     private void drawLineScreenspace(AbstractShader shader, Vector3 from, Vector3 to) {
         float deltaX = to.getX() - from.getX();
         float deltaY = to.getY() - from.getY();
@@ -623,6 +651,9 @@ public class RenderEngine implements Tickable {
         }
     }
 
+    // MODIFIES: this
+    // EFFECTS: draws a single pixel to the framebuffer using the specified color,
+    // given that it passes the depth test
     private void drawFragment(Vector3 position, int color) {
         int posX = (int) (position.getX() + 0.5f);
         int posY = (int) (position.getY() + 0.5f);
@@ -641,6 +672,8 @@ public class RenderEngine implements Tickable {
         depthBuffer[getBufferIndex(posX, posY)] = position.getZ();
     }
 
+    // MODIFIES: this
+    // EFFECTS: clears the framebuffer and depth buffer
     private void clearBuffers() {
         for (int i = 0; i < bufferSize * bufferSize; i++) {
             colorBuffer[i] = COLOR_CLEAR_VALUE;
@@ -648,6 +681,8 @@ public class RenderEngine implements Tickable {
         }
     }
 
+    // EFFECTS: returns the 1D index for the framebuffer and depth buffer given a 2D
+    // (x,y) coordinate
     private int getBufferIndex(int x, int y) {
         return x + (bufferSize * (bufferSize - 1 - y));
     }

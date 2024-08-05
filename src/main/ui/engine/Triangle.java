@@ -7,11 +7,14 @@ public class Triangle {
     public Vector3 verts[];
     public Vector3 uvs[];
 
+    // EFFECTS: initializes all verts and uv arrays as empty
     public Triangle() {
         verts = new Vector3[3];
         uvs = new Vector3[3];
     }
 
+    // EFFECTS: initializes all verts and uv arrays with copies of the values of the
+    // original triangle
     public Triangle(Triangle original) {
         verts = new Vector3[3];
         uvs = new Vector3[3];
