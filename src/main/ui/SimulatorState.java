@@ -1,8 +1,6 @@
 package ui;
 
 import model.*;
-import model.exceptions.PlanetDoesntExistException;
-
 import java.util.concurrent.locks.*;
 
 // Contains all the simulation state related data
@@ -144,15 +142,5 @@ public class SimulatorState implements Tickable {
         float rad1 = planet1.getRadius();
         float rad2 = planet2.getRadius();
         return (float) Math.cbrt(rad1 * rad1 * rad1 + rad2 * rad2 * rad2);
-    }
-
-    // MODIFIES: this
-    // EFFECTS: tries to remove a planet from the simulation, if it still exists
-    private void handleRemovePlanet(Planet toRemove) {
-        try {
-            simulation.removePlanet(toRemove);
-        } catch (PlanetDoesntExistException pdee) {
-            // oh well
-        }
     }
 }
