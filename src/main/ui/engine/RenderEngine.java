@@ -52,6 +52,7 @@ public class RenderEngine implements Tickable {
             SimulatorUtils.loadImage("cloudsC.jpg")
     };
     private static final float PLANET_SPIN_MAX = 500.0f;
+    private static final float TRAIL_UPDATE_MINMUL = 25.0f;
 
     private int bufferSize;
     private float[] depthBuffer;
@@ -64,6 +65,9 @@ public class RenderEngine implements Tickable {
 
     private Transform viewTransform;
     private CameraController cameraController;
+
+    private Planet lastSelectedPlanet;
+    private ArrayList<Vector3> selectedPlanetTrail;
 
     // EFFECTS: initializes the framebuffer to be size x size dimensions,
     // initializes a cameracontroller and viewtransfrom
@@ -86,6 +90,9 @@ public class RenderEngine implements Tickable {
 
         viewTransform = new Transform();
         cameraController = new CameraController(this);
+
+        lastSelectedPlanet = null;
+        selectedPlanetTrail = new ArrayList<>();
     }
 
     public void setViewTransform(Transform viewTransform) {
@@ -114,8 +121,8 @@ public class RenderEngine implements Tickable {
     }
 
     // MODIFIES: this
-    // EFFECTS: synchronously updates the camera controller, draws all the planets
-    // to the framebuffer and finally draws the universe skybox
+    // EFFECTS: synchronously updates the camera controller, clears the framebuffer,
+    // and draws all graphics
     @Override
     public void tick() {
         simState.lock();
@@ -127,6 +134,7 @@ public class RenderEngine implements Tickable {
             drawPlanet(planet);
         }
 
+        drawSelectedPlanetTrail();
         drawUniverse();
 
         imageSync.unlock();
@@ -142,6 +150,38 @@ public class RenderEngine implements Tickable {
         uniTransform = Transform.multiply(uniTransform, Transform.translation(Vector3.multiply(cameraOffset, -1.0f)));
         TextureShader shader = new TextureShader(TEXTURE_UNIVERSE);
         shadeMesh(shader, PLANET_MESH, uniTransform);
+    }
+
+    // MODIFIES: this
+    // EFFECTS: ensures that the trail is following the correct planet, adds new
+    // verticies to the trail when appropriate, and draws the trail
+    private void drawSelectedPlanetTrail() {
+        if (SimulatorGUI.getInstance().getSelectedPlanet() != lastSelectedPlanet) {
+            selectedPlanetTrail.clear();
+            lastSelectedPlanet = SimulatorGUI.getInstance().getSelectedPlanet();
+        }
+
+        if (lastSelectedPlanet == null) {
+            return;
+        }
+
+        if (selectedPlanetTrail.size() == 0) {
+            selectedPlanetTrail.add(lastSelectedPlanet.getPosition());
+        }
+
+        int lastIndex = selectedPlanetTrail.size() - 1;
+        if (Vector3.sub(selectedPlanetTrail.get(lastIndex), lastSelectedPlanet.getPosition())
+                .magnitude() > lastSelectedPlanet.getRadius() * TRAIL_UPDATE_MINMUL) {
+            selectedPlanetTrail.add(lastSelectedPlanet.getPosition());
+        }
+
+        selectedPlanetTrail.add(lastSelectedPlanet.getPosition());
+        for (int i = 0; i < selectedPlanetTrail.size() - 1; i++) {
+            Vector3 linePosI = Transform.multiply(viewTransform, selectedPlanetTrail.get(i));
+            Vector3 linePosF = Transform.multiply(viewTransform, selectedPlanetTrail.get(i + 1));
+            drawLine(new LineShader(0xFFFFFFFF), linePosI, linePosF);
+        }
+        selectedPlanetTrail.remove(selectedPlanetTrail.size() - 1);
     }
 
     // MODIFIES: this
@@ -642,11 +682,11 @@ public class RenderEngine implements Tickable {
             to = temp;
         }
 
-        if (from.getZ() > CLIPPING_PLANE_DEPTH && to.getZ() > CLIPPING_PLANE_DEPTH) {
+        if (from.getZ() >= CLIPPING_PLANE_DEPTH && to.getZ() >= CLIPPING_PLANE_DEPTH) {
             return;
         }
 
-        if (to.getZ() > CLIPPING_PLANE_DEPTH) {
+        if (to.getZ() >= CLIPPING_PLANE_DEPTH) {
             float factor = getClippingFactor(from, to);
             to = interpolateVector3(from, to, factor);
         }
