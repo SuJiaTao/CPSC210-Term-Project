@@ -141,7 +141,8 @@ public class ViewportPanel extends JPanel implements ActionListener, Tickable {
     // EFFECTS: handles whether the start, stop and reset buttons can be used
     private void handleButtonsUsability() {
         boolean hasPlanets = (SimulatorState.getInstance().getSimulation().getPlanets().size() > 0);
-        startButton.setEnabled(hasPlanets);
-        stopButton.setEnabled(hasPlanets);
+        boolean isRunning = SimulatorState.getInstance().getIsRunning();
+        startButton.setEnabled(hasPlanets && !isRunning);
+        stopButton.setEnabled(hasPlanets && isRunning);
     }
 }
