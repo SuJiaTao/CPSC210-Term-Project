@@ -221,8 +221,10 @@ public class RenderEngine implements Tickable {
         TextureShader groundShader = new TextureShader(groundTexture);
         shadeMesh(groundShader, PLANET_MESH, transform);
 
-        CloudShader skyShader = new CloudShader(skyTexture, 0.6f);
-        shadeMesh(skyShader, PLANET_MESH, Transform.multiply(Transform.scale(uniformScaleVector(1.10f)), transform));
+        // REMOVED TILL IT CAN LOOK BETTER
+        // CloudShader skyShader = new CloudShader(skyTexture, 0.6f);
+        // shadeMesh(skyShader, PLANET_MESH,
+        // Transform.multiply(Transform.scale(uniformScaleVector(1.10f)), transform));
     }
 
     // EFFECTS: creates a vector with all components set to scale
