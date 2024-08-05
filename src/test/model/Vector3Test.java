@@ -40,6 +40,15 @@ public class Vector3Test {
     }
 
     @Test
+    public void testCtorBasedOnOriginal() {
+        Vector3 v1Copy = new Vector3(v1);
+        assertEquals(v1, v1Copy);
+        assertEquals(v1.getX(), v1Copy.getX());
+        assertEquals(v1.getY(), v1Copy.getY());
+        assertEquals(v1.getZ(), v1Copy.getZ());
+    }
+
+    @Test
     public void testEqualsThrow() {
         try {
             v1.equals(new Object());

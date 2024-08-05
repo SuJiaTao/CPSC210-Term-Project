@@ -83,4 +83,13 @@ public class CollisionTest {
         assertNotEquals(col4, col5);
         assertNotEquals(col5, col4);
     }
+
+    @Test
+    public void testToString() {
+        Planet p1 = col1.getPlanetsInvolved().get(0);
+        Planet p2 = col1.getPlanetsInvolved().get(1);
+        String toExpect = String.format("Collison %c/%c-%.3f", p1.getName().charAt(0), p2.getName().charAt(0),
+                col1.getCollisionTime());
+        assertEquals(toExpect, col1.toString());
+    }
 }

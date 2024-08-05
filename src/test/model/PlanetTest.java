@@ -187,4 +187,11 @@ public class PlanetTest {
         assertFalse(l.isCollidingWith(r));
         assertFalse(r.isCollidingWith(l));
     }
+
+    @Test
+    public void testToString() {
+        plnt = new Planet("testToString", 5.0f);
+        assertEquals("testToString", plnt.toString());
+        assertEquals(plnt.getName(), plnt.toString());
+    }
 }
