@@ -3,6 +3,7 @@ package ui.engine;
 import model.*;
 import java.awt.image.*;
 
+// An abstract shader class with some built in functionality for shaders which implement it
 public abstract class AbstractShader {
     public static final int CULL_FRAGMENT = 0x00000000;
 

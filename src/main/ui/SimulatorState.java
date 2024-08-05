@@ -59,10 +59,14 @@ public class SimulatorState implements Tickable {
         timeScale = newTimeScale;
     }
 
+    // MODIFIES: this
+    // EFFECTS: locks the internal synchronization object
     public void lock() {
         lock.lock();
     }
 
+    // MODIFIES: this
+    // EFFECTS: unlocks the internal synchronization object
     public void unlock() {
         lock.unlock();
     }

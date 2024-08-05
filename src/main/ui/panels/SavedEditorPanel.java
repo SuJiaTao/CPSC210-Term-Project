@@ -17,6 +17,7 @@ import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
+// JPanel which contains all the UIs for the saved simulation editor
 public class SavedEditorPanel extends JPanel implements ActionListener, Tickable {
     private SavedListPanel parent;
     private JTextField renameField;
@@ -25,6 +26,7 @@ public class SavedEditorPanel extends JPanel implements ActionListener, Tickable
     private JButton newButton;
     private JButton deleteButton;
 
+    // EFFECTS: initializes all UI elements
     public SavedEditorPanel(SavedListPanel parent) {
         this.parent = parent;
         setLayout(new BorderLayout());
@@ -56,6 +58,9 @@ public class SavedEditorPanel extends JPanel implements ActionListener, Tickable
         add(infoPanel, BorderLayout.CENTER);
     }
 
+    // MODIFIES: this
+    // EFFECTS: listens to what button/textfield has been pressed and handles the
+    // input accordingly
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
         if (actionEvent.getSource() == renameField) {

@@ -13,6 +13,8 @@ public class SimulatorGUI implements Tickable {
 
     private MainWindow mainWindow;
 
+    // EFFECTS: throws IllegalStateException of the instance of this class already
+    // exists, initialzes the main window
     private SimulatorGUI() {
         if (instance != null) {
             throw new IllegalStateException();
@@ -21,6 +23,8 @@ public class SimulatorGUI implements Tickable {
         mainWindow = new MainWindow(WINDOW_TITLE, WINDOW_DIMENSION);
     }
 
+    // EFFECTS: if there is no current instance, initialize it, and return the
+    // instance
     public static SimulatorGUI getInstance() {
         if (instance == null) {
             instance = new SimulatorGUI();
@@ -39,6 +43,8 @@ public class SimulatorGUI implements Tickable {
         mainWindow.tick();
     }
 
+    // EFFECTS: this is hilarious and speaks to the terriblness of the design of
+    // this code. returns the currently selected planet
     public Planet getSelectedPlanet() {
         return mainWindow.getEditorTabPanel().getPlanetListPanel().getSelectedPlanet();
     }

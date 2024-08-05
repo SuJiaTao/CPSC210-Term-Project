@@ -6,11 +6,13 @@ import ui.Tickable;
 import javax.swing.*;
 import ui.SimulatorUtils;
 
+// JPanel which contains all the UI for the collision list information viewer
 public class CollisionEditorPanel extends JPanel implements Tickable {
     private CollisionListPanel parent;
     private JTextField planetsInvolvedLabel;
     private JTextField collisionTimeLabel;
 
+    // EFFECTS: initializes all UI elements
     public CollisionEditorPanel(CollisionListPanel parent) {
         super(new BorderLayout());
         this.parent = parent;
@@ -28,6 +30,9 @@ public class CollisionEditorPanel extends JPanel implements Tickable {
         add(infoPanel, BorderLayout.CENTER);
     }
 
+    // MODIFIES: this
+    // EFFECTS: updates all UI elements to reflect the information for the currently
+    // selected collision
     @Override
     public void tick() {
         Collision selectedCol = parent.getSwingList().getSelectedValue();

@@ -17,6 +17,8 @@ public class Mesh {
     private Vector3[] uvs;
     private int[] indicies;
 
+    // REQUIRES: inidices must not index outside of verts, uvs, indicies.length must
+    // be a multiple of INDICIE_ELEMENTS_PER_TRI
     // EFFECTS: initializes a mesh based on the given objects
     private Mesh(Vector3[] verts, Vector3[] uvs, int[] indicies) {
         this.verts = Arrays.copyOf(verts, verts.length);
@@ -24,10 +26,14 @@ public class Mesh {
         this.indicies = Arrays.copyOf(indicies, indicies.length);
     }
 
+    // EFFECTS: returns the amount of triangles currently in the mesh
     public int getTriangleCount() {
         return indicies.length / INDICIE_ELEMENTS_PER_TRI;
     }
 
+    // REQUIRES: triangle must be > 0 and <= getTriangleCount()
+    // EFFECTS: returns a given triangle contained within the mesh by a given
+    // triangle index
     public Triangle getTriangle(int triangle) {
         Triangle tri = new Triangle();
 
@@ -42,6 +48,10 @@ public class Mesh {
         return new Triangle(tri); // make copy so that references aren't to internal objects
     }
 
+    // REQUIRES: file must be a obj file, with no normal data exported within it,
+    // and all faces must not exceed 3 verticies
+    // EFFECTS: loads a specified obj file and constructs a mesh object with it,
+    // returning the mesh object
     public static Mesh loadMeshByFileName(String fileName) {
         File modelFile = new File(MESH_PATH + fileName);
         if (!modelFile.isFile()) {

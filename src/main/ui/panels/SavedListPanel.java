@@ -5,9 +5,12 @@ import java.io.File;
 import java.util.List;
 import persistence.SimulationReadWriter;
 
+// Contains all the UI elements to represent the current list of saved simulations
 public class SavedListPanel extends AbstractListPanel<String> {
     private SavedEditorPanel savedEditorPanel;
 
+    // EFFECTS: initializes itself to record the list of contents in a new list of
+    // empty strings
     public SavedListPanel() {
         super(new ArrayList<String>());
     }

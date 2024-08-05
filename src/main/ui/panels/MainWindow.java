@@ -13,6 +13,7 @@ public class MainWindow extends JFrame implements Tickable {
     private EditorTabPanel editorTabPanel;
     private ViewportPanel viewportPanel;
 
+    // EFFECTS: initializes all window parameters, the editorTab and the 3D viewport
     public MainWindow(String title, Dimension size) {
         setLayout(new BorderLayout());
         setTitle(title);
@@ -42,7 +43,7 @@ public class MainWindow extends JFrame implements Tickable {
     }
 
     // MODIFIES: this
-    // EFFECTS: updates self and all relevant sub-components
+    // EFFECTS: updates the editorTab and the 3D viewport
     @Override
     public void tick() {
         editorTabPanel.tick();

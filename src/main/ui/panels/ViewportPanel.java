@@ -20,15 +20,18 @@ public class ViewportPanel extends JPanel implements ActionListener, Tickable {
     private JLabel timeElapsedLabel;
     private RenderEngine renderEngine;
 
+    // Represents the internal class which actually holds the viewport framebuffer
     private class ActualViewport extends JPanel {
         private ViewportPanel parent;
 
+        // EFFECTS: allows the panel to be focusable
         public ActualViewport(ViewportPanel parent) {
             this.parent = parent;
             setFocusable(true);
             setRequestFocusEnabled(true);
         }
 
+        // EFFECTS: paints the current frame of the render engine into itself
         @Override
         public void paint(Graphics g) {
             super.paint(g);
@@ -38,6 +41,7 @@ public class ViewportPanel extends JPanel implements ActionListener, Tickable {
 
     ActualViewport viewport;
 
+    // EFFECTS: initializes all UI elements and render engine
     public ViewportPanel() {
         setLayout(new BorderLayout());
 

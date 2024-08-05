@@ -134,12 +134,18 @@ public class SimulatorUtils {
         return createNewStar();
     }
 
+    // EFFECTS: returns the required tangential velocity for a body to orbit around
+    // the given planet circularly at the given radius
     private static float getOrbitalVelocity(Planet planet, float radius) {
         float circularVel = (float) Math.sqrt(planet.getMass() * Simulation.GRAVITATIONAL_CONSTANT / radius);
         return circularVel
                 * randomFloatInRange(1.0f - PLANET_ORBIT_VELVARIANCE, 1.0f + PLANET_ORBIT_VELVARIANCE);
     }
 
+    // MODIFIES: orbiter
+    // EFFECTS: places the orbiter in orbit around the orbitee within a random
+    // radius between minMultiple and maxMultiple times the radius of orbitee, while
+    // mildly randomizing the orbital parameters
     private static void setPlanetToOrbit(Planet orbiter, Planet orbitee, float minMultiple, float maxMultiple) {
         float orbitRadius = randomFloatInRange(orbitee.getRadius() * minMultiple, orbitee.getRadius() * maxMultiple);
         Vector3 orbitRotation = new Vector3(
@@ -154,6 +160,8 @@ public class SimulatorUtils {
         orbiter.setVelocity(Vector3.add(orbitee.getVelocity(), orbitVelocity));
     }
 
+    // EFFECTS: creates a new planet which acts as a star near around the origin on
+    // the simulation
     private static Planet createNewStar() {
         float newRadius = randomFloatInRangeGaussian(PLANET_STAR_MINRADIUS, PLANET_STAR_MAXRADIUS);
         Vector3 newPos = new Vector3(

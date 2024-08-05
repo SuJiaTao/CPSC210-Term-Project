@@ -13,6 +13,7 @@ public class EditorTabPanel extends JTabbedPane implements Tickable {
     private CollisionListPanel collisionListPanel;
     private SavedListPanel savedListPanel;
 
+    // EFFECTS: initializes all editor tabs for the editor panel
     public EditorTabPanel() {
         planetListPanel = new PlanetListPanel();
         collisionListPanel = new CollisionListPanel();
@@ -30,7 +31,7 @@ public class EditorTabPanel extends JTabbedPane implements Tickable {
     }
 
     // MODIFIES: this
-    // EFFECTS: updates this and relevant sub-components
+    // EFFECTS: updates all the panels within the tab
     @Override
     public void tick() {
         planetListPanel.tick();

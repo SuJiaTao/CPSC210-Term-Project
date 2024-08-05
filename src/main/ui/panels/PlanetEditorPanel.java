@@ -17,6 +17,7 @@ public class PlanetEditorPanel extends JPanel implements ActionListener, Tickabl
     private JButton removePlaneButton;
     private JButton jumpToPlanetButton;
 
+    // EFFECTS: initializes all UI elements
     public PlanetEditorPanel(PlanetListPanel parent) {
         super(new BorderLayout());
 
