@@ -179,9 +179,7 @@ public class RenderEngine implements Tickable {
         }
 
         selectedPlanetTrail.add(lastSelectedPlanet.getPosition());
-        for (
-
-                int i = 0; i < selectedPlanetTrail.size() - 1; i++) {
+        for (int i = 0; i < selectedPlanetTrail.size() - 1; i++) {
             Vector3 linePosI = Transform.multiply(viewTransform, selectedPlanetTrail.get(i));
             Vector3 linePosF = Transform.multiply(viewTransform, selectedPlanetTrail.get(i + 1));
             drawLine(new LineShader(0xFFFFFFFF), linePosI, linePosF);
