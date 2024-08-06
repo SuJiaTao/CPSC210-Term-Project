@@ -52,7 +52,8 @@ public class RenderEngine implements Tickable {
             SimulatorUtils.loadImage("cloudsC.jpg")
     };
     private static final float PLANET_SPIN_MAX = 500.0f;
-    private static final float TRAIL_UPDATE_MINMUL = 25.0f;
+    private static final float TRAIL_UPDATE_FACTOR = 1.25f;
+    private static final float TRAIL_UPDATE_MINDISTANCE = 5.0f;
 
     private int bufferSize;
     private float[] depthBuffer;
@@ -170,13 +171,17 @@ public class RenderEngine implements Tickable {
         }
 
         int lastIndex = selectedPlanetTrail.size() - 1;
-        if (Vector3.sub(selectedPlanetTrail.get(lastIndex), lastSelectedPlanet.getPosition())
-                .magnitude() > lastSelectedPlanet.getRadius() * TRAIL_UPDATE_MINMUL) {
+        Vector3 deltaPos = Vector3.sub(selectedPlanetTrail.get(lastIndex), lastSelectedPlanet.getPosition());
+        float planetVelMag = lastSelectedPlanet.getVelocity().magnitude();
+        if (deltaPos.magnitude() > planetVelMag * TRAIL_UPDATE_FACTOR
+                && deltaPos.magnitude() >= TRAIL_UPDATE_MINDISTANCE) {
             selectedPlanetTrail.add(lastSelectedPlanet.getPosition());
         }
 
         selectedPlanetTrail.add(lastSelectedPlanet.getPosition());
-        for (int i = 0; i < selectedPlanetTrail.size() - 1; i++) {
+        for (
+
+                int i = 0; i < selectedPlanetTrail.size() - 1; i++) {
             Vector3 linePosI = Transform.multiply(viewTransform, selectedPlanetTrail.get(i));
             Vector3 linePosF = Transform.multiply(viewTransform, selectedPlanetTrail.get(i + 1));
             drawLine(new LineShader(0xFFFFFFFF), linePosI, linePosF);
