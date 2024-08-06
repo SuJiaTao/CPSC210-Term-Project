@@ -9,15 +9,16 @@ import ui.engine.RenderEngine;
 
 // Viewport panel which is used to host the 3D view of the simulation
 public class ViewportPanel extends JPanel implements ActionListener, Tickable {
-    private static final float SPLIT_WEIGHT = 0.0f;
+    private static final float SPLIT_WEIGHT_TOP = 0.0f;
+    private static final float SPLIT_WEIGHT_BOTTOM = 1.0f;
     private static final int VIEWPORT_RESOLUTION = 350;
 
     private JButton startButton;
     private JButton stopButton;
     private JButton resetButton;
     private JButton resetCameraButton;
-    private JSlider timeScaleSlider;
     private JLabel timeElapsedLabel;
+    private JSlider timeScaleSlider;
     private RenderEngine renderEngine;
 
     // Represents the internal class which actually holds the viewport framebuffer
@@ -45,38 +46,50 @@ public class ViewportPanel extends JPanel implements ActionListener, Tickable {
     public ViewportPanel() {
         setLayout(new BorderLayout());
 
-        JPanel simControlPanel = new JPanel(new FlowLayout());
+        JPanel topSimControlPanel = new JPanel(new FlowLayout());
         startButton = new JButton("Start");
         startButton.addActionListener(this);
-        simControlPanel.add(startButton);
+        topSimControlPanel.add(startButton);
 
         stopButton = new JButton("Stop");
         stopButton.addActionListener(this);
-        simControlPanel.add(stopButton);
+        topSimControlPanel.add(stopButton);
 
         resetButton = new JButton("Reset");
         resetButton.addActionListener(this);
-        simControlPanel.add(resetButton);
+        topSimControlPanel.add(resetButton);
 
         resetCameraButton = new JButton("Reset Camera");
         resetCameraButton.addActionListener(this);
-        simControlPanel.add(resetCameraButton);
-
-        timeScaleSlider = new JSlider((int) SimulatorState.TIMESCALE_MIN, (int) SimulatorState.TIMESCALE_MAX,
-                (int) SimulatorState.getInstance().getTimeScale());
-        simControlPanel.add(timeScaleSlider);
+        topSimControlPanel.add(resetCameraButton);
 
         timeElapsedLabel = new JLabel();
-        simControlPanel.add(timeElapsedLabel);
+        topSimControlPanel.add(timeElapsedLabel);
 
         viewport = new ActualViewport(this);
         renderEngine = new RenderEngine(viewport, VIEWPORT_RESOLUTION);
 
-        JSplitPane splitter = new JSplitPane(JSplitPane.VERTICAL_SPLIT, simControlPanel, viewport);
-        splitter.setResizeWeight(SPLIT_WEIGHT);
-        splitter.setEnabled(false);
+        JSplitPane topSplitter = new JSplitPane(JSplitPane.VERTICAL_SPLIT, topSimControlPanel, viewport);
+        topSplitter.setResizeWeight(SPLIT_WEIGHT_TOP);
+        topSplitter.setEnabled(false);
 
-        add(splitter);
+        JPanel bottomSimControlPanel = new JPanel(new FlowLayout());
+
+        JLabel timeScaleLabel = new JLabel("Simulation Timescale:");
+        bottomSimControlPanel.add(timeScaleLabel);
+
+        timeScaleSlider = new JSlider((int) SimulatorState.TIMESCALE_MIN, (int) SimulatorState.TIMESCALE_MAX,
+                (int) SimulatorState.getInstance().getTimeScale());
+        timeScaleSlider.setMajorTickSpacing(4);
+        timeScaleSlider.setPaintTicks(true);
+        timeScaleSlider.setPaintLabels(true);
+        bottomSimControlPanel.add(timeScaleSlider);
+
+        JSplitPane bottomSplitter = new JSplitPane(JSplitPane.VERTICAL_SPLIT, topSplitter, bottomSimControlPanel);
+        bottomSplitter.setResizeWeight(SPLIT_WEIGHT_BOTTOM);
+        bottomSplitter.setEnabled(false);
+
+        add(bottomSplitter);
     }
 
     public RenderEngine getRenderEngine() {

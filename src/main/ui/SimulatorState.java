@@ -7,6 +7,7 @@ import java.util.concurrent.locks.*;
 public class SimulatorState implements Tickable {
     public static final float TIMESCALE_MIN = 1.0f;
     public static final float TIMESCALE_MAX = 20.0f;
+    private static final float MAX_DELTATIME = 0.1f;
 
     private static SimulatorState instance;
     private Simulation simulation;
@@ -76,6 +77,7 @@ public class SimulatorState implements Tickable {
         if (isRunning) {
             long deltaTimeNanoseconds = System.nanoTime() - lastTickNanoseconds;
             float deltaTimeSeconds = (float) deltaTimeNanoseconds / 1000000000.0f;
+            deltaTimeSeconds = Math.min(deltaTimeSeconds, MAX_DELTATIME);
 
             lock();
             lastSimTime = simulation.getTimeElapsed();
