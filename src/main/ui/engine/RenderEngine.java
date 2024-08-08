@@ -41,11 +41,6 @@ public class RenderEngine implements Tickable {
             SimulatorUtils.loadImage("gasE.jpg"),
             SimulatorUtils.loadImage("gasF.jpg")
     };
-    private static final BufferedImage[] TEXTURE_CLOUDS = {
-            SimulatorUtils.loadImage("cloudsA.jpg"),
-            SimulatorUtils.loadImage("cloudsB.jpg"),
-            SimulatorUtils.loadImage("cloudsC.jpg")
-    };
     private static final float PLANET_SPIN_MAX = 500.0f;
     private static final float TRAIL_UPDATE_FACTOR = 1.25f;
     private static final float TRAIL_UPDATE_MINDISTANCE = 5.0f;
@@ -227,6 +222,9 @@ public class RenderEngine implements Tickable {
     // EFFECTS: selects the sun shader and renders the planet with it
     private void drawPlanetSun(Planet planet, Transform transform) {
         AbstractShader shader = new SunShader(TEXTURE_SUN);
+        if (planet.getName().equals("Paul")) {
+            shader = new TextureShader(TEXTURE_PAUL);
+        }
         shadeMesh(shader, PLANET_MESH, transform);
     }
 
@@ -253,18 +251,13 @@ public class RenderEngine implements Tickable {
     // layers
     private void drawPlanetRocky(int planetSeed, Planet planet, Transform transform) {
         int groundSeed = planetSeed % TEXTURE_ROCKY_PLANETS.length;
-        int skySeed = planetSeed % TEXTURE_CLOUDS.length;
-
         BufferedImage groundTexture = TEXTURE_ROCKY_PLANETS[groundSeed];
-        BufferedImage skyTexture = TEXTURE_CLOUDS[skySeed];
+        if (planet.getName().equals("Earth")) {
+            groundTexture = TEXTURE_EARTH;
+        }
 
         TextureShader groundShader = new TextureShader(groundTexture);
         shadeMesh(groundShader, PLANET_MESH, transform);
-
-        // REMOVED TILL IT CAN LOOK BETTER
-        // CloudShader skyShader = new CloudShader(skyTexture, 0.6f);
-        // shadeMesh(skyShader, PLANET_MESH,
-        // Transform.multiply(Transform.scale(uniformScaleVector(1.10f)), transform));
     }
 
     // EFFECTS: creates a vector with all components set to scale
