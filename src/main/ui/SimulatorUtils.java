@@ -22,7 +22,7 @@ public class SimulatorUtils {
     private static final int NEW_PLANET_SUFFIX_MAX = 1000;
 
     public enum PlanetType {
-        Star, GasGiant, Rocky, Asteroid
+        Star, GasGiant, Rocky
     }
 
     private static final float PLANET_STAR_MAXRADIUS = 210.0f;
@@ -73,10 +73,7 @@ public class SimulatorUtils {
         if (radius >= PLANET_GASGIANT_MINRADIUS) {
             return PlanetType.GasGiant;
         }
-        if (radius >= PLANET_ROCKY_MINRADIUS) {
-            return PlanetType.Rocky;
-        }
-        return PlanetType.Asteroid;
+        return PlanetType.Rocky;
     }
 
     // EFFECTS: creates a new planet based on the existing planets and returns it

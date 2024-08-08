@@ -216,6 +216,8 @@ public class RenderEngine implements Tickable {
                 break;
 
             default:
+                // NOTE:
+                // this should not be reached ever
                 shader = new TextureShader(TEXTURE_DEBUG);
                 shadeMesh(shader, DEBUG_MESH, meshTransform);
         }
