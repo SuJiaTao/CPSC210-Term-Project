@@ -758,9 +758,9 @@ public class RenderEngine implements Tickable {
             return;
         }
         float invSlope = deltaX / deltaY;
-        float startX = Math.max(0.0f, bottom.getY());
-        float endX = Math.min(bufferSize - 1.0f, top.getY());
-        for (float drawY = startX; drawY <= endX; drawY += 1.0f) {
+        float startY = Math.max(0.0f, bottom.getY());
+        float endY = Math.min(bufferSize - 1.0f, top.getY());
+        for (float drawY = startY; drawY <= endY; drawY += 1.0f) {
             float drawX = bottom.getX() + (drawY - bottom.getY()) * invSlope;
             float interp = (drawY - bottom.getY()) / deltaY;
             float depth = bottom.getZ() * (1.0f - interp) + interp * top.getZ();
