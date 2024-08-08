@@ -10,6 +10,7 @@ import model.exceptions.PlanetDoesntExistException;
 public class Simulation {
     public static final float GRAVITATIONAL_CONSTANT = 5.0f;
     public static final float EPSILON = 0.001f;
+    private static final EventLog LOG = EventLog.getInstance();
 
     private float timeElapsed;
     private List<Planet> planets;
@@ -52,8 +53,10 @@ public class Simulation {
     // already in the simulation
     public synchronized void addPlanet(Planet planet) {
         if (planets.contains(planet)) {
+            logNewEvent("Tried to add " + planet.getName() + " to the simulation but it already existed!");
             throw new PlanetAlreadyExistsException();
         }
+        logNewEvent("Added planet " + planet.getName() + " to the simulation");
         planets.add(planet);
     }
 
@@ -65,8 +68,11 @@ public class Simulation {
     // planet is already in the simulation
     public synchronized void addHistoricPlanet(Planet historicPlanet) {
         if (historicPlanets.contains(historicPlanet)) {
+            logNewEvent("Tried to add the historic" + historicPlanet.getName()
+                    + " to the simulation but it already existed!");
             throw new PlanetAlreadyExistsException();
         }
+        logNewEvent("Added historic planet " + historicPlanet.getName() + " to the simulation");
         historicPlanets.add(historicPlanet);
     }
 
@@ -84,6 +90,8 @@ public class Simulation {
             throw new PlanetDoesntExistException();
         }
 
+        logNewEvent("Added new collision between " + planet1.getName() + " and " + planet2.getName()
+                + " to the simulation.");
         collisions.add(collision);
     }
 
@@ -92,8 +100,11 @@ public class Simulation {
     // PlanetDoesntExistException if the planet doesn't exist in the simulation
     public synchronized void removePlanet(Planet planet) {
         if (!planets.contains(planet)) {
+            logNewEvent("Tried to remove " + planet.getName() + " from the simulation but it didn't exist");
             throw new PlanetDoesntExistException();
         }
+
+        logNewEvent("Removed " + planet.getName() + " from the simulation");
         planets.remove(planet);
 
         // NOTE:
@@ -140,7 +151,7 @@ public class Simulation {
             if (collisions.contains(col)) {
                 return;
             }
-            collisions.add(col);
+            addCollision(col);
         }
     }
 
@@ -169,5 +180,11 @@ public class Simulation {
             throw new ArgumentOutOfBoundsException("mass2 must be > 0");
         }
         return (GRAVITATIONAL_CONSTANT * mass1 * mass2) / Math.max(EPSILON, (dist * dist));
+    }
+
+    // MODIFIES: EventLog.getInstance()
+    // EFFECTS: logs a new event to the event log with the given string
+    private static void logNewEvent(String message) {
+        LOG.logEvent(new Event(message));
     }
 }

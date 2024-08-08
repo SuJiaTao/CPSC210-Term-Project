@@ -1,10 +1,14 @@
 package ui.panels;
 
 import java.awt.*;
+import java.awt.event.*;
 
 import ui.SimulatorUtils;
 import ui.Tickable;
 import javax.swing.*;
+
+import model.Event;
+import model.EventLog;
 
 // Main window JFrame which is used to house all the graphics
 public class MainWindow extends JFrame implements Tickable {
@@ -20,6 +24,21 @@ public class MainWindow extends JFrame implements Tickable {
         setPreferredSize(size);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setIconImage(SimulatorUtils.loadImage("icon.png"));
+
+        // NOTE:
+        // i'm not happy to implement it this way but oh well
+        addWindowListener(new WindowAdapter() {
+            // Adapted from:
+            // https://stackoverflow.com/questions/16295942/java-swing-adding-action-listener-for-exit-on-close
+            // EFFECTS: prints all events in the eventlog instance
+            @Override
+            public void windowClosing(WindowEvent windowEvent) {
+                System.out.println("EVENT LOG:");
+                for (Event event : EventLog.getInstance()) {
+                    System.out.println(event.getDescription());
+                }
+            }
+        });
 
         editorTabPanel = new EditorTabPanel();
         viewportPanel = new ViewportPanel();
