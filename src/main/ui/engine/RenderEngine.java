@@ -703,17 +703,68 @@ public class RenderEngine implements Tickable {
     // MODIFIES: this
     // EFFECTS: draws a 2D line to the framebuffer with the given shader
     private void drawLineScreenspace(AbstractShader shader, Vector3 from, Vector3 to) {
-        float deltaX = to.getX() - from.getX();
-        float deltaY = to.getY() - from.getY();
-        float dist = (float) Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-        float drawX = from.getX();
-        float drawY = from.getY();
-        for (float step = 0; step <= dist; step++) {
-            float depth = from.getZ() + (to.getZ() - from.getZ()) * (step / dist);
-            Vector3 dummy = new Vector3();
-            drawFragment(new Vector3(drawX, drawY, depth), shader.shade(dummy, dummy));
-            drawX += deltaX / dist;
-            drawY += deltaY / dist;
+        Vector3 left = null;
+        Vector3 right = null;
+        if (from.getX() > to.getX()) {
+            right = from;
+            left = to;
+        } else {
+            left = from;
+            right = to;
+        }
+
+        Vector3 top = null;
+        Vector3 bottom = null;
+        if (from.getY() > to.getY()) {
+            top = from;
+            bottom = to;
+        } else {
+            bottom = from;
+            top = to;
+        }
+        drawLineScreenspaceXAxis(shader, left, right);
+        drawLineScreenspaceYAxis(shader, bottom, top);
+    }
+
+    // REQUIRES: left.getX() < right.getX()
+    // MODIFIES: this
+    // EFFECTS: draws a 2D line to the framebuffer in screenspace, based on the x
+    // axis
+    private void drawLineScreenspaceXAxis(AbstractShader shader, Vector3 left, Vector3 right) {
+        float deltaX = right.getX() - left.getX();
+        float deltaY = right.getY() - left.getY();
+        if (deltaX < 1.0f) {
+            return;
+        }
+        float slope = deltaY / deltaX;
+        float startX = Math.max(0.0f, left.getX());
+        float endX = Math.min(bufferSize - 1.0f, right.getX());
+        for (float drawX = startX; drawX <= endX; drawX += 1.0f) {
+            float drawY = left.getY() + (drawX - left.getX()) * slope;
+            float interp = (drawX - left.getX()) / deltaX;
+            float depth = left.getZ() * (1.0f - interp) + interp * right.getZ();
+            drawFragment(new Vector3(drawX, drawY, depth), shader.shade(new Vector3(), new Vector3()));
+        }
+    }
+
+    // REQUIRES: bottom.getY() < top.getY()
+    // MODIFIES: this
+    // EFFECTS: draws a 2D line to the framebuffer in screenspace, based on the x
+    // axis
+    private void drawLineScreenspaceYAxis(AbstractShader shader, Vector3 bottom, Vector3 top) {
+        float deltaX = top.getX() - bottom.getX();
+        float deltaY = top.getY() - bottom.getY();
+        if (deltaY < 1.0f) {
+            return;
+        }
+        float invSlope = deltaX / deltaY;
+        float startX = Math.max(0.0f, bottom.getY());
+        float endX = Math.min(bufferSize - 1.0f, top.getY());
+        for (float drawY = startX; drawY <= endX; drawY += 1.0f) {
+            float drawX = bottom.getX() + (drawY - bottom.getY()) * invSlope;
+            float interp = (drawY - bottom.getY()) / deltaY;
+            float depth = bottom.getZ() * (1.0f - interp) + interp * top.getZ();
+            drawFragment(new Vector3(drawX, drawY, depth), shader.shade(new Vector3(), new Vector3()));
         }
     }
 
