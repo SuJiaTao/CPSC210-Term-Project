@@ -1,16 +1,11 @@
 package ui.engine;
 
 import ui.*;
-import ui.engine.shader.AbstractShader;
-import ui.engine.shader.CloudShader;
-import ui.engine.shader.GasGiantLayerShader;
-import ui.engine.shader.LineShader;
-import ui.engine.shader.SunShader;
-import ui.engine.shader.TextureShader;
 import model.*;
 import java.awt.*;
 import javax.swing.*;
 import java.awt.image.*;
+import ui.engine.shader.*;
 import java.util.ArrayList;
 import java.util.concurrent.locks.*;
 
