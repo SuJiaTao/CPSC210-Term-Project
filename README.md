@@ -26,3 +26,8 @@
 > - I want to be able to check if a specific planet has collided with any other planets
 > - I want to be able to save the specific simulation state as a named file
 > - I want to be able to load a specific simulation state that I saved earlier by its name
+
+## Phase 4: Task 3 - Reflection
+
+> ### If I had more time, what would I have done different?
+> Firstly, I definitely would have refactored the old `SimulationManager` class instead of completely re-writing it, which *initially* I attempted but quickly realised it would take way too long. I think there was alot more room for abstraction. Each `XXXEditorPanel` class contained a `AbstractListPanel<T>` derived class, and similar logic, which at the time I felt could have easily been combined into another class which I wanted to name `AbstractEditorPanel<T>`, but ultimately the duplicated code wasn't all that complex, and I was running out of time. Also in retrospect, I realise that I really should have done away with the `SimulatorUtils` class, which initially was somewhat well organized, but ended up storing all static methods which I didnt want to bloat various classes, but were most definitely appropriate to be contained within them. Lastly, I really would have liked to include normals and lighting into my render engine, which I had the experience and time to do, however, I would have had to add a "rotation extraction" functionality from my `Transform` class, which would have been near impossible to test because **3D ROTATIONS ARE EVIL**.
