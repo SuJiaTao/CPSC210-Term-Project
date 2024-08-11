@@ -42,8 +42,9 @@ public class RenderEngine implements Tickable {
             SimulatorUtils.loadImage("gasF.jpg")
     };
     private static final float PLANET_SPIN_MAX = 500.0f;
-    private static final float TRAIL_UPDATE_FACTOR = 1.25f;
+    private static final float TRAIL_UPDATE_FACTOR = 0.2f;
     private static final float TRAIL_UPDATE_MINDISTANCE = 5.0f;
+    private static final float DRAWLINE_EPSILON = 0.0001f;
 
     private int bufferSize;
     private float[] depthBuffer;
@@ -723,7 +724,7 @@ public class RenderEngine implements Tickable {
     private void drawLineScreenspaceXAxis(AbstractShader shader, Vector3 left, Vector3 right) {
         float deltaX = right.getX() - left.getX();
         float deltaY = right.getY() - left.getY();
-        if (deltaX < 1.0f) {
+        if (deltaX <= DRAWLINE_EPSILON) {
             return;
         }
         float slope = deltaY / deltaX;
@@ -744,7 +745,7 @@ public class RenderEngine implements Tickable {
     private void drawLineScreenspaceYAxis(AbstractShader shader, Vector3 bottom, Vector3 top) {
         float deltaX = top.getX() - bottom.getX();
         float deltaY = top.getY() - bottom.getY();
-        if (deltaY < 1.0f) {
+        if (deltaY <= DRAWLINE_EPSILON) {
             return;
         }
         float invSlope = deltaX / deltaY;
